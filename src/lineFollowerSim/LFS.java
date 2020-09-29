@@ -291,7 +291,7 @@ public void clearSensors()              { sensors.clear();    }
  *    Draw robot view and course views to screen. 
  *    Divider variable 0=disable view, 1= draw every frame, 2 = every other frame (every two draw() calls),
  *    3 every third frame (draw() call)... This allows throttling view updates which may be helpful
- *    if graphics perfomance is limited. The robot view is always rendered to an internal 
+ *    if graphics performance is limited. The robot view is always rendered to an internal 
  *    bitmap at fixed 64 DPI resolution to be available for spot and line sensor sample acquisition for each
  *    simulation time step.
  *    
