@@ -2,7 +2,7 @@ package lineFollowerSim;
 
 import processing.core.*;
 
-/** Create linear array of spot sensors, no public constructor for this class, LFS.createLineSensor() method is used instead. 
+/** Create linear array of spot sensors, no public constructor is defined for this class, LFS method createLineSensor() is used instead. 
  * 
  * @author Ron Grant 
  *

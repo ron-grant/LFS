@@ -44,15 +44,17 @@ import java.io.IOException;
  *  <p>
  *  Using LFS features, user controller code reads sensor data, updates internal state, and finally sets robot target speed and turn rate. 
  *  The "internal state" being the fun bit. This is where things get interesting in the case of a complex line following course such as
- *  the Dallas Personal Robotics Group (dprg.org) Challenge Course.
+ *  the Dallas Personal Robotics Group (dprg.org) Challenge Course where there are a number of different course features.
  * <p>
- *  Initially, during contest run, robot location and heading query is unavailable. User may implement their own odometry, but the simulation is not 
- *  guaranteed to be free from deliberate introduction of some error. For example there may be some errors introduced in speed control and turn rate control
+ *  During contest run, robot location and heading queries (e.g. getRobotHeading() ) are unavailable. User may
+ *  implement their own odometry, but the simulation is not 
+ *  guaranteed to be free from deliberate introduction of some error. For example there may be some errors
+ *  introduced in speed control and turn rate control
  *  beyond errors introduced due to finite time step and limited numerical precision.
+ *  <p>
+ * Note that several methods documented are not called by user code. These are highlighted by 
  * <p>
- *  For consideration in future is mode to allow location and heading queries during contest run, possibly subject to error such that local queries could be 
- *  made allowing short distance maneuvers to be performed. 
- * 
+ * (Called by simulation core code.) 
  *  @author Ron Grant
  */  
 
@@ -229,7 +231,8 @@ public void setCourseDPI(int dpi)
  *  <p> 
  *  TBD - might be requirement that aspect ratio is maintained. Might consider only width
  *  parameter with auto calculation of height if this is the case. - RDG Sept 19, 2020.
- * 
+ * <p>
+ * (Called by simulation core code) 
  * 
  * @param x          upper left corner x
  * @param y          upper left corner y
@@ -259,7 +262,8 @@ public void defineCourseViewport (int x, int y, int width, int height)
 
 
 /** Draw internal bitmap of robot proximity and update sensor data values. Called from draw() at each simulation step.
- * 
+ * <p>
+ * (Called by simulation core code.) 
  * @param r Red color channel 0..255
  * @param g Green color channel 0..255
  * @param b Blue color channel 0..255
@@ -298,7 +302,8 @@ public void clearSensors()              { sensors.clear();    }
  *    If either "div" value is greater than one this will be temporarily overridden whenever
  *    either mouse button is pressed to facilitate better animation of robot drag or rotation, especially
  *    if either value is set to large number e.g. (2,30) where course view is being updated very infrequently.
- * 
+ *<p>
+ * (Called by simulation core code.)  
  * @param rvDiv  Robot view divider    0=disable 1=every draw() 2=every two draw() calls, 3=...
  * @param cvDiv  Course view divider   0=disable 1=every draw() 2=every two draw() calls, 3=...
  * @param cRotate90 Rotate course 90 if true 
@@ -504,7 +509,8 @@ public void setCourse(String fname)
  *  Draw text of robot location and heading into bitmap. Idea is user does not have direct
  *  access to this information. In the real world such data would not be easily obtainable without absolute
  *  position and orientation detection. Under certain circumstances this information might be made available
- *  
+ *<p>
+ * (Called by simulation core code.)  
  *   @param x Screen X position for location of robot location and heading bitmap.
  *   @param y Screen Y position for location of robot location and heading bitmap. 
  */
@@ -530,7 +536,8 @@ contestResetCount=0;
 
 /** Called from draw() method, if stepRequseted simulator will calculate new position and heading of robot
  *  based on current speed and turn rate.
- * 
+ * <p>
+ * (Called by simulation core code.) 
  * @param stepRequested If true drive update will be called. If false, no driveUpdate and no crumbs will be added.
  */
 public void driveUpdate(boolean stepRequested)
@@ -546,7 +553,8 @@ public void driveUpdate(boolean stepRequested)
 
 
 /** Current robot runtime formatted in minutes:seconds:milliseconds  (stopwatch tick x timeStep)
- * 
+ * <p>
+ * (Called by simulation core code.) 
  *@return Contest runtime string mn:se:msec
  */
 public String getContestTimeString ()
@@ -595,8 +603,8 @@ if (dt>maxTimeStep)
 timeStep = dt;
 }
 
-/* Simulation time step in seconds, should not be changed during simulation.
- * @return timeStep in seconds e.g. 0.01667 is default 1/60th second 
+/** Simulation time step in seconds, should not be changed during simulation, recommend change in userInit method.
+ * @return timeStep in seconds e.g. 0.01667 is default ~1/60th second 
  */
 public float getTimeStep()
 { return timeStep; }
@@ -713,9 +721,15 @@ public LineSensor createLineSensor (float xoff, float yoff, int w, int h, int nu
 
 /**
  * Erase crumbs in course view - performed at start of robot run.
+ * <p>
+ * (Called by simulation core code.) 
  */
 public void crumbsEraseAll() { view.crumbEraseAll(); }
 
+/**
+ *  Draw robot coordinate axes in robot view. Optionally called in userDraw. Serves as a good reminder orientation of robot coordinates
+ *  and origin location.
+ */
 public void drawRobotCoordAxes()  { view.drawRobotCoordAxes(); }
 
 
@@ -752,7 +766,8 @@ void appendStringToFile(String header, String filename, String text)
 /**
  * Called to start contest, controller enabled, crumbs cleared, stopwatch cleared.
  * Reading position and heading prohibited during run as is repositioning robot with setPositionAndHeading.
- * 
+ * <p>
+ * (Called by simulation core code.) 
  */
 public void contestStart()
 {
@@ -783,7 +798,8 @@ public boolean contestIsRunning()
  * Stop contest - robot slowed to stop, controller disabled, stop watch stopped. At this point
  * contestFinish() should be called after any further actions taken. It is possible comment dialog will
  * be generated in the future helping to automate process from stop (triggered by SPACE BAR) to contestFinish().
- * 
+ * <p>
+ * (Called by simulation core code.) 
  */
 public void contestStop()
 {
@@ -848,7 +864,8 @@ else { PApplet.println ("Contest Running robot heading not available"); return 0
 /**
  * Call after contest stopped (Key F - Finish) 
  * Logs run to .cdf file and initiates image save
- * 
+ * <p>
+ * (Called by simulation core code.) 
  */
 
 public void contestFinish()
@@ -876,7 +893,8 @@ public void contestFinish()
 
 
 /** Called at end of sketch draw() method, checks to see if screen save has been requested by simulator and saves image if so.
- * 
+ * <p>
+ * (Called by simulation core code.) 
  */
 
 public void contestScreenSaveIfRequested()  // need count down on this 1 frame

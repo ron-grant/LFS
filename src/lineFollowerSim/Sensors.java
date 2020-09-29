@@ -76,7 +76,7 @@ public class Sensors {  // no modifier = package protected
 PApplet p;
 
 /**
- *  SpotSensor list, contains all instances of SpotSensor objects created by LFS.createSpotSensor.
+ *  SpotSensor list, contains all instances of SpotSensor objects created by LFS method createSpotSensor.
  *  <p>
  *  This list is user accessible in allowing iteration through defined line sensors.
  *  <p>
@@ -86,7 +86,7 @@ PApplet p;
 public ArrayList <SpotSensor> spotSensorList = new ArrayList<SpotSensor>();   // list of spot sensors, created automatically as spot sensor instances are created
 
 /**
- *  LineSensor list, contains all instances of LineSensor objects created by LFS.createLineSensor.
+ *  LineSensor list, contains all instances of LineSensor objects created by LFS method createLineSensor.
  *  <p>
  *  This list is user accessible allowing iteration through defined line sensors. 
  *  <p>
@@ -106,7 +106,7 @@ Sensors (PApplet parent)
 { p = parent; }
 
 /**
- * clear both spot and line sensor lists -- see LFS.clearSensors()
+ * clear both spot and line sensor lists -- see LFS method clearSensors()
  */
 void clear()
 {

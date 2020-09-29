@@ -22,10 +22,10 @@ Download Processing 3.4 or later from the Processing website at www.processing.o
 If you are new to processing, follow their instructions to gain some basic knowledge of the environment which is very similar to Arduino IDE, except Processing is Java based. If you have C++ programming experience, fear not, Java uses many identical low level language constructs reducing the learning curve. Also, you don't need to be a Java expert to get a great deal of milage out of the Processing environment.
 
 <p>
-Download LineFollowingSim-X.zip file, by clicking on the file name above in the repo. file list.
-Extract LineFollowerSim folder by right clicking on the .ZIP file in your Download folder.
+Click on lineFollower.zip in above file list. Download then 
+extract lineFollowerSim folder by right clicking on the .ZIP file in your Download folder.
 <p>
-Copy LineFollowerSim folder to to Processing sketchbook folders libraries subfolder.
+Copy lineFollowerSim folder to to Processing sketchbook folders libraries subfolder.
 To locate your processing sketchbook folder: Use Processing menu command  File>Preferences to display Preferences dilog. The sketchbook path is listed in the dialog as the first item.
 <p>  
 Start/Restart Processing  File>Examples  you will find Two example sketches when expanding tree branch named Line Following Simulator.
