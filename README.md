@@ -32,7 +32,7 @@ Start/Restart Processing  File>Examples  you will find Two example sketches when
 <p>
 The LFS Application Interface as used by the included example sketches, is documented in the reference subfolder of the LineFollowerSim library folder. Click on index.html and the API documentation will appear in your browser.
 <p> 
-Also, download the User's guide from the file list above. (Note updated release due by end of Day Sept 26, 2020)
+Also, download the User's guide from the file list above. Available in PDF or ODT (Open Desk Top ) document format.
 <p>
 Happy line following!
 
