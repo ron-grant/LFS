@@ -40,10 +40,14 @@ Happline following!
 
 ### Known Issues as of Sept 29, 2020
 
-Go command not documented in demo programs
+Go command not documented in demo programs.
+<p>
 Robot drag is not allowed in R-Run contest mode. Need to allow robot drag (and change heading) via mouse in G-Go mode.  
+<p>
 Need sensor display window to help illustrate code that reads sensors and to show sensor data without having to write code.
+<p>
 Increase Accel Rate in Demo Programs.
+<p>
 Need to go over install / usage instructions.   
  
 
