@@ -756,7 +756,7 @@ public SpotSensor createSpotSensor (float xoff, float yoff, int w, int h )
  *  view of the course has been rendered to a bitmap.
  *  <p>
  *  It should be noted the line sensor can be modified into a 1/2 circle sensor array and/or the sensor array 
- *  can be rotated about the line sensor center spot.
+ *  can be rotated about the line sensor center spot location at (xoff,yoff).
  *
  * @param xoff              X offset (inches) from center of robot in robot coordinates. +X axis extends forward.
  * @param yoff              Y offset (inches) from center of robot in robot coordinates. +Y axis extends to right. 
@@ -771,13 +771,13 @@ public LineSensor createLineSensor (float xoff, float yoff, int w, int h, int nu
 /**
  * Erase crumbs in course view - performed at start of robot run.
  * <p>
- * (Called by simulation core code.) 
+ * Called by simulation core code and also by keyPress E-EraseCrumbs. 
  */
 public void crumbsEraseAll() { view.crumbEraseAll(); }
 
 /**
  *  Draw robot coordinate axes in robot view. Optionally called in userDraw. Serves as a good reminder orientation of robot coordinates
- *  and origin location.
+ *  and origin when positioning sensors.
  */
 public void drawRobotCoordAxes()  { view.drawRobotCoordAxes(); }
 
@@ -894,9 +894,9 @@ else { PApplet.println ("Contest Running robot location not available"); return 
 }
 /**
  * If contest is not running return robot heading value (degrees).
- * Example Headings given image with origin in upper-left corner +X axis running to right on
- * "page" and +Y axis running down the "page" as you would view an image on a screen or paper on 
- * a desk. See illustration in User's Guide.
+ * Example Headings (along coordinate axes) given. Note course image places its origin in upper-left
+ * corner +X axis running to right on the "page" and +Y axis running down the "page" as you would 
+ * view an image on a screen or paper on  a desk. See illustration in User's Guide.
  * <p>  0  = heading along image X axis in -X direction 
  * <p>  90 = heading along image Y axis in -Y direction
  * <p> 180 = heading along image X axis in +X direction

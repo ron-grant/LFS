@@ -16,7 +16,7 @@ Shown below is an image of the DPRG Challenge Course. Join in and create your co
 
 
 
-### LFS Installation
+### LineFollowerSim (LFS) Installation
 
 Download Processing 3.4 or later from the Processing website at www.processing.org.
 If you are new to processing, follow their instructions to gain some basic knowledge of the environment which is very similar to Arduino IDE, except Processing is Java based. If you have C++ programming experience, fear not, Java uses many identical low level language constructs reducing the learning curve. Also, you don't need to be a Java expert to get a great deal of milage out of the Processing environment.
@@ -25,8 +25,11 @@ If you are new to processing, follow their instructions to gain some basic knowl
 Download latest lineFollowerSim-X.zip in above distribution folder sub folder lineFollowerSim-X sub-folder download (where X = release #)
 extract lineFollowerSim folder by right clicking on the .ZIP file in your Download folder.
 <p>
+Note: LineFollowerSim is not available (as of Oct 1,2020) through the Processing Contribution Manager accessed by Sketch>ImportLibrary>AddLibrary menu command.
+<p>
 Copy lineFollowerSim folder to to Processing sketchbook folders libraries subfolder.
-To locate your processing sketchbook folder: Use Processing menu command  File>Preferences to display Preferences dilog. The sketchbook path is listed in the dialog as the first item.
+To locate your processing sketchbook folder: Use Processing menu command  File>Preferences to display Preferences dilog. The sketchbook path is listed in the dialog as the
+first item. If the libraries folder does not exist in your sketches folder, you will need to create it, then copy LineFollowerSim folder to it.
 <p>  
 Start/Restart Processing  File>Examples  you will find Two example sketches when expanding tree branch named Line Following Simulator.
 <p>
@@ -38,20 +41,17 @@ See also API documentation located in reference subfolder of lineFollowerSim-X f
 <p>
 Happline following!
 
-### Known Issues as of Sept 30, 2020
+### Known Issues and few Comments as of Sept 30, 2020   Library 1.0.1
 
 Key menu slight improvement - Contest Keys  R)un SPACE-Stop F)inish       G)o Non-Contest Start 
 +Added E-EraseCrumbs
 <p>
-+ Robot drag allowed when contest not running
-<p>
 Need sensor display window to help illustrate code that reads sensors and to show sensor data without having to write code.
 <p>
-+ Increased Accel Rate in Demo Programs from 0.5 to 16 / 32 inches/sec^2
++ Increased Accel Rate in Demo Programs from 0.5 to 16 / 32 inches/sec^2 (was accidental very slow acceleration rate for demonstration)
 <p>
-Need to go over install / usage instructions.  
 Would like UserKeys separate from simulation core keys.. 
- 
+
 
 
 
