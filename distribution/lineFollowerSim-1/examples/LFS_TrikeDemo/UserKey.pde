@@ -4,6 +4,7 @@
 //
 //Note:  Remember to click on the run window to give focus before pressing keys 
 
+String keySummary1      = "E)raseCrumbs";
 String keySummaryConOn  = "SPACE=freeze/step 0..9 speed C)ontroller OFF S)top R)un F)inish";
 String keySummaryConOff = "C)ontroller turn on  <- -> turn, up/dn arrow velocity S)top R)un F)inish"; 
 
@@ -43,6 +44,7 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                      }  
                    }  
                                                                   
+  if (key == 'E')  lfs.crumbsEraseAll();
   if (key == 'F')  lfs.contestFinish();                                                                
                                                                   
   if (key == 'P') panelDisplayMode = (panelDisplayMode + 1) % 3;  // cycle display status command panel opacity

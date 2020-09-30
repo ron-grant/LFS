@@ -29,7 +29,7 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   
   // below acceleration and deceleration rates are subject to LFS maximums
   
-  lfs.setAccRate(0.5);      // acceleration rate (inches/sec^2)  
+  lfs.setAccRate(16);      // acceleration rate (inches/sec^2)  
   lfs.setDecelRate(32);    // deceleration rate (inches/sec^2)  
   lfs.setTurnAcc(720);     // turn acceleration and deceleration rate  (degrees/sec^2) 
   

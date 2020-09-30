@@ -125,8 +125,7 @@ public void setup()
     textSize(28);
     text(lfs.getContestTimeString(),51,46);
     
-    if (lfs.contestIsRunning())
-      text("Run",width-248,47);
+    text(lfs.getContestStateName(),width-248,47);
       
     text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);  
     

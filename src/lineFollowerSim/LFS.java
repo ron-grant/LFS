@@ -195,8 +195,57 @@ public LFS (PApplet parent)
  */
 public void setEnableController(boolean enable)
 {
+    if (!enable) {                            
+    	if (contestState == ContestStates.csRun) contestState = ContestStates.csStop;     // disable controller - make sure contest not running
+    	else contestState = ContestStates.csIdle;
+    }
 	controllerEnabled = enable;
 }
+
+/** 
+ * Get contest state as char Idle-I Stop-S Run-R Finish-F
+ * @return contest state as character 
+ * 
+ */
+public char getContestState()
+{
+	//{csIdle,csStop,csRun,csResetRequest,csFinished};
+	//ResetRequest intended as state allowing robot to be moved by judge and restarted
+	
+	char c = ' ';
+	switch (contestState) {
+	case csIdle     :  c = 'I'; break;
+	case csStop     :  c = 'S'; break;
+	case csRun      :  c = 'R'; break;      
+	case csFinished :  c = 'F'; break;
+	case csResetRequest : c = 'X'; break;   // Reset Request may not be supported 
+	}
+	
+	return c;
+}
+
+/** 
+ * Get contest state name string   Idle Stop Run Finish Reset (if implemented)
+ * @return contest state name string  
+ * 
+ */
+public String getContestStateName()
+{
+	//{csIdle,csStop,csRun,csResetRequest,csFinished};
+	//ResetRequest intended as state allowing robot to be moved by judge and restarted
+	
+	String s = "undefined";
+	switch (contestState) {
+	case csIdle     :  s = "Idle"; break;
+	case csStop     :  s = "Stop"; break;
+	case csRun      :  s = "Run"; break;      
+	case csFinished :  s = "Finish"; break;
+	case csResetRequest : s = "Reset"; break;   // Reset Request may not be supported 
+	}
+	
+	return s;
+}
+
 
 /**
  * Determine if user controller is enabled. If not, userControllerUpdate() should not be called.
@@ -870,9 +919,14 @@ else { PApplet.println ("Contest Running robot heading not available"); return 0
 
 public void contestFinish()
 {
+  if (contestState ==  ContestStates.csRun) contestStop();   // stop contest if still running (space bar not pressed to stop) 
+  if (contestState != ContestStates.csStop) 
+  { PApplet.println("Warning - cannot Finish contest that was not started with R-Run Command");
+    return;
+  }
+	
   contestState = ContestStates.csFinished;
  
-  
   
   String comments = ""; // need to have csStop before cdFinished  with chance to enter comments !!!
   

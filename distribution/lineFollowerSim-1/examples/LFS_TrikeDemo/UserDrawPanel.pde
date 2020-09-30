@@ -33,9 +33,9 @@
     //String ts = 
     //text (ts+"con "+cs,30,190);
 
-    
-      if (lfs.controllerIsEnabled()) text(keySummaryConOn,30,80);    // see KeyInput tab  
-      else text(keySummaryConOff,30,80);
+    text(keySummary1,30,60);    
+    if (lfs.controllerIsEnabled()) text(keySummaryConOn,30,80);    // see KeyInput tab  
+    else text(keySummaryConOff,30,80);
     
     
     text ("right mouse button down, drag horz. to change heading",30,100);
