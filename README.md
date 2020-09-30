@@ -22,7 +22,7 @@ Download Processing 3.4 or later from the Processing website at www.processing.o
 If you are new to processing, follow their instructions to gain some basic knowledge of the environment which is very similar to Arduino IDE, except Processing is Java based. If you have C++ programming experience, fear not, Java uses many identical low level language constructs reducing the learning curve. Also, you don't need to be a Java expert to get a great deal of milage out of the Processing environment.
 
 <p>
-Download latest lineFollowerSim-X.zip in above distribution folder sub folder lineFollowerSim-X (where X = release #)
+Download latest lineFollowerSim-X.zip in above distribution folder sub folder lineFollowerSim-X sub-folder download (where X = release #)
 extract lineFollowerSim folder by right clicking on the .ZIP file in your Download folder.
 <p>
 Copy lineFollowerSim folder to to Processing sketchbook folders libraries subfolder.
