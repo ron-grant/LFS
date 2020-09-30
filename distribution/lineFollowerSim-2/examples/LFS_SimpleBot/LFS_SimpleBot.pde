@@ -4,8 +4,8 @@
    that orignally contained it.  
    
    Ron Grant
-   Sept 27,2020 
-   https://github.com/ron-grant/LineFollowerSimLib
+   Sept 30,2020 
+   https://github.com/ron-grant/LFS
    
      
    Refer to LFS User's Guide for a description of tabs and methods
