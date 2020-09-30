@@ -38,17 +38,19 @@ See also API documentation located in reference subfolder of lineFollowerSim-X f
 <p>
 Happline following!
 
-### Known Issues as of Sept 29, 2020
+### Known Issues as of Sept 30, 2020
 
-Go command not documented in demo programs.
+Key menu slight improvement - Contest Keys  R)un SPACE-Stop F)inish       G)o Non-Contest Start 
++Added E-EraseCrumbs
 <p>
-Robot drag is not allowed in R-Run contest mode. Need to allow robot drag (and change heading) via mouse in G-Go mode.  
++ Robot drag allowed when contest not running
 <p>
 Need sensor display window to help illustrate code that reads sensors and to show sensor data without having to write code.
 <p>
-Increase Accel Rate in Demo Programs.
++ Increased Accel Rate in Demo Programs from 0.5 to 16 / 32 inches/sec^2
 <p>
-Need to go over install / usage instructions.   
+Need to go over install / usage instructions.  
+Would like UserKeys separate from simulation core keys.. 
  
 
 

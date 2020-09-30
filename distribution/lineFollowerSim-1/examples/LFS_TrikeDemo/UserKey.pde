@@ -4,9 +4,9 @@
 //
 //Note:  Remember to click on the run window to give focus before pressing keys 
 
-String keySummary1      = "E)raseCrumbs";
-String keySummaryConOn  = "SPACE=freeze/step 0..9 speed C)ontroller OFF S)top R)un F)inish";
-String keySummaryConOff = "C)ontroller turn on  <- -> turn, up/dn arrow velocity S)top R)un F)inish"; 
+String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest";
+String keySummaryConOn  = "SPACE=freeze/step 0..9 speed C)ontroller OFF S)top E)raseCrumbs";
+String keySummaryConOff = "C)ontroller turn on  <- -> turn, up/dn arrow speed S)top"; 
 
 boolean rotate90 = true;  // course view  toggle rotation with Alt key 
 
