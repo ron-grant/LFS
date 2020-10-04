@@ -12,7 +12,7 @@ Check out various DPRG line following courses at https://github.com/dprg/Contest
 Shown below is an image of the DPRG Challenge Course. Join in and create your controller to solve this course! 
 <p>
   
-![](https://github.com/ron-grant/LineFollowerSimLib/blob/master/ChallengeSmallImage.jpg)
+![](ChallengeSmallImage.jpg)
 
 
 
