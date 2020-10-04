@@ -2,14 +2,14 @@
 
 */
 
-SpotSensor sensorL,sensorM,sensorR;
+SpotSensor sensorL,sensorM,sensorR,sensorDimensionCheck;
 LineSensor sensor1;  
 
 int courseNum = 1;  // allow selection of see also UserReset tab
 
 void userInit()  // called by lfs to obtain robot information and for sensor definitions
 {
-  lfs.setFirstNameLastNameRobotName("Ron","Grant","SimpleBot");   // change to your name and robot
+  lfs.setFirstNameLastNameRobotName("Carl","Ott ","MecanumDemo");   // change to your name and robot
  
   if (courseNum==1)
   {
@@ -51,16 +51,21 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
    
   // Sept 16, need to change new SpotSensor to lfs.create..   to save having to include reference to sensors.. 
          
-  sensorL = lfs.createSpotSensor(1,-2,12,12);         // example spot sensors 
-  sensorM = lfs.createSpotSensor(1.5f,0,10,10);
-  sensorR = lfs.createSpotSensor(1, 2,12,12);
-   
-  sensor1 = lfs.createLineSensor(2.0f, 0, 5, 5, 65); // x,y offset from robot center, spot size (5,5) ,
+  sensorL = lfs.createSpotSensor(1,-1,64,64);         // example spot sensors 
+  sensorM = lfs.createSpotSensor(1.5f,0,32,32);
+  sensorR = lfs.createSpotSensor(1, 1,64,64);
+
+  sensorDimensionCheck = lfs.createSpotSensor(1, 0,154,16); // up 1 inch, horizontal centered about 0, 154px/2.4in wide and 25px/0.25in tall)
+
+  // 8 sensor array to model Polulu QTRX-MD-08A https://www.pololu.com/product/4448/pictures
+  sensor1 = lfs.createLineSensor(2.0f, 0, 19, 19, 8); // x,y offset from robot center, spot size (5,5) ,
                                                      // number of samples (if even, gets incremented to odd value 
                                                      // to place a spot directly at sensor x,y
                                                      // and make sensor symmetrical about x,y
+                                                     // ToDo- investiate potential boundary errors w/ non-square sensors
+
  
-  sensor1.setArcRadius(2);    // optional 1/2 circle with center at xoff,yoff, radius in inches
+  sensor1.setArcRadius(0);    // optional 1/2 circle with center at xoff,yoff, radius in inches
                               // negative radius reverses circle OR setRotation to 180 
   
   sensor1.setRotation (0);   // optional sensor modifier  0 = aligned with robot Left/Right (Y-axis)
