@@ -71,5 +71,5 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
                                  // in userController at robot run time. That is, every time step
                                  // provides an oppurtinity to modify these values for the next time step.
 
-  markerSetup(); 
+  lfs.markerSetup(); 
 }

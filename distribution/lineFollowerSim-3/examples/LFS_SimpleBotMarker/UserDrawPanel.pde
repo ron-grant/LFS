@@ -2,7 +2,7 @@
 */
   void userDrawPanel()  // called from draw() at frame rate
   {
-    markerDraw(); 
+    lfs.markerDraw(); 
     
     //------------------------
     // display status info at top of screen

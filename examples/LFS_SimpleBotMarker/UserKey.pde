@@ -1,11 +1,11 @@
-/* UserKey - actions to take when key is pressed
+/* UserKey - actions to take when key is pressed   (also mouseClicked actions)
 
    Single key response commands here to allow manual drive of robot
    turning drive controller on/off, Contest Run control 
 
 */
 
-String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest";
+String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest  M)arker";
 String keySummaryConOn  = "SPACE=freeze/step 0..9 speed C)ontroller OFF S)top E)raseCrumbs";
 String keySummaryConOff = "C)ontroller turn on  <- -> turn, up/dn arrow speed S)top"; 
 
@@ -21,6 +21,15 @@ boolean rotate90 = true;  // course view toggle rotate90 off/on  with ALT key
 //S     stop robot motion, disable controller 
 
 
+ void mouseClicked()
+    {
+      if (lfs.markerHandleMouseClick()) return;   // markerHandleMouseClick returns true if clicked
+                                                  // in a marker circle, then this mouseClick is considered 
+                                                  // consumed, hence return
+      // user / other mouse click handlers here  
+    }
+ 
+
 public void keyPressed()  // handle keypress events for manual driving of robot.
 {
   if ((key>='a')&&(key<='z')) key -=32; // shift to uppercase  
@@ -30,8 +39,8 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
     simFreeze =  (simSpeed == 0);
   }
 
-
-  if (key == 'M') markerAddRemove();
+  if (key == 'M') lfs.markerAddRemove(); // interactive marker placement / removal   
+  
   if (key == 'C') { lfs.setEnableController(!lfs.controllerIsEnabled());   // toggle allowing controller to update
                     if (!lfs.controllerIsEnabled()) lfs.stop();             // position and heading of robot
                   }                                                       // if controller not enabled - stop robot

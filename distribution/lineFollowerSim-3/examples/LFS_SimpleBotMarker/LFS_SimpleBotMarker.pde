@@ -22,6 +22,9 @@
    UserInit    userInit()                       define name, course, sensors, acceleration...
    UserKey     keyPressed()                     command key decoder 
    UserReset   userControllerResetAndRun()      method called by simulator to start robot running                                         
+ 
+   Marker      comments only                    comments on adding marker support
+                                                to sketch (library ver 1.0.3 or later)
   
 */  
 

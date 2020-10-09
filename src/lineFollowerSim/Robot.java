@@ -30,7 +30,7 @@ PApplet parent;
 // note that robot object instanced by simulator is private -- so no access to x,y coordinates and heading as they are "exact"
 // location on course.
 
-public float x;         // robot position on course in inch coordinates
+public float x;           // robot position on course in inch coordinates
 public float y;
 public float heading;     // robot heading, 0 to 360 degrees CW, 0 is world x-
 
