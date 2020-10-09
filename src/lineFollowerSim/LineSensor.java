@@ -121,6 +121,12 @@ public class LineSensor extends SpotSensor {
    */
   public void setArcRadius(float radiusInches) { arcRadius = radiusInches; }      // when non-zero array is 1/2 circle, radius inches
   
+  /** Get sensor arc radius.
+   * @return Arc radius in inches
+  */
+  public float getArcRadius() { return arcRadius; }
+  
+  
   /**
    * Rotate line (or 1/2 circle) sensor by given angle in degrees, positive angle rotate clockwise,
    * negative angle, counter-clockwise.  

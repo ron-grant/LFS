@@ -555,6 +555,13 @@ public void setCourse(String fname)
 }
 
 /**
+ * Get current course filename
+ * @return CourseFilename
+ */
+public String getCourseFilename() { return courseFilename; }
+
+
+/**
  *  Draw text of robot location and heading into bitmap. Idea is user does not have direct
  *  access to this information. In the real world such data would not be easily obtainable without absolute
  *  position and orientation detection. Under certain circumstances this information might be made available
@@ -963,6 +970,17 @@ public void contestScreenSaveIfRequested()  // need count down on this 1 frame
   requestScreenSaveInFrameCount = -1;
 
 }
+
+
+
+/**
+ * 
+ * @param worldX  course X in inches   
+ * @param worldY  course Y in inches
+ * @return PVector with screen absolute (x,y) location 
+ */
+public PVector courseCoordToScreenCoord (float worldX, float worldY) 
+	{ return view.courseCoordToScreenCoord (worldX,worldY); }  
 
 
 

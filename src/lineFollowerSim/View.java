@@ -79,7 +79,11 @@ class View {  // no modifier = package protected
   int startDragY;
   float startDragLocX,startDragLocY;
 
-  int courseDPI = 64;           // LFS can change via call, sets this value too.                                  
+  int courseDPI = 64;           // LFS can change via call, sets this value too.    
+  
+  boolean courseRotated90;
+  PImage course;   // ref to course bitmap 
+  
    
   View(PApplet parent)
   {
@@ -366,6 +370,58 @@ void drawRobotCoordAxes()  // called from LFS
   
 } 
 
+
+ PVector courseCoordToScreenCoord (float wx, float wy)  // given world XY coord return screen XY   exposed in LFS class
+ {
+    PVector pScreen = new PVector();  // output screen coords
+   
+    int cw = course.width;     // width and height of course image in pixels
+    int ch = course.height;
+   
+    float vs = 1.0f;
+    float vsx = 1.0f*courseVP.w/cw;
+    float vsy = 1.0f*courseVP.h/ch;
+      
+    if (courseRotated90)
+    {
+      vsx = 1.0f*courseVP.w/ch;
+      vsy = 1.0f*courseVP.h/cw;
+    }
+    
+    if (vsx<vsy) vs = vsx;                  // calculate uniform view scale that will fit course into viewport 
+    else vs = vsy;
+    float sx = vs*courseDPI;   // now uniform scaling        viewport pixels to inches multiplier 
+    float sy = sx; 
+    
+    int vpx = courseVP.x;        // course viewport origin
+    int vpy = courseVP.y;
+  
+    if (courseRotated90)
+    {
+      vpy  += courseVP.h;    
+      float wcp = 1.0f*course.height*vs;   // course horizontal width screen pixels
+       
+      // invert  screen to courseXY equation   
+      //worldY  = (courseVP.x+wcp-X)/sy;
+      //worldX  = (Y-courseVP.y)/sx;
+      
+      // screen pScreen  function of world coord p 
+      pScreen.x =  courseVP.x + wcp - (wy * sy);    // course origin is upper right corner of course 
+      pScreen.y =  courseVP.y +       (wx * sx);    // world +Y decreasing screen X, world +X increasing screen Y
+    }
+    else
+    {
+      //worldX = (X-vpx)/sx;
+      //worldY = (Y-vpy)/sy;
+      pScreen.x = vpx + (wx * sx);  // world coord to screen transform 
+      pScreen.y = vpy + (wy * sy);
+    }  
+  
+   return pScreen; // transformed vector 
+ }       
+
+ 
+
  
   // at present drawCourse view using transform applied to scaled course image
   // shape probably faster
@@ -375,6 +431,9 @@ void drawRobotCoordAxes()  // called from LFS
   {
     int cw = course.width;     // width and height of course image in pixels
     int ch = course.height;
+    
+    courseRotated90 = rotateCourse90;  // used to inform  courseCoordToScreenCoord about course orientation
+    this.course = course;
 	    
 	float vs = 1.0f;
 	float vsx = 1.0f*courseVP.w/cw;
