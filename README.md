@@ -1,3 +1,6 @@
+### Library 1.3 released see LFS-1.3-Changes.pdf 
+Cool new features including interactive start location and heading Markers, User colorable sensors, Hover over sensors to identify, improved viewport display with course and robot OR sensor view.
+
 # LFS - Line Follower Simulation 
 LFS is a software tool designed assist in the process of desinging robot line follower controller software.
 <p>
@@ -40,10 +43,6 @@ Also, download the User's guide from the file list above. Available in PDF or OD
 See also API documentation located in reference subfolder of lineFollowerSim-X folder. (Clicking on index.html to load HTML based API documentation. 
 <p>
 Happline following!
-
-### Library 1.3 released see PDF document 
-
-Cool new features including Markers, User colorarble sensors, Hover over sensors to identify, improved viewport display with course and robot OR sensor view.
 
 
 
