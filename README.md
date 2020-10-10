@@ -41,16 +41,9 @@ See also API documentation located in reference subfolder of lineFollowerSim-X f
 <p>
 Happline following!
 
-### Known Issues and few Comments as of Sept 30, 2020   Library 1.0.1
+### Library 1.3 released see PDF document 
 
-Key menu slight improvement - Contest Keys  R)un SPACE-Stop F)inish       G)o Non-Contest Start 
-+Added E-EraseCrumbs
-<p>
-Need sensor display window to help illustrate code that reads sensors and to show sensor data without having to write code.
-<p>
-+ Increased Accel Rate in Demo Programs from 0.5 to 16 / 32 inches/sec^2 (was accidental very slow acceleration rate for demonstration)
-<p>
-Would like UserKeys separate from simulation core keys.. 
+Cool new features including Markers, User colorarble sensors, Hover over sensors to identify, improved viewport display with course and robot OR sensor view.
 
 
 
