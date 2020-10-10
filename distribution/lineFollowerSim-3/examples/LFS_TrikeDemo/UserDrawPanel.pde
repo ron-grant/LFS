@@ -1,6 +1,8 @@
   
   void userDrawPanel()  // called from draw() at frame rate
   {
+    lfs.showSensors((courseTop)?'R':'S');    // show user colorable sensors (lib 1.3)
+    if (courseTop) lfs.markerDraw();         // only display markers when course visible (lib 1.3)
     
     //------------------------
     // display status info at top of screen

@@ -16,13 +16,11 @@
 void userControllerResetAndRun() 
 {
   userInit();                               // call userInit() to init sensors & accel rates.
-  
-  if (courseNum == 2)
-  lfs.setPositionAndHeading (52,12,0);      // override initial position & heading with start
-                                            // at 52,12,0
-  
+
+  lfs.moveToStartLocationAndHeading();      // initial position, click on marker overrides (lib 1.3)
    
   lfs.setTargetSpeed(6.0f);   // example start driving robot straight
+  
   // might be used if you are only controlling turn rate.
   
   // reset user state variables
@@ -31,5 +29,7 @@ void userControllerResetAndRun()
   // Be sure to reset them were 
   
   ePrev = 0;
+  
+  
 
 } // end userControllerResetAndRun

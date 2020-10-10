@@ -1,5 +1,6 @@
 /* UserInit - load course, define acceleration rates.. , define sensors
 
+   Additions at end of userInit for (lib 1.3). Init markers, get sensor names
 */
 
 SpotSensor sensorL,sensorM,sensorR;
@@ -9,7 +10,7 @@ int courseNum = 1;  // allow selection of see also UserReset tab
 
 void userInit()  // called by lfs to obtain robot information and for sensor definitions
 {
-  lfs.setFirstNameLastNameRobotName("Ron","Grant","SimpleBot");   // change to your name and robot
+  lfs.setFirstNameLastNameRobotName("Ron","Grant","SimpleBot3");   // change to your name and robot
  
   if (courseNum==1)
   {
@@ -69,6 +70,8 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   //sensor1.setPosition(2.5,0);  // example position modification 
                                  // position,rotation and arcRadius (1/2 circle) can be modified 
                                  // in userController at robot run time. That is, every time step
-                                 // provides an oppurtinity to modify these values for the next time step.
+                                 // provides an opportunity to modify these values for the next time step.
 
+  nameSensorsUsingVariableNames();   // look up sensor names and assign them to sensor name field (lib 1.3)
+  lfs.markerSetup();                 // load course markers (lib 1.3)
 }

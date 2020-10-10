@@ -84,6 +84,8 @@ class View {  // no modifier = package protected
   boolean courseRotated90;
   PImage course;   // ref to course bitmap 
   
+  char userDrawViewID;  // used to tell coordinate axes which viewport is being used 'R' robot or 'S' sensor
+  
    
   View(PApplet parent)
   {
@@ -98,16 +100,27 @@ class View {  // no modifier = package protected
 	
   /**
    *  sets up transform for user draw functions, called from user code.
+   *  @param viewID  'R' robot view 'S' sensor view 
    */
-  void setupUserDraw()  
+  void setupUserDraw(char viewID)  
   {
+	userDrawViewID = viewID;  // note for drawCoordAxes()  
+	  
     p.resetMatrix();
     p.camera();
+    float sx = courseDPI;
+    float sy = courseDPI;
     
-    float sx = courseDPI * robotVP.w / sensorVP.w;
-    float sy = courseDPI * robotVP.h / sensorVP.h;
+    if (viewID == 'R')
+    {
+     sx = courseDPI * robotVP.w / sensorVP.w;
+     sy = courseDPI * robotVP.h / sensorVP.h;
+     p.translate (robotVP.x+robotVP.w/2,robotVP.y+robotVP.h/2);
+    }
+    else
+  	 p.translate (sensorVP.x+sensorVP.w/2,sensorVP.y+sensorVP.h/2);	
     
-    p.translate (robotVP.x+robotVP.w/2,robotVP.y+robotVP.h/2);
+  
     p.scale (sx,sy);
     p.rotate(-PApplet.PI/2.0f);      // -90 degrees   +Y to right and +X up (in window)
     p.strokeWeight(4.0f/courseDPI);  // 2 pixels at current scale 
@@ -335,7 +348,7 @@ public void coverSensorView(int r, int g, int b, int a)    // color including al
 	  p.camera();
 	
 	  	 
-	  setupUserDraw();                                 // needed for mouse drag?
+	  setupUserDraw('R');                                 // needed for mouse drag?
 	  if (!contestRunning) mouseDragRobot(robot); 
 	  
   }
@@ -351,8 +364,11 @@ void drawRobotCoordAxes()  // called from LFS
   int xL = 40;        // x axis length - default
   int yL = 40;
  
-  p.translate (robotVP.x+robotVP.w/2,robotVP.y+robotVP.h/2);
- 
+  if (userDrawViewID == 'R') 
+    p.translate (robotVP.x+robotVP.w/2,robotVP.y+robotVP.h/2);
+  else
+	p.translate (sensorVP.x+sensorVP.w/2,sensorVP.y+sensorVP.h/2);  
+  
   p.textSize(32);
   p.strokeWeight(3);
   p.stroke(0,250,0);   // green

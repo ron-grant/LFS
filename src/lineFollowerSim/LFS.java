@@ -269,12 +269,21 @@ public String getContestStateName()
 public boolean controllerIsEnabled() { return controllerEnabled; }
 
 /** Setup coordinate transformations and scale factors required for optional user code (userDraw method) to draw
- * overlay graphics on robot view.
- * 
+ * overlay graphics on SENSOR view. 
+ *
  */
+public void setupUserDrawSensorViewport() 
+{
+  view.setupUserDraw('S');
+}
+
+/** Setup coordinate transformations and scale factors required for optional user code (userDraw method) to draw
+ * overlay graphics on ROBOT view. 
+ */
+
 public void setupUserDraw() 
 {
-  view.setupUserDraw();
+  view.setupUserDraw('R');
 }
 
 /**

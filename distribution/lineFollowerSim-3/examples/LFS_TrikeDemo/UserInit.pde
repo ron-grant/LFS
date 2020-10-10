@@ -78,6 +78,8 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   spotFR3= lfs.createSpotSensor(2.125, 2.75, 11, 11);
 
   lineSensor1 = lfs.createLineSensor(0, 0, 5, 5, 64); // x,y offset from robot center, spot size (5,5) , number of samples
-               
+  
+  nameSensorsUsingVariableNames();   // look up sensor names and assign them to sensor name field (lib 1.3)
+  lfs.markerSetup();                 // load course markers (lib 1.3)               
    
 }

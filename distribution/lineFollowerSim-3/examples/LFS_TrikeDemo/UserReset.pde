@@ -20,7 +20,8 @@ void userControllerResetAndRun()
   lfs.setPositionAndHeading (52,12,0);      // override initial position & heading with start
                                             // at 52,12,0
   
-   lfs.setPositionAndHeading (52-4,12,0);  
+  // lfs.setPositionAndHeading (52-4,12,0);  
+  lfs.moveToStartLocationAndHeading();      // initial position, click on marker overrides (lib 1.3)
    
   // lfs.setTargetSpeed(6.0f);   // example start driving robot straight -- Trike uses wheelVelocity to set
   trike.wheelVelocity = 4.0;     // Target Speed - See: trikeDriveUpdate () in UserTracking

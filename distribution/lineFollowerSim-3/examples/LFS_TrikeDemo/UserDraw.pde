@@ -6,10 +6,11 @@ void userDraw()
   
   
   float sc = 4.0/64;
-  
-  lfs.setupUserDraw();       // sets up transforms origin robot center scale inches
-                             // with +X up on screen and +y to right on screen
-    
+ 
+  // sets up transforms origin robot center scale inches with +X up on screen and +y to right on screen
+  if (courseTop) lfs.setupUserDraw();      // sets up transforms origin robot center scale inches for Robot view
+  else lfs.setupUserDrawSensorViewport();  // ... for SensorView
+      
   lfs.drawRobotCoordAxes();  // draw robot coordinate axes 
   
  

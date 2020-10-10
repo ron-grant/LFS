@@ -1,4 +1,15 @@
 /* UserCon - user controller code, read sensors, possibly decode features, update speed and turn rate
+
+   A challenge course controller will most likely need a much better line detector than
+   presented here. Consider scrapping this one and writing one that includes ability to detect
+   multiple line intersections. Also, changes in course polarity (white lines on black...)
+   could be detected OR you could go with edge detection approach...
+    
+   The PD controller implemented here is good enough for the advanced course, but
+   you will probably want to think about how to handle all the special patterns present in challenge
+   course. (If you are trying to solve the DPRG Challenge Course)
+   
+   
 */
 
 float ePrev;      // global previous error 
@@ -6,13 +17,37 @@ float ePrev;      // global previous error
 
 void userControllerUpdate ()    
 {
+    
+  // your robot controller code here - this method called every time step
+  // crude attempt to control velocity as function of current centroid error 
   
-// your robot controller code here - this method called every time step
-// crude attempt to control velocity as function of current centroid error 
+  float[] sensor =  sensor1.readArray();   // readArray() returns reference to sensor array of floats 
+  
+  float e = calcSignedCentroidSingleDarkSpan(sensor) ;   //error in pixels of line intersection with sensor
+  
+  
+  // Added example code of accessing line sensor color table and modifying it for display
+  int[] colorTable = sensor1.getColorArray();  // get reference to sensor color table
+  int n = sensor1.getSensorCellCount();
+  for (int i=0; i<n; i++) 
+  {
+    color c =  color (0,0,50); // dark blue
+    if ((i > n/2-e-3) && (i < n/2-e+3)) c = color (255,0,0); // red 
+    colorTable[i] = c;
+  }
+  
+  // update sensor colors on spot sensors even though not used in this demo
+  
+  if (sensorL.read() > 0.5) sensorL.setColor (color(0,0,100));
+  else sensorL.setColor(color(255,0,0));
+ 
+  if (sensorM.read() > 0.5) sensorM.setColor (color(0,0,100));
+  else sensorM.setColor(color(255,0,0));
+ 
+  if (sensorR.read() > 0.5) sensorR.setColor (color(0,0,100));
+  else sensorR.setColor(color(255,0,0));  
 
-float[] sensor =  sensor1.readArray();   // readArray() returns reference to sensor array of floats 
 
-float e = calcSignedCentroidSingleDarkSpan(sensor) ;          //error in pixels of line intersection with sensor
 
 //println(String.format("line positioning error %3.1f",e)); 
 
@@ -29,6 +64,9 @@ ePrev = e;
 // generally your robot will up updating TargetTurnRate and possibly TargetSpeed
 
 lfs.setTargetTurnRate(-e * 10 + (e - ePrev) * 10.0);   // turn rate in degrees per second
+
+// handy to disable set target speed and manually change 
+// note: in this case start in non-contest mode.
 lfs.setTargetSpeed(1.0 + abs(12.0f/(abs(e/2.0f)+1.0)));   
 
 //lfs.setTargetSpeed (4.0);

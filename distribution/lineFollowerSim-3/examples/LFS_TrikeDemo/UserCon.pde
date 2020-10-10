@@ -55,6 +55,23 @@ void userControllerUpdate()
   if(spotFL3.read()>0.5){ patFL += 8;}
   if(spotFR3.read()>0.5){ patFR += 8;}
   if(spotFR2.read()>0.5){;}
+  
+  
+  // update spot sensors with absolute intensity  (lib 1.3)  normal line Red background dark blue 
+  // for display only -- no impact on simulation 
+  for (SpotSensor ss : lfs.sensors.spotSensorList)
+    if (ss.read()<0.5) ss.setColor (color(255,0,0)); else ss.setColor(color(0,0,20)); 
+    
+  // update line sensor with absolute intensity for robot/sensor drawing  
+  // for display only -- no impact on simulation 
+  int colors[] = lineSensor1.getColorArray();
+  float inten[] = lineSensor1.readArray();
+  for (int i=0; i<lineSensor1.getSensorCellCount();i++)
+    if (inten[i]<0.5) colors[i] = color(255,0,0); else colors[i] = color(0,0,20); 
+  
+  
+  
+  
 
 
   switch ( sensorState )

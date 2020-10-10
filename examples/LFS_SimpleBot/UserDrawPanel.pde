@@ -2,6 +2,11 @@
 */
   void userDrawPanel()  // called from draw() at frame rate
   {
+    lfs.showSensors((courseTop)?'R':'S');    // show user colorable sensors (lib 1.3)
+    if (courseTop) lfs.markerDraw();         // only display markers when course visible (lib 1.3) 
+   
+    // when !courseTop is true only sensor viewport is displayed allowing 
+    // for more screen area to be used for user robot status... 
     
     //------------------------
     // display status info at top of screen

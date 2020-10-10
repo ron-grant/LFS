@@ -7,7 +7,10 @@
 
 void userDraw()
 {
-  lfs.setupUserDraw();       // sets up transforms origin robot center scale inches
+  if (courseTop) lfs.setupUserDraw();   // sets up transforms origin robot center scale inches for Robot view
+  else lfs.setupUserDrawSensorViewport();  // ... for SensorView
+  
+   
   lfs.drawRobotCoordAxes();  // draw robot coordinate axes 
   
   strokeWeight(4.0f/lfs.courseDPI);                // line thickness in pixels 

@@ -1,8 +1,17 @@
 /* Line Following Simulator User Application - Processing Environment
   
-   This version compatible of "main program tab" is compatible with library release
-   that originally contained it.  
+   LFS_SimpleBot3   Required LineFollowerSim Library 1.3.0 or later
+   * supports interactive Markers 
+   * user draw/upate/ID sensors
+   * improved view port toggle (Tab select Sensor view / course and robot view)
+   * Sensor view variable position now supported
    
+   See Document  LFS-1.3-Changes.pdf
+   Some changes are highlighted as (lib 1.3) in this program indicating 
+   library version 1.3 and on is required.
+      
+   
+     
    Ron Grant
    Sept 30,2020 
    https://github.com/ron-grant/LFS
@@ -22,7 +31,7 @@
    UserInit    userInit()                       define name, course, sensors, acceleration...
    UserKey     keyPressed()                     command key decoder 
    UserReset   userControllerResetAndRun()      method called by simulator to start robot running                                         
-  
+   
 */  
 
 import lineFollowerSim.*;  // Simulator API - accepts turn rate and speed commands 
@@ -31,47 +40,46 @@ import lineFollowerSim.*;  // Simulator API - accepts turn rate and speed comman
 
 LFS lfs;  // line following simulator - single instance created in setup()
 
-// pull into lib - hide implementation details 
+// some global variables
 
 int simSpeed = 9;                     // simulation speed 0=single step 1 slow to 9 normal  -- controlled by Keypress           
 boolean simFreeze = false;            // toggled by space bar (when simSpeed>0) else single step -- controlled by Keypress
 boolean simRequestStep = false;       // program has decided it needs to take a simulation step
 int panelDisplayMode = 2;
 
-boolean showFPS = true;  // show frames per second being drawn - does not affect robot 
-                          // stopwatch time, or simulation behavior, just real time
-                          // ideally 60 fps will run robot actual speed with default time step
-                          // equal to 1/60th secm, 30fps robot appears to run 1/2 speed - slow
-                          // motion - as would be noted by slow stop watch.
+boolean showFPS = true;    // show frames per second being drawn - does not affect robot 
+                           // stopwatch time, or simulation behavior, just real time
+                           // ideally 60 fps will run robot actual speed with default time step
+                           // equal to 1/60th sec, 30fps robot appears to run 1/2 speed - slow
+                           // motion - as would be noted by slow stop watch.
    
-boolean courseTop = true;   // couse view top or bottom                     
+boolean courseTop = true;  // couse view top, now when false course view (and small robot view) are hidden                     
                      
 PImage ci;
 float fr;
     
-void clearScreen() { background(0,0,20); } // called initally and  when changing course orientation     
+void clearScreen() { background(0,0,20); } // called initially and  when changing course orientation     
     
 public void setup()
 {
   size (1800,900,P3D);       // window width,height in pixels
-  frameRate(8*120);
+  frameRate(1000);           // request high frame rate to run simulator potentially faster 
+                             // than realtime   
   
   lfs = new LFS(this);   // single instance of LFS  ref to this applet, robotView width,height e.g. typical 800,600
   
   lfs.defineRobotViewport(40,70,400,400);
   lfs.defineCourseViewport(480,70,1280,640);
- 
+  lfs.defineSensorViewport(40,80,800,800);          // define and position raw sensor view (lib 1.3)
+                                                    // was fixed at 0,0 upper-left getting in the way
+                                                    // of header text.
  
     
   userInit(); // called here - and also on robot start (contest start)
   
-  //for (SpotSensor ss : lfs.sensors.spotSensorList) println (ss.getXoff(),ss.getYoff(),ss.read());
-  
   simSpeed =9;
   
   clearScreen();
-  
- // ci = lfs.getCourse();
   
   lfs.setShowSensorsOnSensorView(true);  // slight frame rate gain if false 
 }
@@ -80,7 +88,8 @@ public void setup()
 
   public void draw ()  // method called by Processing at 30 to 60 times per second (1 frame time)
   {
-   // Screen not erased upon entry to draw, e.g. with background() method call.
+   // Screen now erased upon entry to draw, e.g. with background() method call.
+   background(0,0,20);  // erases window 
    
    // Robot view and Course view overwrite viewport areas - but not every frame unless view rate dividers set to 1 (see below)
    // Other screen areas should be overwritten with solid rect before writing text.
@@ -91,10 +100,10 @@ public void setup()
    if (courseTop)
    lfs.updateSensors(0,0,0,alpha);     // draws 64 DPI bitmap of current robot location on screen (can be covered)
                                        // sensor updates, making sensor data available for user controller
+    
    
-   // blank robot view when course not on top - new Oct 8, 2020 
-   lfs.drawRobotAndCourseViews((courseTop?1:0) ,1,rotate90);  // draw robot and course, using frame divider 
-  
+   if (courseTop)  // selective enable/disable controlled by Tab key 
+     lfs.drawRobotAndCourseViews(1,1,rotate90);  // draw robot and course, using frame divider
    
    // Frame divider (1,1,.. ) used for display every frame. Normal case.
    // To attempt to improve performance read on:
@@ -103,38 +112,36 @@ public void setup()
    // when mouse pressed and not disabled, LFS will temporarily insure every frame
    // Using GPU may eliminate this feature... 
     
-   if (!courseTop) lfs.updateSensors(0,0,0,alpha); 
+   if (!courseTop) lfs.updateSensors(0,0,0,alpha); // complimentary to call above
      
-   if (courseTop) userDraw();
+   userDraw();
     
-    resetMatrix();
-    camera();
+   resetMatrix();
+   camera();
     
        
-    rectMode (CORNER);   // text boxes - backgrounds 
-    fill (0);
-    rect (40,10,400,48);
-    rect (480,10,1200,48);
+   rectMode (CORNER);   // text boxes - backgrounds 
+   fill (0);
+   rect (40,10,400,48);
+   rect (480,10,1200,48);
        
-    if (showFPS)   // draw() frames per sec (fps)  - performance monitor 
-    { textSize (18);
-      fill(150);
-      if (frameCount%60 == 0) fr = frameRate;
-      text(String.format("%2.0f fps",fr),340,55);
-    }
+   if (showFPS)   // draw() frames per sec (fps)  - performance monitor 
+   { textSize (18);
+     fill(150);
+     if (frameCount%60 == 0) fr = frameRate;
+     text(String.format("%2.0f fps",fr),340,55);
+   }
     
-    fill(240);
-    textSize(28);
-    text(lfs.getContestTimeString(),51,46);
+   fill(240);
+   textSize(28);
+   text(lfs.getContestTimeString(),51,46);
     
-    text(lfs.getContestStateName(),width-248,47);
+   text(lfs.getContestStateName(),width-248,47);
       
-    text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);  
+   text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);  
     
-     
-     
     
-    lfs.drawRobotLocHeadingVel(974,47);        // draw x,y location and heading bitmap (values not available) 
+   lfs.drawRobotLocHeadingVel(974,47);        // draw x,y location and heading bitmap (values not available) 
                                                
     
     
@@ -169,5 +176,55 @@ public void setup()
    lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish"   
    
   } // end of draw()
+  
+   
+  
+import java.lang.reflect.*;  // java reflection used to lookup sensor names 
+
+public void nameSensorsUsingVariableNames()  // (lib 1.3)
+  {
+  PApplet p = this; // p is current instance of PApplet
+  
+  println ("SpotSensors");
+  for(Field f : p.getClass().getDeclaredFields())   
+  {
+     if(f.getType() == SpotSensor.class)
+     {
+       String name = f.getName(); 
+       try {
+    
+       SpotSensor ss = (SpotSensor) (f.get(p));  // access class instance
+       if (ss.getName() == null) ss.setName(name);
+       println (name, ss.getXoff(), ss.getYoff()); 
+       } catch (IllegalAccessException e)
+       {}
+     }
+   
+  } 
+
+  println ("LineSensors");
+  for(Field f : p.getClass().getDeclaredFields())
+  {
+     if(f.getType() == LineSensor.class)
+     {
+       String name = f.getName();
+           
+       try {
+         LineSensor ls = (LineSensor) (f.get(p));  // access class instance
+        
+         if (ls.getName() == null) 
+          ls.setName(name);             // set sensor default name using variable name 
+         println (name, ls.getXoff(), ls.getYoff()); 
+       }
+       catch (IllegalAccessException e)
+       {
+       }
+  
+     } 
+  }
+
+} // end method   
+
+  
 
  
