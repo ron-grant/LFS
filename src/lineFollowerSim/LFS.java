@@ -40,7 +40,7 @@ import java.io.IOException;
  *  <li> generating the view of immediate surroundings of a robot</li>
  *  <li> reading sensor values from user defined spot and line sensors</li> 
  *  <li> presentation of an image of the course with cookie crumb trail tracking progress of robot</li>
- *  <li> implements interactive marker system allowing storing multiple robot start locations & headings on a course.</li>
+ *  <li> implements interactive marker system allowing storing multiple robot start locations and headings on a course.</li>
  *  </ul>
  *  <p>
  *  Using LFS features, user controller code reads sensor data, updates internal state, and finally sets robot target speed and turn rate. 
@@ -86,11 +86,16 @@ public Sensors sensors;
  */
 public String simContestFilename = "contest.cdf";
 
+
+//public boolean showSensorsOnSensorView = true;
+
 /**
- * When false, may speed up frame rate on some systems.
- * An alternative is to draw sensor info over robot view.
+ * Show (or hide) indication of sensor data has been read by coloring screen bitmap pixels directly.
+ * This method might find its way to being more of a diagnostic tool due to fact it shows sensor location and not
+ * any information relating to user interpretation of data. 
+ * 
+ * @param show Set to false to hide display indicating sensor sampling location
  */
-public boolean showSensorsOnSensorView = true;
 
 public void setShowSensorsOnSensorView(boolean show)
 { sensors.showSampledPixels = show; }
@@ -317,6 +322,27 @@ public void defineCourseViewport (int x, int y, int width, int height)
   view.defineCourseViewport (x,y,width,height); 	
 }
  
+
+/** Define sensor view display region in screen (pixel) coordinates.
+ *  This method is optional. Since library version 1.0.0, sensor viewport was predefined 
+ *  as (0,0,800,800)
+ * @param x        upper left corner x
+ * @param y        upper left corner y 
+ * @param width    viewport width 
+ * @param height   viewport height 
+ */
+
+public void defineSensorViewport (int x, int y, int width, int height)  
+{
+  view.defineSensorViewport (x,y,width,height); 	
+}
+ 
+// !!! need documentation 
+public VP getRobotViewport()  { return view.robotVP;  }
+public VP getCourseViewport() { return view.courseVP; }
+public VP getSensorViewport() { return view.sensorVP; }
+
+
 
 
 /** Draw internal bitmap of robot proximity and update sensor data values. Called from draw() at each simulation step.
@@ -1049,6 +1075,14 @@ public void  moveToStartLocationAndHeading()
 {
   marker.gotoStartLocation(this);  // goto default start location OR current clicked on marker location
 }
+
+/**Show sensors in Robot or Sensor viewport. Displays sensor color data as created (optionally) by user code.
+ * Default is green if user does not modify sensor color (or colorTable in case of line sensor).
+ * 
+ * @param vportID  character 'R' robot viewport 'S' sensor viewport (scaled 64 DPI)
+ */
+public void showSensors(char vportID) { sensors.showSensors(this,vportID); } 
+
 
 
 } // end LFS class 

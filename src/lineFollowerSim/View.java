@@ -43,7 +43,7 @@ class View {  // no modifier = package protected
   
   public boolean r3D = true; 
   
-  public VP robotVP;   // robot view (on screen viewport)
+  public VP robotVP;   // robot view (on screen viewport)   
   public VP courseVP;  // course view (on screen viewport)
   
   /**

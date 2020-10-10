@@ -15,6 +15,7 @@ public class LineSensor extends SpotSensor {
   private int sensorCells;          // cells (spots) in line sensor   assumed to be spotWPix x spotHPix each with zero space beteween each sensor pixel
   
   float[] sensorTable;  
+  int[] colorTable;      // one entry per sensor cell 
 
   // modifiers - set after lines sensor created 
 
@@ -64,6 +65,9 @@ public class LineSensor extends SpotSensor {
        
     this.sensorCells = sensorCells;
     sensorTable = new float[sensorCells];  // allocate sensor values - use read() or getSensorTable() to access
+    colorTable  = new int[sensorCells];   // allocate sensor spot colors to be assigned by user and displayed by showSensors method 
+    
+    for (int i=0; i<sensorCells; i++) colorTable[i] = parent.color (0,255,0); // default green
     
     sensors.lineSensorList.add(this); 
     
@@ -80,8 +84,20 @@ public class LineSensor extends SpotSensor {
    * @return float[] sized to number sensor cells (spots). 
    */
   public float[] readArray() { return sensorTable; }             
-
-
+  
+  /**
+   * Retrieve reference to color array including values set for each line sensor element (each spot within line).
+   * Populated with color values by user code, and read by sensorDisplay method.
+   * By default array is filled with color green so that array is displayed in contrasting color to course colors in case
+   * user code does not modify the array.
+   * @return reference to array of int[] sized to number of cells in sensor. 
+   */
+  public int[] getColorArray () {return colorTable; } 
+  
+  
+  
+  
+  
   /**
    * Get line sensor center spot X offset (inches) from robot center, in robot coordinates, specified in LFS.createSpotSensor() 
    *

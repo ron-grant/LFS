@@ -1,7 +1,7 @@
 /* Line Following Simulator User Application - Processing Environment
   
    This version compatible of "main program tab" is compatible with library release
-   that orignally contained it.  
+   that originally contained it.  
    
    Ron Grant
    Sept 30,2020 

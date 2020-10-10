@@ -22,6 +22,10 @@
    UserInit    userInit()                       define name, course, sensors, acceleration...
    UserKey     keyPressed()                     command key decoder 
    UserReset   userControllerResetAndRun()      method called by simulator to start robot running                                         
+ 
+   Marker      comments only                    comments on adding marker support
+                                                to sketch (library ver 1.0.3 or later)
+   Sensor      comments only                    comments on adding sensor plus support 
   
 */  
 
@@ -38,10 +42,10 @@ boolean simFreeze = false;            // toggled by space bar (when simSpeed>0) 
 boolean simRequestStep = false;       // program has decided it needs to take a simulation step
 int panelDisplayMode = 2;
 
-boolean showFPS = true;  // show frames per second being drawn - does not affect robot 
+boolean showFPS = true;   // show frames per second being drawn - does not affect robot 
                           // stopwatch time, or simulation behavior, just real time
                           // ideally 60 fps will run robot actual speed with default time step
-                          // equal to 1/60th secm, 30fps robot appears to run 1/2 speed - slow
+                          // equal to 1/60th sec, 30fps robot appears to run 1/2 speed - slow
                           // motion - as would be noted by slow stop watch.
    
 boolean courseTop = true;   // couse view top or bottom                     
@@ -49,7 +53,7 @@ boolean courseTop = true;   // couse view top or bottom
 PImage ci;
 float fr;
     
-void clearScreen() { background(0,0,20); } // called initally and  when changing course orientation     
+void clearScreen() { background(0,0,20); } // called initially and  when changing course orientation     
     
 public void setup()
 {
@@ -80,7 +84,8 @@ public void setup()
 
   public void draw ()  // method called by Processing at 30 to 60 times per second (1 frame time)
   {
-   // Screen not erased upon entry to draw, e.g. with background() method call.
+   // Screen now erased upon entry to draw, e.g. with background() method call.
+   background(0,0,20);  // erases window 
    
    // Robot view and Course view overwrite viewport areas - but not every frame unless view rate dividers set to 1 (see below)
    // Other screen areas should be overwritten with solid rect before writing text.
@@ -91,10 +96,10 @@ public void setup()
    if (courseTop)
    lfs.updateSensors(0,0,0,alpha);     // draws 64 DPI bitmap of current robot location on screen (can be covered)
                                        // sensor updates, making sensor data available for user controller
+    
    
-   // blank robot view when course not on top - new Oct 8, 2020 
-   lfs.drawRobotAndCourseViews((courseTop?1:0) ,1,rotate90);  // draw robot and course, using frame divider 
-  
+   if (courseTop)  // selective enable/disable controlled by Tab key
+     lfs.drawRobotAndCourseViews(1,1,rotate90);  // draw robot and course, using frame divider
    
    // Frame divider (1,1,.. ) used for display every frame. Normal case.
    // To attempt to improve performance read on:
@@ -169,5 +174,56 @@ public void setup()
    lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish"   
    
   } // end of draw()
+  
+   
+  
+import java.lang.reflect.*;  // java reflection used to lookup sensor names 
+
+public void nameSensorsUsingVariableNames() 
+      
+{
+  PApplet p = this; // p is current instance of PApplet
+  
+  println ("SpotSensors");
+  for(Field f : p.getClass().getDeclaredFields())   
+  {
+     if(f.getType() == SpotSensor.class)
+     {
+       String name = f.getName(); 
+       try {
+    
+       SpotSensor ss = (SpotSensor) (f.get(p));  // access class instance
+       if (ss.getName() == null) ss.setName(name);
+       println (name, ss.getXoff(), ss.getYoff()); 
+       } catch (IllegalAccessException e)
+       {}
+     }
+   
+  } 
+
+  println ("LineSensors");
+  for(Field f : p.getClass().getDeclaredFields())
+  {
+     if(f.getType() == LineSensor.class)
+     {
+       String name = f.getName();
+           
+       try {
+         LineSensor ls = (LineSensor) (f.get(p));  // access class instance
+        
+         if (ls.getName() == null) 
+          ls.setName(name);             // set sensor default name using variable name 
+         println (name, ls.getXoff(), ls.getYoff()); 
+       }
+       catch (IllegalAccessException e)
+       {
+       }
+  
+     } 
+  }
+
+} // end method   
+
+  
 
  

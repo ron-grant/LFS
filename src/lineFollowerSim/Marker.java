@@ -85,6 +85,7 @@ void draw()
   
   p.resetMatrix();
   p.camera();
+  
   p.stroke (255,0,255); // magenta
   p.ellipseMode (PApplet.CENTER);
   p.noFill();

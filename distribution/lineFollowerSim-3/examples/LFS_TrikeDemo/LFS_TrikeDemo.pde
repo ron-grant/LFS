@@ -1,7 +1,7 @@
 /* Line Following Simulator User Application - Processing Environment
   
    This version compatible of "main program tab" is compatible with library release
-   that orignally contained it.  
+   that originally contained it.  
    
    Ron Grant
    Sept 27,2020 
@@ -41,7 +41,7 @@ int panelDisplayMode = 2;
 boolean showFPS = true;  // show frames per second being drawn - does not affect robot 
                           // stopwatch time, or simulation behavior, just real time
                           // ideally 60 fps will run robot actual speed with default time step
-                          // equal to 1/60th secm, 30fps robot appears to run 1/2 speed - slow
+                          // equal to 1/60th sec, 30fps robot appears to run 1/2 speed - slow
                           // motion - as would be noted by slow stop watch.
    
 boolean courseTop = true;   // couse view top or bottom                     
@@ -49,7 +49,7 @@ boolean courseTop = true;   // couse view top or bottom
 //PImage ci;
 float fr;   // frame rate 
     
-void clearScreen() { background(0,0,20); } // called initally and  when changing course orientation     
+void clearScreen() { background(0,0,20); } // called initially and  when changing course orientation     
     
 public void setup()
 {

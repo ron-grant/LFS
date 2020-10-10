@@ -13,9 +13,12 @@ public class SpotSensor {
   protected float xoff;         // sensor offset from robot center in inches (positive X=distance along robot direction of straight travel, positive Y=distance to right)
   protected float yoff;
   protected int spotWPix;
-  protected int spotHPix;     // spot size in pixel
+  protected int spotHPix;      // spot size in pixel
+  
+  protected String name;       // sensor can be manually set OR using java reflection determined from variable name 
   
   private float intensity;    // normalized intensity 0.0 (black) to 1.0 (white)
+  private int color; 
   private PApplet p;          // ref to processing applet
  
  // no modifier = package private SpotSensor
@@ -33,6 +36,7 @@ public class SpotSensor {
    if ((spotWPix & 1) == 0) spotWPix++;
    if ((spotHPix & 1) == 0) spotHPix++; 
    
+   color =  p.color (0,255,0);  // default green - until user modifies 
      
    sensors.spotSensorList.add(this);   // add this new instance to list, processed by sensorUpdate()
     
@@ -45,6 +49,20 @@ public class SpotSensor {
   * 
   */
  public float read() { return intensity; } // return current sensor value, normalized 0.0 (black) to 1.0 (white), used by controller 
+ 
+ /**
+  * Set spot color after analysis for sensor overlay display. 
+  * <p>
+  * * @param color specifies integer, but may use color(r,g,b) or color(r,g,b,alpha)  where alpha= transparency
+  */
+ public void setColor (int color) { this.color = color; }
+ 
+ /**
+  * Retrieve color value set, used by showSensors method.
+  * @return color integer 
+  */
+ public int getColor () {return color; } 
+ 
  
  void setIntensity (float inten) { intensity = inten; }  // package private 
 
@@ -64,18 +82,28 @@ public class SpotSensor {
  /** Get spot height in pixels 
   *@return Spot height (pixels) 
   */
- public int   getSpotHPix() { return spotHPix; }
+public int   getSpotHPix() { return spotHPix; }
  /**
   * Set spot sensor center at new xoff position in robot coordinates.
   * @param xoff X Distance (inches) from robot center. (Distance forward of center) 
   */
- public void setXoff(float xoff) {this.xoff=xoff;}
+public void setXoff(float xoff) {this.xoff=xoff;}
  /**
   * Set spot sensor center at new yoff position in robot coordinates.
   * @param yoff Y Distance (inches) from robot center. (Distance to right) 
   */
- public void setYoff(float yoff) {this.yoff=yoff;}
+public void setYoff(float yoff) {this.yoff=yoff;}
 
+ /** Set sensor name. Note user application may set a default name derived from physical variable name
+ * using a facility called reflection. This name may also be overridden here.
+ * @param name Sensor name 
+ */
+public void setName (String name) { this.name = name; }
+ /** Get sensor name. Note user application may set a default name derived from physical variable name
+ * using a facility called reflection.
+ * @return Name string. 
+ */
+public String getName () { return name; }
  
 
 
@@ -118,7 +146,7 @@ float sampleSensorPixel (VP vp, int courseDPI, float xoff, float yoff)
  for (int xr=-w2; xr<w2+1; xr++)
  {
   int scanLine = vp.y + vp.h/2 - sensorY - yr;         // scanline number (the screen Y coordinate value)
-  int pixelCol = vp.x + vp.w/2  + sensorX + xr;         // screen X coordinate calc 
+  int pixelCol = vp.x + vp.w/2  + sensorX + xr;        // screen X coordinate calc 
     
   // screen width * scanline 
   int i = p.width*scanLine + pixelCol;              // index into 1D pixel array    
