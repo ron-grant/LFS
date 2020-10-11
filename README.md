@@ -1,3 +1,6 @@
+### Library 1.3 released see LFS-1.3-Changes.pdf 
+Cool new features including interactive start location and heading Markers, User colorable sensors, Hover over sensors to identify, improved viewport display with course and robot OR sensor view.
+
 # LFS - Line Follower Simulation 
 LFS is a software tool designed assist in the process of desinging robot line follower controller software.
 <p>
@@ -22,12 +25,10 @@ Download Processing 3.4 or later from the Processing website at www.processing.o
 If you are new to processing, follow their instructions to gain some basic knowledge of the environment which is very similar to Arduino IDE, except Processing is Java based. If you have C++ programming experience, fear not, Java uses many identical low level language constructs reducing the learning curve. Also, you don't need to be a Java expert to get a great deal of milage out of the Processing environment.
 
 <p>
-Download latest lineFollowerSim-X.zip in above distribution folder sub folder lineFollowerSim-X sub-folder download (where X = release #)
-extract lineFollowerSim folder by right clicking on the .ZIP file in your Download folder.
-<p>
-Note: LineFollowerSim is not available (as of Oct 1,2020) through the Processing Contribution Manager accessed by Sketch>ImportLibrary>AddLibrary menu command.
-<p>
-Copy lineFollowerSim folder to to Processing sketchbook folders libraries subfolder.
+Download latest lineFollowerSim-X.zip (where X is release number) found nested a few levels down in above distribution folder.
+Click on lineFollowerSim-X folder then its download folder where you will find lineFollowerSim.zip. Click on the file and you will find a Download button on the 
+right side of the screen. When you click that button you will see a familiar Open/Save dialog, press OK. After the ZIP is downloaded, extract the lineFollowerSim folder 
+and copy folder to to Processing sketchbook folders libraries subfolder.
 To locate your processing sketchbook folder: Use Processing menu command  File>Preferences to display Preferences dilog. The sketchbook path is listed in the dialog as the
 first item. If the libraries folder does not exist in your sketches folder, you will need to create it, then copy LineFollowerSim folder to it.
 <p>  
@@ -39,18 +40,7 @@ Also, download the User's guide from the file list above. Available in PDF or OD
 <p>
 See also API documentation located in reference subfolder of lineFollowerSim-X folder. (Clicking on index.html to load HTML based API documentation. 
 <p>
-Happline following!
-
-### Known Issues and few Comments as of Sept 30, 2020   Library 1.0.1
-
-Key menu slight improvement - Contest Keys  R)un SPACE-Stop F)inish       G)o Non-Contest Start 
-+Added E-EraseCrumbs
-<p>
-Need sensor display window to help illustrate code that reads sensors and to show sensor data without having to write code.
-<p>
-+ Increased Accel Rate in Demo Programs from 0.5 to 16 / 32 inches/sec^2 (was accidental very slow acceleration rate for demonstration)
-<p>
-Would like UserKeys separate from simulation core keys.. 
+Happy line following!
 
 
 

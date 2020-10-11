@@ -58,7 +58,8 @@ float[] lineData = lineSensor.read();
 
 import processing.core.*;
 import java.util.ArrayList;
-
+import java.lang.reflect.*;   // Reflection allows the ability to obtain Class member names and to modify them by name
+                              // used by nameSensorsUsingVariableNames() 
 
 
 //global sensor lists - built as sensors are defined, generally not needed by "user"
@@ -100,7 +101,15 @@ public ArrayList <LineSensor> lineSensorList = new ArrayList<LineSensor>();   //
 boolean showSampledPixels = true; // package private 
 
 private int sensorTotalSpotCount;   // enumerated every call to updateSensors
-// public int sensorCurrentIdentifierIndex = 1; // incremented for each sensor created 
+
+
+// variables used for line sensor spot location calculation 
+private int sensorN;    
+private float halfWidth;
+int DPI;
+float sinA,cosA; 
+float xoff,yoff;
+
 
 Sensors (PApplet parent)
 { p = parent; }
@@ -120,6 +129,66 @@ float radians (float deg) { return deg*180.0f/((float) Math.PI);}
 
 // xorg yorg are screen origins of sensor viewport 
 
+
+/** Used in conjunction with lineSensorSpotLocationCalc used to determine location of individual spot x,y offsets within a line sensor
+ * taking into account rotation and/or half circle mode (non-zero arcRadius). An example use is to display sensor spots with colors(s) that 
+ * indicate user set thresholds, i.e. turning line sensor spots RED where a line is perceived or other colors where a stain might be perceived. 
+ * 
+ * @param ls reference to line sensor
+ */
+
+public void lineSensorSpotLocationCalcInit(LineSensor ls)
+{
+  sensorN = ls.getSensorCellCount();  	
+
+  halfWidth = (sensorN / 2.0f * ls.getSpotWPix()) / DPI;      // half width of line sensor in inches 
+	                                                          // used to calculate offset of line sensor
+                                                              // equal to 1/2 sensor total width applied in robot -Y direction 
+	   
+  float a = radians(ls.rotationAngle);
+  sinA = (float) Math.sin(a);                                 // 2D rotation pre-calc 
+  cosA = (float) Math.cos(a);
+  
+  xoff = ls.getXoff();
+  yoff = ls.getYoff();
+	
+}
+
+/** This method is called for each line sensor index from 0 to sensor spot count -1, where it calculates 
+ * robot relative coordinates of each spot based on sensor location, arcRadius and rotation parameters.
+ * Main use is to simplify display of line sensor data after user has added interpretation of raw sensor data. 
+ * 
+ * 
+ * @param ls Reference to line sensor
+ * @param index Current index from 0 to sensor cell (spot) count  -1
+ * @param result PVector containing x,y offset with respect to robot
+ */
+
+public void lineSensorSpotLocationCalc (LineSensor ls, int index, PVector result)
+{
+  int n = ls.getSensorCellCount();  
+  
+  float u = (float) index /(n-1);  // parameter varies from 0 to 1.0 over N sensor elements 
+  float t = (float) Math.PI*u;     // parameter varies from 0 to PI 
+
+  float r = ls.arcRadius;          // default is 0 (straight line)
+  float x = 0;
+  float y = 0;
+
+  if (r!=0)  // arc
+  {
+    y = (float) -(r*Math.cos(t));
+    x = (float)  (r*Math.sin(t));
+  }  
+  else y = ((0.5f+index)*ls.getSpotHPix()/DPI) - halfWidth;   // straight line 
+                   
+  result.x = xoff + x * cosA - y * sinA;   // rotate spot sensor sensor  
+  result.y = yoff + x * sinA + y * cosA;   // about sensor origin (center of sensor array                               
+
+}
+
+
+
 void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI image - now on screen) 
 
 
@@ -128,7 +197,8 @@ void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI imag
                     // line sensors sample a linear cluster array or clusters of pixels 
                    
 {
-  
+ DPI = courseDPI;   // set local DPI used in calculations
+	
  p.loadPixels(); // prepare to access screen pixels in pixels[] array
  
  
@@ -148,52 +218,138 @@ void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI imag
  {
    float[] sensorTable = ls.readArray();   // get a reference to sensor's sensorTable & update it pixel by pixel
 
-   int n = ls.getSensorCellCount();  
    
-   float halfWidth = (n / 2.0f * ls.getSpotWPix()) / courseDPI;      // half width of line sensor in inches 
-                                                                   // used to calculate offset of line sensor
-                                                                   // equal to 1/2 sensor total width applied in robot -Y direction 
+   lineSensorSpotLocationCalcInit(ls);     // set up repetitive calculations for spot locations on line sensor 
+    
+   PVector spotLoc = new PVector(0,0); 
    
-   //println ("Line sensor half width = ",halfWidth);
-   
-   float a = radians(ls.rotationAngle);
-   float sinA = (float) Math.sin(a);
-   float cosA = (float) Math.cos(a);
-   
-   
-   for (int index=0; index<n; index++)
+   for (int index=0; index<sensorN; index++)
    { // for each line sensor pixel index (e.g. 0..64 if 65 pixel sensor)
-              
-     float u = (float) index /(n-1);  // parameter varies from 0 to 1.0 over N sensor elements 
-     float t = (float) Math.PI*u;     // parameter varies from 0 to PI 
-     
-     float r = ls.arcRadius;          // default is 0 (straight line)
-     float x = 0;
-     float y = 0;
-     
-     if (r!=0)  // arc
-     {
-       y = (float) (r*Math.cos(t));
-       x = (float) (r*Math.sin(t));
-     }  
-     else y = halfWidth -((0.5f+index)*ls.getSpotHPix()/courseDPI);  // straight line 
-      
-     y = - y;  
-                                        
-     float xp = x * cosA - y * sinA;   // rotate spot sensor sensor  
-     float yp = x * sinA + y * cosA;   // about sensor origin (center of sensor array                               
-        
-   
-     sensorTable[index] = ls.sampleSensorPixel(vp,courseDPI,xp+ls.getXoff(),yp+ls.getYoff());
+    
+	 lineSensorSpotLocationCalc (ls,index,spotLoc);  // calculate location of spot, reference returned in spotLoc 
+     sensorTable[index] = ls.sampleSensorPixel(vp,courseDPI,spotLoc.x,spotLoc.y);
                               
    } 
-   sensorTotalSpotCount+=n;  // tally total #of sensor elements (spots)
+   sensorTotalSpotCount+=sensorN;  // tally total #of sensor elements (spots)
    
  }
  
  if (showSampledPixels) 
- p.updatePixels();  // update required since sampled pixels are have been colored green to help with visualization of locations sampled     
+   p.updatePixels();  // update required since sampled pixels are have been colored green to help with visualization of locations sampled     
 } 
+
+
+
+
+void showSensors(LFS lfs, char vportID)  // call with viewport you wish to use for display 'S' sensor or 'R' robot  
+{                                        // call defined in LFS
+   p.pushMatrix();
+   p.pushStyle();
+   
+   p.resetMatrix();
+   p.camera();
+   
+   VP svp =  lfs.getSensorViewport(); 
+    
+   VP vp = lfs.getRobotViewport();
+  
+   VP currentVP;
+   
+   float tx,ty; // define translation to center of viewport 
+    
+   if (vportID=='R') { currentVP=vp;  tx = vp.x+vp.w/2;   ty = vp.y+vp.h/2;  }    // viewport center
+   else              { currentVP=svp; tx = svp.x+svp.w/2; ty= svp.y+svp.h/2; } 
+      
+   
+  // scale (courseDPI);
+   p.strokeWeight(0.5f);
+   p.rectMode (PApplet.CENTER);
+   p.fill (255,0,0);     // draw over spot sensors 
+   p.stroke(255,0,0);
+   
+   float sc = lfs.courseDPI ;
+   // if robot view
+   if (vportID=='R')
+     sc = sc * vp.w/svp.w;
+     
+   for (SpotSensor ss : lfs.sensors.spotSensorList)
+   {
+     float x = ss.getXoff();
+     float y = ss.getYoff();
+     float w = ss.getSpotWPix();
+     float h = ss.getSpotHPix();
+   
+     float scrX = tx +y*sc;
+     float scrY = ty -x*sc;
+   
+     p.fill(ss.getColor());
+     p.rect (scrX,scrY,w,h);   // robot x,y swapped   pos X in robot system = -Y in screen 
+     
+     float d2 = PApplet.sq(scrX-p.mouseX)+PApplet.sq(scrY-p.mouseY); // squared dist from sensor center to mouse 
+     
+     if (d2<16) showSensorName(currentVP,String.format("SpotSensor %s = %1.2f ",ss.getName(),ss.read()));  // look up name 
+   }  
+   
+   // reuse code used to calc sensor coords for each spot in line sensor
+     
+   for (LineSensor ls : lfs.sensors.lineSensorList)
+   {
+     float xoff = ls.getXoff();
+     float yoff = ls.getYoff();
+     float w = ls.getSpotWPix();
+     float h = ls.getSpotHPix();
+   
+     float[] sensorTable = ls.readArray();      // get a reference to sensor's sensorTable 
+     int [] colorTable   = ls.getColorArray();  // get a reference to sensor's colorTable
+
+     int n = ls.getSensorCellCount();  
+   
+     lfs.sensors.lineSensorSpotLocationCalcInit(ls);
+     p.rectMode (PApplet.CENTER);
+     PVector pt = new PVector (0,0);
+     
+     for (int index=0; index<n; index++)
+     { // for each line sensor pixel index (e.g. 0..64 if 65 pixel sensor)
+       
+       lfs.sensors.lineSensorSpotLocationCalc (ls,index,pt); 
+       
+      // drawSpot(xoff+xp,yoff+yp,w,h);
+       float scrX = tx+(pt.y)*sc;
+       float scrY = ty+(-pt.x)*sc; 
+        
+       p.fill (colorTable[index]); 
+       p.noStroke();
+       p.rect (scrX,scrY,w,h); 
+       
+       float d2 = PApplet.sq(scrX-p.mouseX)+PApplet.sq(scrY-p.mouseY); // squared dist from sensor center to mouse 
+       if (d2<16) showSensorName(currentVP,
+    		   String.format("LineSensor %s[%d] = %1.2f ",ls.getName(),index,sensorTable[index]));  // look up name 
+   
+   //  sensorTable[index] = ls.sampleSensorPixel(vp,courseDPI,xp+ls.getXoff(),yp+ls.getYoff());
+                              
+     } 
+   }
+ 
+   p.popMatrix();
+   p.popStyle();
+   
+}
+
+
+
+void showSensorName(VP vp, String name)       // overlay sensor name on robot or sensor view depending on which is visible
+{                                      // used when mouse location is close to sensor location 
+   
+  p.pushStyle();                         // display sensor name at bottom of viewport  
+  p.fill (20);
+  p.rectMode(PApplet.CORNER);
+  p.rect (vp.x,vp.y+vp.h-50,vp.w,50);
+  p.textSize (20);
+  p.fill (240);
+  p.textAlign(PApplet.CENTER);
+  p.text (name,vp.x+vp.w/2,vp.y+vp.h-20);
+  p.popStyle();
+}
 
 
 

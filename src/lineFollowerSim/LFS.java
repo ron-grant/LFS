@@ -37,9 +37,10 @@ import java.io.IOException;
  * 
  *  <ul>
  *  <li> tracking the position and heading of a virtual robot based on user specified target speed and turn rate</li>
- *  <li> generating the view of the robots immediate surroundings</li>
+ *  <li> generating the view of immediate surroundings of a robot</li>
  *  <li> reading sensor values from user defined spot and line sensors</li> 
  *  <li> presentation of an image of the course with cookie crumb trail tracking progress of robot</li>
+ *  <li> implements interactive marker system allowing storing multiple robot start locations and headings on a course.</li>
  *  </ul>
  *  <p>
  *  Using LFS features, user controller code reads sensor data, updates internal state, and finally sets robot target speed and turn rate. 
@@ -52,6 +53,10 @@ import java.io.IOException;
  *  introduced in speed control and turn rate control
  *  beyond errors introduced due to finite time step and limited numerical precision.
  *  <p>
+ *
+ * Using the marker system introduced in library release 1.0.3 and later is documented in Marker tab of 
+ * LFS_SimpleRobotMarker example, including steps required to modify existing LFS sketch to add this functionality.
+ * <p>
  * Note that several methods documented are not called by user code. These are highlighted by 
  * <p>
  * (Called by simulation core code.) 
@@ -69,6 +74,8 @@ private PApplet p;     // reference to current applet (processing sketch using t
 Robot robot;           // single instance of robot class - accessed only from this 
                        // class  -- user must rely on this class' get/set methods 
 
+Marker marker;         // single instance of marker class - accessed from this class only 
+
 /**
  *  Sensors class single instance - gives access to spot and line sensor lists.
  */
@@ -79,11 +86,16 @@ public Sensors sensors;
  */
 public String simContestFilename = "contest.cdf";
 
+
+//public boolean showSensorsOnSensorView = true;
+
 /**
- * When false, may speed up frame rate on some systems.
- * An alternative is to draw sensor info over robot view.
+ * Show (or hide) indication of sensor data has been read by coloring screen bitmap pixels directly.
+ * This method might find its way to being more of a diagnostic tool due to fact it shows sensor location and not
+ * any information relating to user interpretation of data. 
+ * 
+ * @param show Set to false to hide display indicating sensor sampling location
  */
-public boolean showSensorsOnSensorView = true;
 
 public void setShowSensorsOnSensorView(boolean show)
 { sensors.showSampledPixels = show; }
@@ -187,6 +199,8 @@ public LFS (PApplet parent)
   
   timeStep = 0.01667f;
   
+  marker = new Marker (parent,this); // pass ref to both parent Applet and this instance of LFS
+  
 }
 
 /**
@@ -255,12 +269,21 @@ public String getContestStateName()
 public boolean controllerIsEnabled() { return controllerEnabled; }
 
 /** Setup coordinate transformations and scale factors required for optional user code (userDraw method) to draw
- * overlay graphics on robot view.
- * 
+ * overlay graphics on SENSOR view. 
+ *
  */
+public void setupUserDrawSensorViewport() 
+{
+  view.setupUserDraw('S');
+}
+
+/** Setup coordinate transformations and scale factors required for optional user code (userDraw method) to draw
+ * overlay graphics on ROBOT view. 
+ */
+
 public void setupUserDraw() 
 {
-  view.setupUserDraw();
+  view.setupUserDraw('R');
 }
 
 /**
@@ -308,6 +331,27 @@ public void defineCourseViewport (int x, int y, int width, int height)
   view.defineCourseViewport (x,y,width,height); 	
 }
  
+
+/** Define sensor view display region in screen (pixel) coordinates.
+ *  This method is optional. Since library version 1.0.0, sensor viewport was predefined 
+ *  as (0,0,800,800)
+ * @param x        upper left corner x
+ * @param y        upper left corner y 
+ * @param width    viewport width 
+ * @param height   viewport height 
+ */
+
+public void defineSensorViewport (int x, int y, int width, int height)  
+{
+  view.defineSensorViewport (x,y,width,height); 	
+}
+ 
+// !!! need documentation 
+public VP getRobotViewport()  { return view.robotVP;  }
+public VP getCourseViewport() { return view.courseVP; }
+public VP getSensorViewport() { return view.sensorVP; }
+
+
 
 
 /** Draw internal bitmap of robot proximity and update sensor data values. Called from draw() at each simulation step.
@@ -553,6 +597,13 @@ public void setCourse(String fname)
  courseFilename = fname;
  course = p.loadImage(fname); 
 }
+
+/**
+ * Get current course filename
+ * @return CourseFilename
+ */
+public String getCourseFilename() { return courseFilename; }
+
 
 /**
  *  Draw text of robot location and heading into bitmap. Idea is user does not have direct
@@ -963,6 +1014,83 @@ public void contestScreenSaveIfRequested()  // need count down on this 1 frame
   requestScreenSaveInFrameCount = -1;
 
 }
+
+
+/**
+ * 
+ * @param worldX  course X in inches   
+ * @param worldY  course Y in inches
+ * @return PVector with screen absolute (x,y) location 
+ */
+public PVector courseCoordToScreenCoord (float worldX, float worldY) 
+	{ return view.courseCoordToScreenCoord (worldX,worldY); }  
+
+
+// interface to Marker 
+/**
+ * Called from  userInit() method to initialize marker system used to allow recording
+ * robot start locations and headings within a course. Saved markers are loaded from 
+ * file with the same name as the loaded course image, except with .mrk extension and 
+ * subsequently displayed when markerDraw method is called.
+ * <p>
+ * See also : markerAddRemove and markerHandleMouseClick methods.
+ */
+public void markerSetup() {if (contestIsRunning()) marker.setup(0,0,0);
+                    else marker.setup(robot.x,robot.y,robot.heading);}
+
+/**
+ * Draw markers on to course view as magenta circles. Typically this method is called from userDrawPanel 
+ * method allowing marker circle display to be turned off (by not calling markerDraw method).
+ */
+public void markerDraw() {marker.draw(); }
+
+/**This method call should be added to keypressed() method defined in UserKey 
+ * If method has not been implemented then code would be written: 
+ * <p>
+ * void mouseClicked() {
+ * <p>
+ *   if (lfs.markerHandleMouseClick()) return;
+ *   <p>
+ *   // user or other mouse click handlers here
+ * <p>    
+ * }
+ * <p> 
+ * @return true if mouse clicked on marker, false if no action taken
+ */
+public boolean markerHandleMouseClick() { 
+	if (!contestIsRunning()) return marker.handleMouseClick();
+	else return false;
+	} 
+
+/**
+ * Add / remove marker at current robot location when contest not running.
+ * Typically this method is called from keyPressed(), e.g.
+ * <p>
+ * if (key == 'M') lfs.markerAddRemove();  
+ */
+public void markerAddRemove() {
+	if (!contestIsRunning())
+		marker.addRemove(robot.x, robot.y, robot.heading);
+	}  // should be called when M pressed 
+
+
+/**
+ * Typically called from userControllerResetAndRun() to locate robot at default location OR
+ * marker location if defined and clicked. 
+ * 
+ * 
+ */
+public void  moveToStartLocationAndHeading()
+{
+  marker.gotoStartLocation(this);  // goto default start location OR current clicked on marker location
+}
+
+/**Show sensors in Robot or Sensor viewport. Displays sensor color data as created (optionally) by user code.
+ * Default is green if user does not modify sensor color (or colorTable in case of line sensor).
+ * 
+ * @param vportID  character 'R' robot viewport 'S' sensor viewport (scaled 64 DPI)
+ */
+public void showSensors(char vportID) { sensors.showSensors(this,vportID); } 
 
 
 
