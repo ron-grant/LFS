@@ -40,7 +40,7 @@ Also, download the User's guide from the file list above. Available in PDF or OD
 <p>
 See also API documentation located in reference subfolder of lineFollowerSim-X folder. (Clicking on index.html to load HTML based API documentation. 
 <p>
-Happline following!
+Happy line following!
 
 
 
