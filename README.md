@@ -25,12 +25,10 @@ Download Processing 3.4 or later from the Processing website at www.processing.o
 If you are new to processing, follow their instructions to gain some basic knowledge of the environment which is very similar to Arduino IDE, except Processing is Java based. If you have C++ programming experience, fear not, Java uses many identical low level language constructs reducing the learning curve. Also, you don't need to be a Java expert to get a great deal of milage out of the Processing environment.
 
 <p>
-Download latest lineFollowerSim-X.zip in above distribution folder sub folder lineFollowerSim-X sub-folder download (where X = release #)
-extract lineFollowerSim folder by right clicking on the .ZIP file in your Download folder.
-<p>
-Note: LineFollowerSim is not available (as of Oct 1,2020) through the Processing Contribution Manager accessed by Sketch>ImportLibrary>AddLibrary menu command.
-<p>
-Copy lineFollowerSim folder to to Processing sketchbook folders libraries subfolder.
+Download latest lineFollowerSim-X.zip (where X is release number) found nested a few levels down in above distribution folder.
+Click on lineFollowerSim-X folder then its download folder where you will find lineFollowerSim.zip. Click on the file and you will find a Download button on the 
+right side of the screen. When you click that button you will see a familiar Open/Save dialog, press OK. After the ZIP is downloaded, extract the lineFollowerSim folder 
+and copy folder to to Processing sketchbook folders libraries subfolder.
 To locate your processing sketchbook folder: Use Processing menu command  File>Preferences to display Preferences dilog. The sketchbook path is listed in the dialog as the
 first item. If the libraries folder does not exist in your sketches folder, you will need to create it, then copy LineFollowerSim folder to it.
 <p>  
