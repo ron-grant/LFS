@@ -4,7 +4,8 @@ Cool new features including interactive start location and heading Markers, User
 ### Library 1.3.1
 
 Optional robot icon overlay. See LFS_Simplebot  UserInit tab userInit method. 
-Problems with display when large icon loaded. Course icon appears to work OK. 
+Within a few hours of release, corrected problem with sensor viewport outline being displayed over top of course view when loading large robot icon. Fixed - did not increment
+library version. Re-download and overwrite..  
 
 # LFS - Line Follower Simulation 
 LFS is a software tool designed assist in the process of desinging robot line follower controller software.
