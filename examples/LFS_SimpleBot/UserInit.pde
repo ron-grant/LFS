@@ -35,14 +35,11 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   lfs.setRobotIconScale(0.5);                   // scale up or down as needed, default scale is 1.0
                                                 // (lib 1.3.1)  
  
- 
-  // As of library ver 1.3.1 the following loadImage causes issue with view display
-  // overlap even if code in UserDraw that uses the image is disabled.
-  // also red border appears around status disaplay when image load is allowed... ???
- 
-  // bigIcon = loadImage("SimpleBotBigIcon.png");  // image from data folder  to display in UserDraw tab userDraw method 
+  bigIcon = loadImage("SimpleBotBigIcon.png");  // image from data folder  to display in UserDraw tab userDraw method 
                                                 // for now using small image 
  
+ 
+  // ------------- end of optional icon support
  
   if (courseNum==1)
   {

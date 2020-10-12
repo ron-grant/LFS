@@ -369,7 +369,7 @@ public void updateSensors(int r, int g, int b, int a)
   view.drawSensorView(course,robot,courseDPI);  // for now VP  at 0,0  Sept 22  !!!
   view.sensorUpdate(sensors,courseDPI);
                                                        // draws into screen frame buffer now - fast
-  view.coverSensorView(r,g,b,a);                    // rgb,alpha
+  view.coverSensorView(r,g,b,a);                       // rgb,alpha
  
   
   

@@ -120,6 +120,8 @@ public void setup()
     
        
    rectMode (CORNER);   // text boxes - backgrounds 
+   strokeWeight (1.0);  // added explicit  strokeWeight,strokeColor  for lib 1.31
+   stroke (240);      
    fill (0);
    rect (40,10,400,48);
    rect (480,10,1200,48);
@@ -140,8 +142,8 @@ public void setup()
    text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);  
     
     
-   lfs.drawRobotLocHeadingVel(974,47);        // draw x,y location and heading bitmap (values not available) 
-                                               
+   lfs.drawRobotLocHeadingVel(974,47);        // draw x,y location and heading bitmap (values not available during contest run) 
+                                              // That is, getRobotX() getRobotY()..  are not available during contest run time. 
     
     
    if (!simFreeze)                             // if simulation not frozen with speed=0, key='0' freezes

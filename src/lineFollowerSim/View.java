@@ -241,6 +241,7 @@ public void drawSensorView(PImage courseImage, Robot robot, int courseDPI)  // d
   rv = p.createShape();
   rv.beginShape();
   
+  rv.noStroke();                // 1.3.1 get rid of any border 
   rv.texture(courseImage);
   
   rv.textureMode(PApplet.IMAGE);              // uv coordinates in image pixels not normalized
@@ -288,7 +289,7 @@ public void coverSensorView(int r, int g, int b, int a)    // color including al
   p.resetMatrix();
   p.camera();
   p.pushStyle();
-  p.stroke (r,g,b,a);
+  p.noStroke(); //   was  stroke (r,g,b,a);
   p.fill(r,g,b,a);
   p.rectMode(PApplet.CORNER);
   p.rect(sensorVP.x,sensorVP.y,sensorVP.w,sensorVP.h);
@@ -492,6 +493,7 @@ void drawRobotCoordAxes()  // called from LFS
 	
 	p.resetMatrix();
 	p.camera();
+	p.noStroke();  // no border on image
 	    
 	if (rotateCourse90)
 	{
