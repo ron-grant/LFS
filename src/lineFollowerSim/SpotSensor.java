@@ -51,9 +51,10 @@ public class SpotSensor {
  public float read() { return intensity; } // return current sensor value, normalized 0.0 (black) to 1.0 (white), used by controller 
  
  /**
-  * Set spot color after analysis for sensor overlay display. 
+  * Set spot rgb color after analysis for sensor overlay display, e.g. setColor(color(255,0,0));   // red
   * <p>
-  * * @param color specifies integer, but may use color(r,g,b) or color(r,g,b,alpha)  where alpha= transparency
+  * * @param color Specifies integer, suggest using color(r,g,b) or color(r,g,b,alpha)  where alpha= transparency
+  * 
   */
  public void setColor (int color) { this.color = color; }
  

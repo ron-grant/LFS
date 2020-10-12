@@ -86,14 +86,27 @@ class View {  // no modifier = package protected
   
   char userDrawViewID;  // used to tell coordinate axes which viewport is being used 'R' robot or 'S' sensor
   
-   
+  int userRobotIconAlpha;         // user icon transparency
+  PImage userRobotIconImage;      // user icon (optional) to display on course 
+  public float userRobotIconScale;  
+  
   View(PApplet parent)
   {
     p = parent;
     this.courseDPI = courseDPI;
     crumbThresholdDist = 0.5f;     // distance from previous crumb must exceed this value before new crumb is generated
+    userRobotIconScale = 1.0f;
   }
   
+  
+  void setUserRobotIcon(String filename, int alpha)  // called by LFS  - replace blue pointer on course image
+  {
+	userRobotIconImage = p.loadImage(filename);
+	userRobotIconAlpha = alpha;
+  }
+  
+  void setUserRobotIconAlpha (int alpha)            // called by LFS
+  { userRobotIconAlpha = alpha; }
   
   
   void setCourseDPI(int dpi) { courseDPI = dpi; }    // called by LFS
@@ -566,14 +579,29 @@ void drawRobotCoordAxes()  // called from LFS
     p.stroke (50,50,255);
     p.translate(x,y);
     if (rotateCourse90) a += PApplet.radians(90.0f); 
-    float xe = -r*PApplet.cos(a);
-    float ye = -r*PApplet.sin(a);
     
-    p.line (0,0,xe,ye);
-    p.ellipseMode (PApplet.CENTER);
-    p.ellipse (0,0,10,10);
+    if (userRobotIconImage == null)
+    {
+      float xe = -r*PApplet.cos(a);   
+      float ye = -r*PApplet.sin(a);
+      p.line (0,0,xe,ye);                            // draw blue pointer line 
+      p.ellipseMode (PApplet.CENTER);                // with circle 
+      p.ellipse (0,0,10,10);
+    }
+    else
+    {
+      p.imageMode(PApplet.CENTER);
+      p.rotate(a-PApplet.radians(90.0f));
+      p.scale(userRobotIconScale);
+      p.tint(255,userRobotIconAlpha);
+      p.image(userRobotIconImage,0,0);        // draw user icon at robot location 
+      p.tint(255,255);
+      p.imageMode(PApplet.CORNER);
+    	
+    }
     
-    p.translate (xe,ye);
+    
+    // p.translate (xe,ye);
     
     p.resetMatrix();
     p.camera();          // in test with P3D not resetting camera slowed down frame rate???
