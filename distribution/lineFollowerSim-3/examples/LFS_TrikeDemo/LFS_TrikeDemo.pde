@@ -55,7 +55,7 @@ boolean showFPS = true;    // show frames per second being drawn - does not affe
    
 boolean courseTop = true;  // couse view top, now when false course view (and small robot view) are hidden                     
                      
-PImage ci;
+
 float fr;
     
 void clearScreen() { background(0,0,20); } // called initially and  when changing course orientation     
