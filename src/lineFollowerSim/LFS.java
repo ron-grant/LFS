@@ -369,7 +369,7 @@ public void updateSensors(int r, int g, int b, int a)
   view.drawSensorView(course,robot,courseDPI);  // for now VP  at 0,0  Sept 22  !!!
   view.sensorUpdate(sensors,courseDPI);
                                                        // draws into screen frame buffer now - fast
-  view.coverSensorView(r,g,b,a);                    // rgb,alpha
+  view.coverSensorView(r,g,b,a);                       // rgb,alpha
  
   
   
@@ -672,7 +672,7 @@ int msecs =  runtime %1000;
 //String rs = "";
 //if (simSupportContestReset) rs = String.format ("Resets %d",contestResetCount);
 
-return String.format("%2d:%02d:%03d",mins,secs,msecs);  // originally appended reset count
+return String.format("%2d:%02d.%03d",mins,secs,msecs);  // originally appended reset count  (sec.millisec)
 
 }
 
@@ -1091,6 +1091,27 @@ public void  moveToStartLocationAndHeading()
  * @param vportID  character 'R' robot viewport 'S' sensor viewport (scaled 64 DPI)
  */
 public void showSensors(char vportID) { sensors.showSensors(this,vportID); } 
+
+/**Define image to be used as robot image on course (replacing blue pointer). Suggest small file 100x100 pixels.
+ * Use PNG format with alpha channel where background around robot is transparent. 
+ * 
+ * @param filename Icon filename located in data folder 
+ * @param alpha Icon transparency 0 to 255   0=totally transparent 255=totally opaque
+ */
+public void setRobotIcon(String filename, int alpha)  // replace blue pointer on course image
+{ view.setUserRobotIcon(filename, alpha);
+}
+/**
+ * Set alpha channel for robot icon image defined by setUserRobotIcon
+ * @param alpha Icon transparency 0 to 255   0=totally transparent 255=totally opaque
+ */
+public void setRobotIconAlpha (int alpha) {view.setUserRobotIconAlpha(alpha); }
+
+/**
+ * Set display scale for Robot icon
+ * @param scale scale factor 1.0 = original size, 0.5 = 1/2 original size ... 
+ */
+public void setRobotIconScale (float scale) { view.userRobotIconScale = scale; }
 
 
 

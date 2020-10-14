@@ -1,6 +1,12 @@
 ### Library 1.3 released see LFS-1.3-Changes.pdf 
 Cool new features including interactive start location and heading Markers, User colorable sensors, Hover over sensors to identify, improved viewport display with course and robot OR sensor view.
 
+### Library 1.3.1
+
+Optional robot icon overlay. See LFS_Simplebot  UserInit tab userInit method. 
+Within a few hours of release, corrected problem with sensor viewport outline being displayed over top of course view when loading large robot icon. Fixed - did not increment
+library version. Re-download and overwrite..  
+
 # LFS - Line Follower Simulation 
 LFS is a software tool designed assist in the process of desinging robot line follower controller software.
 <p>
@@ -16,7 +22,6 @@ Shown below is an image of the DPRG Challenge Course. Join in and create your co
 <p>
   
 ![](ChallengeSmallImage.jpg)
-
 
 
 ### LineFollowerSim (LFS) Installation
@@ -40,6 +45,16 @@ Also, download the User's guide from the file list above. Available in PDF or OD
 <p>
 See also API documentation located in reference subfolder of lineFollowerSim-X folder. (Clicking on index.html to load HTML based API documentation. 
 <p>
+### Known Issues 1.3.0 (+ indicates corrected in next release, - pending)
+<p>
++ If you "Finish" a contest with sensor view display vs course, the snapshot will contain that view and not the course. To correct with auto display of course view.
+<p>
+Modify UserKey adding courseTop=true;     if (key == 'F')  {courseTop=true; lfs.contestFinish();}               
+<p> 
++LFS contest runtime reported as mins:sec:millisec vs  mins:sec.millisec in contest.cdf file (located in sketch data sub folder)
+
+
+
 Happy line following!
 
 
