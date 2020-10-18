@@ -19,7 +19,7 @@ public class VP  {  // ViewPort  x,y upper-left,  width height         // simple
 	   * @param w width in pixels
 	   * @param h height in pixels
 	   */
-	  VP(int x, int y, int w, int h) {this.x=x; this.y=y; this.w=w; this.h=h;}
+	  public VP(int x, int y, int w, int h) {this.x=x; this.y=y; this.w=w; this.h=h;}
 	
   public boolean pointInside(int x1, int y1) { return (x1>x) && (x1<x+w) && (y1>y) && (y1<y+h); }	  
 	  

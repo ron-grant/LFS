@@ -1113,6 +1113,12 @@ public void setRobotIconAlpha (int alpha) {view.setUserRobotIconAlpha(alpha); }
  */
 public void setRobotIconScale (float scale) { view.userRobotIconScale = scale; }
 
-
+/**
+ * Control if robot or course viewport respond to mouse.
+ * Program disables while variable editor in use which overlaps course view.
+ * This is a bit of a hack, while using light-weight viewports.
+ * @param enable Allow course view and robot view to repond to mouse commands for robot position and heading altering.
+ */
+public void setMouseActiveInViews(boolean enable) { view.mouseActive = enable; }
 
 } // end LFS class 

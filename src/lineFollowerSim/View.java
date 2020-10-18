@@ -90,12 +90,15 @@ class View {  // no modifier = package protected
   PImage userRobotIconImage;      // user icon (optional) to display on course 
   public float userRobotIconScale;  
   
+  boolean mouseActive;
+  
   View(PApplet parent)
   {
     p = parent;
     this.courseDPI = courseDPI;
     crumbThresholdDist = 0.5f;     // distance from previous crumb must exceed this value before new crumb is generated
     userRobotIconScale = 1.0f;
+    mouseActive = true;
   }
   
   
@@ -274,6 +277,9 @@ public void drawSensorView(PImage courseImage, Robot robot, int courseDPI)  // d
 
 boolean mouseInside(VP v) 
 {    // mouse in viewport test 
+	 
+	if (!mouseActive) return false;  // lfs.setMouseActiveInViews(enable) used to control
+	                                 // for purpose of allowing variable editor to work.. 
 	int mx = p.mouseX-v.x;    
 	int my = p.mouseY-v.y;
     return (mx>0)&&(mx<v.w)&&(my>0)&&(my<v.h); }  
