@@ -5,7 +5,10 @@ user display panels, better help with user help screen, separation of custom key
 best of all demo animation for destruction of your robot when it strays beyond course bounds. 
 <p>
 The updated LFS_Simplebot sketch includes most of the updates. Just a few additions to the library code.
-
+<p>
+You will need the Processing sound library for this release. On processing menu bar Sketch > Import Library > Add Library
+will invoke the Contribution Manager, type sound in the search box then click on Sound library then click Install button.
+When the installation is complete, restart Processing and you should be good to go.
 
 
 ### Library 1.3 released see LFS-1.3-Changes.pdf 
