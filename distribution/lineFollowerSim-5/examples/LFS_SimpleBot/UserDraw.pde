@@ -8,10 +8,12 @@
 
 */
 
-
+boolean showUserDraw = true; // set false to eliminate user drawing
 
 void userDraw() 
 {
+  if (showUserDraw == false) return;    
+  
   if (courseTop) lfs.setupUserDraw();   // sets up transforms origin robot center scale inches for Robot view
   else lfs.setupUserDrawSensorViewport();  // ... for SensorView
      
@@ -43,7 +45,7 @@ void userDraw()
     
     rotate (PI/2);              // robot coordinates place +X up need to right +Y down
     imageMode(CENTER);          // center image at x,y 
-    tint (255,128);             // 255,alpha   alpha param 0..255   0=transparent 255=opaque
+    tint (255,40);             // 255,alpha   alpha param 0..255   0=transparent 255=opaque
     image (bigIcon,0,0,10,10);  // x,y,width,height     width=height= 10 inches  
     tint (255,255);             // restore opaque tinting 
     imageMode(CORNER);          // important to restore corner mode for proper image display elsewhere            

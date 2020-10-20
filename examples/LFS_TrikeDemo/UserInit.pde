@@ -1,4 +1,4 @@
-
+// UserInit - Trike Bot
 // Define LineSensors and SpotSensors here 
 // using LineSensor and SpotSensor classes
 //
@@ -16,7 +16,7 @@ SpotSensor spotAI, spotFR2;
 SpotSensor spotFL3, spotFR3;
 LineSensor lineSensor1;            // line sensors     
 
-
+PImage bigIcon;                    // this variable should be defined for use by userDraw method     
 
 
 void userInit()  // called by lfs to obtain robot information and for sensor definitions
@@ -81,5 +81,47 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   
   nameSensorsUsingVariableNames();   // look up sensor names and assign them to sensor name field (lib 1.3)
   lfs.markerSetup();                 // load course markers (lib 1.3)               
+  
+   
+  /* Optional support for Robot Icons by popular request of people including DPRG President, Carl Ott  (lib 1.3.1)
+     Load icon file(s) from data folder.
+  
+     Simplebot example provided here. Create your own custom icon with a program such as inkscape.
+     PNG preferred format, supports background transparency making for nice overlay of robot, vs image borders 
+     being visible.
+   
+     Small icon recommended for course designed around 100x100 pixels 
+     Larger icon recommended for robot view/sensor view  400x400 pixels to 800x800 pixels
+     
+   
+     
+  */    
+  
+      
+  lfs.setRobotIcon("TrikeIcon.png",255);    // override course pointer, display this icon file, located in data folder
+                                                // with alpha transparency 0..255  0=transparent to 255 opaque
+                                                // (lib 1.3.1) 
+                                           
+  lfs.setRobotIconScale(0.5);                   // scale up or down as needed, default scale is 1.0
+                                                // (lib 1.3.1)  
+ 
+  // bigIcon = loadImage("");  // image from data folder  to display in UserDraw tab userDraw method 
+                               // NOT using  
+ 
+ 
+  // ------------- end of optional icon support
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
    
 }

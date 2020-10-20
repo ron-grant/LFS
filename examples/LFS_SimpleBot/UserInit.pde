@@ -1,6 +1,8 @@
 /* UserInit - load course, define acceleration rates.. , define sensors
 
    Additions at end of userInit for (lib 1.3). Init markers, get sensor names
+   
+   
 */
 
 SpotSensor sensorL,sensorM,sensorR;
@@ -11,7 +13,7 @@ int courseNum = 1;  // allow selection of see also UserReset tab
 
 void userInit()  // called by lfs to obtain robot information and for sensor definitions
 {
-  lfs.setFirstNameLastNameRobotName("Ron","Grant","SimpleBot3");   // change to your name and robot
+  lfs.setFirstNameLastNameRobotName("Ron","Grant","SimpleBot4");   // change to your name and robot
  
   /* Optional support for Robot Icons by popular request of people including DPRG President, Carl Ott  (lib 1.3.1)
      Load icon file(s) from data folder.
@@ -23,7 +25,7 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
      Small icon recommended for course designed around 100x100 pixels 
      Larger icon recommended for robot view/sensor view  400x400 pixels to 800x800 pixels
      
-     Large icon disabled in 1.3.1  - see comment below 
+   
      
   */    
   

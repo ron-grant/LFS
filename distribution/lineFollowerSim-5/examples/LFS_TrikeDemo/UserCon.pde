@@ -1,5 +1,7 @@
-
+// UserCon - Trike Bot 
 //  Below is untouched code from Will Aug 22,2020
+//  except  for uprintln changed to uuprintln  
+//  which does a uprintln AND displays on screen 
 //  
 
 int cOld = 0;       // centroid of path run  
@@ -22,11 +24,11 @@ void userControllerUpdate()
 
   if (lsa.length == 0)
   {
-    println ("userControllerUpdate - no sensor data exit");
+    uprintln ("userControllerUpdate - no sensor data exit");
     return;
   }  
   else
-   // println ("userControllerUpdate");
+   // uprintln ("userControllerUpdate");
 
   sensorRunDetector(lsa);   // sensorRun[][1]
   
@@ -84,7 +86,7 @@ void userControllerUpdate()
         )
       {
         trike.steerAngleR = -0.9; //- 0.7854;
-        println(" offset to right"); // 3" radius  turn
+        uprintln(" offset to right"); // 3" radius  turn
         toGo = 3.614;   // 39.19 deg turn
         sensorState = 3; // goto offset move, step 1
         break;
@@ -93,7 +95,7 @@ void userControllerUpdate()
         && (spotFL.read()>0.5)&&(spotFR.read()>0.5) &&(patR==63) )
       {
         trike.steerAngleR =  0.7854;
-        println(" offset to left"); // 3" radius turn   
+        uprintln(" offset to left"); // 3" radius turn   
         toGo = 3.614;   //  turn
         sensorState = 3; // goto offset move, step 1
         break;
@@ -105,7 +107,7 @@ void userControllerUpdate()
          &&(spotL5.read()>0.5)) //  angle
       {
         //toGo = (spotR3.read()<0.5) ? 5.8 : 10.5; // 90deg turn
-        trike.steerAngleR = - 1.15; println(" acute to right"); //  ACUTE TURN   
+        trike.steerAngleR = - 1.15; uprintln(" acute to right"); //  ACUTE TURN   
         toGo = 10.5;   // approx. 120deg turn
         sensorState = 4; // goto acute move,
         break;
@@ -124,7 +126,7 @@ void userControllerUpdate()
         )   // RIGHT 90 WHT
       )
       {
-        trike.steerAngleR = - 1.05; println(" 90 to right"); //  radius turn   
+        trike.steerAngleR = - 1.05; uprintln(" 90 to right"); //  radius turn   
         toGo = 6.4;   // approx. 90deg turn
         sensorState = 4; // goto acute move,
         break;
@@ -144,7 +146,7 @@ void userControllerUpdate()
         )   // LEFT 90 WHT
       )
       {
-        trike.steerAngleR = + 1.05; println(" 90 to left"); // 3" radius turn   
+        trike.steerAngleR = + 1.05; uprintln(" 90 to left"); // 3" radius turn   
         toGo = 6.4;   // approx. 90deg turn
         sensorState = 4; // goto acute move,
         break;
@@ -157,7 +159,7 @@ void userControllerUpdate()
         //&&(patFR<=8)
         )
       {
-        trike.steerAngleR = - 1.13; println(" notch  right"); // 1.85   -1.107 2" radius    
+        trike.steerAngleR = - 1.13; uprintln(" notch  right"); // 1.85   -1.107 2" radius    
         toGo = 10.30;   // approx. 132deg turn
         sensorState = 5; // goto notch 1st move,
         break;
@@ -171,8 +173,8 @@ void userControllerUpdate()
                }
                case 2:{
                 /* if( (abs(sensorRun[1][0])+ abs(sensorRun[2][0])) > 0) 
-                    {robot.steerAngleR = HALF_PI ; println(" wide + run");} // left turn
-                 else {robot.steerAngleR = - HALF_PI; println(" wide - run");} // right turn
+                    {robot.steerAngleR = HALF_PI ; uprintln(" wide + run");} // left turn
+                 else {robot.steerAngleR = - HALF_PI; uprintln(" wide - run");} // right turn
                  toGo = 4.712;   // 90deg turn
                  sensorState = 1; // 90deg turn, step 1
                 */
@@ -193,7 +195,7 @@ void userControllerUpdate()
                 trackingUpdate( cOld, dt); // just keep going
                  break;
                }
-               default:{ println( " sensorState 0 default ", sensorRun[0][0]);}
+               default:{ uprintln(String.format(" sensorState 0 default  %d",sensorRun[0][0]));}
              } // end of runs switch
              break; // out of outer switch case 0 
     } 
@@ -223,7 +225,7 @@ void userControllerUpdate()
                 { trike.steerAngleR = 0; toGo = 1.0;}
                 else
                 {trike.steerAngleR = - trike.steerAngleR;// reverse turn direction
-                println(" offset to right, step 2"); // 3" radius left turn
+                uprintln(" offset to right, step 2"); // 3" radius left turn
                 toGo = 3.614;} // request 
                 sensorState = 4; // goto offset move, step 2
               }
@@ -241,18 +243,18 @@ void userControllerUpdate()
              sensorState = 5;
              if( toGo < 0.0)                  // far enough
              { trike.steerAngleR = 0.852; // 3.5r 0.968 2.75r 1.012 2.5" radius
-               println( " notch 2nd move");
+               uprintln( " notch 2nd move");
                toGo = 5.9; sensorState = 4; // 4.776 goto ending manuver
              } 
              break;
     }   
 
-  default:{ println(" default "); }
+  default:{ uprintln(" default "); }
   } // switch
   cOld = c;
 
-  // println (" steer2 ", robot.steerAngleR);
-  //println(" runs ", sensorRun[0][0], sensorRun[1][0],sensorRun[2][0], sensorRun[3][0]);
+  // uprintln (" steer2 ", robot.steerAngleR);
+  //uprintln(" runs ", sensorRun[0][0], sensorRun[1][0],sensorRun[2][0], sensorRun[3][0]);
   
   trikeDriveUpdate ();  // calculate speed and turn rate 
   

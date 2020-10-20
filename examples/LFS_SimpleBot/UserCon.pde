@@ -14,6 +14,10 @@
 
 float ePrev;      // global previous error 
 
+float Kp;         // parameters  see UserParEdit 
+float Kd;
+float maxSpeed;
+
 
 void userControllerUpdate ()    
 {
@@ -63,13 +67,14 @@ ePrev = e;
 
 // generally your robot will up updating TargetTurnRate and possibly TargetSpeed
 
-lfs.setTargetTurnRate(-e * 10 + (e - ePrev) * 10.0);   // turn rate in degrees per second
+lfs.setTargetTurnRate(-e * Kp + (e - ePrev) * Kd);   // turn rate in degrees per second
 
 // handy to disable set target speed and manually change 
 // note: in this case start in non-contest mode.
-lfs.setTargetSpeed(1.0 + abs(12.0f/(abs(e/2.0f)+1.0)));   
 
-//lfs.setTargetSpeed (4.0);
+//lfs.setTargetSpeed(1.0 + abs(12.0f/(abs(e/2.0f)+1.0)));   
+
+lfs.setTargetSpeed (maxSpeed);
 
 
 }

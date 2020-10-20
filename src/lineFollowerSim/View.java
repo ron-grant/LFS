@@ -86,11 +86,16 @@ class View {  // no modifier = package protected
   
   char userDrawViewID;  // used to tell coordinate axes which viewport is being used 'R' robot or 'S' sensor
   
-  int userRobotIconAlpha;         // user icon transparency
-  PImage userRobotIconImage;      // user icon (optional) to display on course 
+  public int userRobotIconAlpha;         // user icon transparency
+  PImage userRobotIconImage;             // user icon (optional) to display on course 
   public float userRobotIconScale;  
+  public float userRobotIconRotationBias;
   
   boolean mouseActive;
+  public boolean crumbsVisible;   // bit of a hack needed to hide crumbs when help window drawn over-top
+                                  // course window -- for some reason they are bleeding through. 
+                                  // drawing order or Z-depth isssue. Taking the easy route - hide 'em when 
+                                  // help visible 
   
   View(PApplet parent)
   {
@@ -98,6 +103,7 @@ class View {  // no modifier = package protected
     this.courseDPI = courseDPI;
     crumbThresholdDist = 0.5f;     // distance from previous crumb must exceed this value before new crumb is generated
     userRobotIconScale = 1.0f;
+    userRobotIconRotationBias = 0.0f;
     mouseActive = true;
   }
   
@@ -599,7 +605,7 @@ void drawRobotCoordAxes()  // called from LFS
     else
     {
       p.imageMode(PApplet.CENTER);
-      p.rotate(a-PApplet.radians(90.0f));
+      p.rotate(a-PApplet.radians(90.0f)+ userRobotIconRotationBias);
       p.scale(userRobotIconScale);
       p.tint(255,userRobotIconAlpha);
       p.image(userRobotIconImage,0,0);        // draw user icon at robot location 
@@ -641,9 +647,9 @@ void drawRobotCoordAxes()  // called from LFS
        yc =  vpy + (pt.y * sy);    // vertoffset + y scaled to pixels
     }  
              
-    p.point (xc,yc);
+    if (crumbsVisible) p.point (xc,yc);
      
-    if (firstCrumb) {
+    if (crumbsVisible && firstCrumb) {
        
        p.pushStyle();
        p.fill (20,200,20);
@@ -658,7 +664,7 @@ void drawRobotCoordAxes()  // called from LFS
   }
     
   
-    if (contestFinished)
+    if (crumbsVisible && contestFinished)
     {
       p.pushStyle();
       p.fill (200,20,20);

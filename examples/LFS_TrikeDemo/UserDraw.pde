@@ -1,9 +1,19 @@
+/* UserDraw - Trike
+
+   Image overlay supported Lib 1.3.1
+   See UserInit where icon is defined and loaded.
+
+  NOT using image overlay in robot view as is done in LFS_SampleBot
+  
+*/
+
+boolean showUserDraw = true; // set false to eliminate user drawing
 
 void userDraw()
 {
   // Draw Trike Features over robot view 
   // 
-  
+  if (showUserDraw == false) return;    
   
   float sc = 4.0/64;
  

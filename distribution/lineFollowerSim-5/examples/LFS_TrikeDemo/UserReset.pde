@@ -1,4 +1,4 @@
-/* UserReset 
+/* UserReset - Trike Bot
 
    Method userControllerResetAndRun is called when the simulation
    is doing a contest Run
