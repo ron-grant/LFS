@@ -268,16 +268,22 @@ void showSensors(LFS lfs, char vportID)  // call with viewport you wish to use f
    p.stroke(255,0,0);
    
    float sc = lfs.courseDPI ;
+   
+   float rvScale =  1.0f;  // robot view scale down factor   new 1.4 applied to rect w,h
+   
    // if robot view
    if (vportID=='R')
-     sc = sc * vp.w/svp.w;
+   {
+	 rvScale =  1.0f*vp.w/svp.w;  // robot view scale down factor   new 1.4 applied to rect w,h  
+     sc = sc * rvScale;
+   }  
      
    for (SpotSensor ss : lfs.sensors.spotSensorList)
    {
      float x = ss.getXoff();
      float y = ss.getYoff();
-     float w = ss.getSpotWPix();
-     float h = ss.getSpotHPix();
+     float w = rvScale * ss.getSpotWPix();
+     float h = rvScale * ss.getSpotHPix();
    
      float scrX = tx +y*sc;
      float scrY = ty -x*sc;
@@ -296,8 +302,8 @@ void showSensors(LFS lfs, char vportID)  // call with viewport you wish to use f
    {
      float xoff = ls.getXoff();
      float yoff = ls.getYoff();
-     float w = ls.getSpotWPix();
-     float h = ls.getSpotHPix();
+     float w = ls.getSpotWPix() * rvScale;
+     float h = ls.getSpotHPix() * rvScale;
    
      float[] sensorTable = ls.readArray();      // get a reference to sensor's sensorTable 
      int [] colorTable   = ls.getColorArray();  // get a reference to sensor's colorTable

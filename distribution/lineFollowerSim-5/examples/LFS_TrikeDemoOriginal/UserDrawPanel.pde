@@ -1,12 +1,6 @@
-/* UserDrawPanel - draw info onto screen 
-*/
+  
   void userDrawPanel()  // called from draw() at frame rate
   {
-    lfs.showSensors((courseTop)?'R':'S');    // show user colorable sensors (lib 1.3)
-    if (courseTop) lfs.markerDraw();         // only display markers when course visible (lib 1.3) 
-   
-    // when !courseTop is true only sensor viewport is displayed allowing 
-    // for more screen area to be used for user robot status... 
     
     //------------------------
     // display status info at top of screen
@@ -39,13 +33,13 @@
     //String ts = 
     //text (ts+"con "+cs,30,190);
 
-    text(keySummary1,30,60);
+    text(keySummary1,30,60);    
     if (lfs.controllerIsEnabled()) text(keySummaryConOn,30,80);    // see KeyInput tab  
     else text(keySummaryConOff,30,80);
     
     
-    text ("hold right mouse button down and drag horz. to change heading",30,100);
-    text ("hold left mouse button down and drag to change position",30,120);
+    text ("right mouse button down, drag horz. to change heading",30,100);
+    text ("left mouse button down, drag to change position",30,120);
 
     if (!focused)  // if window does not have focus, indicate that fact to user
     {
@@ -53,6 +47,6 @@
       fill (255, 70, 70);   // pale red
       text ("Click in application window to give focus for key command response", 30, 140);
       popStyle();
-    } else text ("Tab - toggle couse/robot view  ALT-rotate90  P)anel visibility", 30, 140);
+    } else text ("Tab - toggle couse/robot view, Alt-Rotate  P)anel visibility", 30, 140);
   }    
   

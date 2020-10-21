@@ -4,22 +4,11 @@
 //
 //Note:  Remember to click on the run window to give focus before pressing keys 
 
-String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest   M)arker";
+String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest";
 String keySummaryConOn  = "SPACE=freeze/step 0..9 speed C)ontroller OFF S)top E)raseCrumbs";
 String keySummaryConOff = "C)ontroller turn on  <- -> turn, up/dn arrow speed S)top"; 
 
 boolean rotate90 = true;  // course view  toggle rotation with Alt key 
-
-
- void mouseClicked()
-    {
-      if (lfs.markerHandleMouseClick()) return;   // markerHandleMouseClick returns true if clicked
-                                                  // in a marker circle, then this mouseClick is considered 
-                                                  // consumed, hence return (lib 1.3)
-      // user / other mouse click handlers here  
-    }
- 
-
 
 
 //0      single step mode
@@ -41,7 +30,6 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
   }
 
 
-  if (key == 'M') lfs.markerAddRemove();   // interactive marker placement/removal  (lib 1.3)   
   
   if (key == 'C') { lfs.setEnableController(!lfs.controllerIsEnabled());   // toggle allowing controller to update
                     if (!lfs.controllerIsEnabled()) lfs.stop();             // position and heading of robot
@@ -57,8 +45,7 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                    }  
                                                                   
   if (key == 'E')  lfs.crumbsEraseAll();
-  if (key == 'F')  {courseTop=true; lfs.contestFinish();}   
-                                                          
+  if (key == 'F')  lfs.contestFinish();                                                                
                                                                   
   if (key == 'P') panelDisplayMode = (panelDisplayMode + 1) % 3;  // cycle display status command panel opacity
    

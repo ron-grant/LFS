@@ -1,14 +1,11 @@
-/* UserKey - actions to take when key is pressed   (also mouseClicked actions)
+/* UserKey - actions to take when key is pressed
 
    Single key response commands here to allow manual drive of robot
    turning drive controller on/off, Contest Run control 
 
-   Some additions for (lib 1.3) including M)arker command and addition of 
-   mouseClicked() method with call to library markerHandleMouseClick method
-
 */
 
-String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest  M)arker";
+String keySummary1      = "Contest R)un SPACE-Stop F)inish      G)o NonContest";
 String keySummaryConOn  = "SPACE=freeze/step 0..9 speed C)ontroller OFF S)top E)raseCrumbs";
 String keySummaryConOff = "C)ontroller turn on  <- -> turn, up/dn arrow speed S)top"; 
 
@@ -24,15 +21,6 @@ boolean rotate90 = true;  // course view toggle rotate90 off/on  with ALT key
 //S     stop robot motion, disable controller 
 
 
- void mouseClicked()
-    {
-      if (lfs.markerHandleMouseClick()) return;   // markerHandleMouseClick returns true if clicked
-                                                  // in a marker circle, then this mouseClick is considered 
-                                                  // consumed, hence return (lib 1.3)
-      // user / other mouse click handlers here  
-    }
- 
-
 public void keyPressed()  // handle keypress events for manual driving of robot.
 {
   if ((key>='a')&&(key<='z')) key -=32; // shift to uppercase  
@@ -42,7 +30,7 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
     simFreeze =  (simSpeed == 0);
   }
 
-  if (key == 'M') lfs.markerAddRemove();   // interactive marker placement/removal  (lib 1.3)   
+
   
   if (key == 'C') { lfs.setEnableController(!lfs.controllerIsEnabled());   // toggle allowing controller to update
                     if (!lfs.controllerIsEnabled()) lfs.stop();             // position and heading of robot
@@ -58,7 +46,7 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                    }  
                                                                   
   if (key == 'E')  lfs.crumbsEraseAll();
-  if (key == 'F')  {courseTop=true; lfs.contestFinish();}                                                                   
+  if (key == 'F')  lfs.contestFinish();                                                                
                                                                   
   if (key == 'P') panelDisplayMode = (panelDisplayMode + 1) % 3;  // cycle display status command panel opacity
    

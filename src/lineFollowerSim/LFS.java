@@ -67,7 +67,7 @@ public class LFS  {
 
 //private String Version = "Sep 14 2020";	
 
-View view;
+View view;             // package private - important 
 private PApplet p;     // reference to current applet (processing sketch using this lib)
 
 
@@ -346,9 +346,27 @@ public void defineSensorViewport (int x, int y, int width, int height)
   view.defineSensorViewport (x,y,width,height); 	
 }
  
-// !!! need documentation 
+
+/**
+ * Get a reference to Robot viewport including  location and size in screen coordinates. Upper-left x,y and width,height 
+ * in pixels. Modification of viewport size and position may be possible, but results not guaranteed.
+ *   
+ * @return reference to viewport.
+ */
 public VP getRobotViewport()  { return view.robotVP;  }
+/**
+ * Get a reference to Course viewport including  location and size in screen coordinates. Upper-left x,y and width,height 
+ * in pixels. Modification of viewport size and position may be possible, but results not guaranteed.
+ *   
+ * @return reference to viewport.
+ */
 public VP getCourseViewport() { return view.courseVP; }
+/**
+ * Get a reference to Sensor viewport including  location and size in screen coordinates. Upper-left x,y and width,height 
+ * in pixels. Modification of this viewports size and position may be possible, but results not guaranteed.
+ *    
+ * @return reference to viewport.
+ */
 public VP getSensorViewport() { return view.sensorVP; }
 
 
@@ -864,7 +882,8 @@ void appendStringToFile(String header, String filename, String text)
 
 
 /**
- * Called to start contest, controller enabled, crumbs cleared, stopwatch cleared.
+ * Called to start contest, controller enabled, crumbs cleared, stopwatch cleared and any rotation bias added to
+ * animate optional robot icon is cleared.
  * Reading position and heading prohibited during run as is repositioning robot with setPositionAndHeading.
  * <p>
  * (Called by simulation core code.) 
@@ -875,6 +894,7 @@ public void contestStart()
   controllerEnabled = true;
   crumbsEraseAll();
   clearStopwatch();
+  view.userRobotIconRotationBias = 0.0f;
 }
 
 /** Check to see if contest is running. If so, stopwatch is running, and some restrictions will apply including
@@ -1015,12 +1035,11 @@ public void contestScreenSaveIfRequested()  // need count down on this 1 frame
 
 }
 
-
-/**
+/** Convert robot location on course to screen x,y coordinates (0,0) top-left of screen  
  * 
- * @param worldX  course X in inches   
- * @param worldY  course Y in inches
- * @return PVector with screen absolute (x,y) location 
+ * @param worldX  robot world coordinate X value 
+ * @param worldY  robot world coordinate Y value
+ * @return Processing PVector with screen x,y values  
  */
 public PVector courseCoordToScreenCoord (float worldX, float worldY) 
 	{ return view.courseCoordToScreenCoord (worldX,worldY); }  
@@ -1106,13 +1125,59 @@ public void setRobotIcon(String filename, int alpha)  // replace blue pointer on
  * @param alpha Icon transparency 0 to 255   0=totally transparent 255=totally opaque
  */
 public void setRobotIconAlpha (int alpha) {view.setUserRobotIconAlpha(alpha); }
+public int getRobotIconAlpha ( ) { return view.userRobotIconAlpha; }
 
 /**
  * Set display scale for Robot icon
  * @param scale scale factor 1.0 = original size, 0.5 = 1/2 original size ... 
  */
 public void setRobotIconScale (float scale) { view.userRobotIconScale = scale; }
+public float getRobotIconScale () { return view.userRobotIconScale; }
 
 
+/**
+ * Set robot course icon rotation bias in radians - can be used to animate icon typically after a run. Default bias = 0 
+ * and bias is set to 0 at start of a contest run. Positive values rotate icon clockwise. This rotation has no
+ * impact on "actual" robot heading.
+ * @param rotationBias  rotation in radians, default 0
+ */
+
+public void setRobotIconRotationBias (float rotationBias) {
+	if (!contestIsRunning()) view.userRobotIconRotationBias = rotationBias; }
+/**
+ * Get robot icon rotation bias in radians.
+ * @return robot icon turn bias in radians 
+ */
+public float getRobotIconRotationBias() { return view.userRobotIconRotationBias; }
+
+/**
+ * Control if robot or course viewport respond to mouse.
+ * Program disables while variable editor in use which overlaps course view.
+ * This is a bit of a hack, while using light-weight viewports.
+ * @param enable Allow course view and robot view to respond to mouse commands for robot position and heading altering.
+ */
+public void setMouseActiveInViews(boolean enable) { view.mouseActive = enable; }
+
+/**
+ * Return true if robot has driven beyond course extents.
+ * @return true if robot outside course bounds 
+ */
+public boolean robotOutOfBounds() {
+	
+	
+	float xmax = course.width/courseDPI;
+	float ymax = course.height/courseDPI;
+	
+	return ((robot.x <0.0) || (robot.y<0.0) || (robot.x>xmax) || (robot.y>ymax));
+	
+	
+}
+
+/**
+ * LFS hides crumbs when help visible using this method. Problem with points bleeding 
+ * through solid rectangle. Drawing order or Z-buffer issue don't know.  
+ * @param enable When true crumbs are drawn. 
+ */
+public void setCrumbsVisible (boolean enable) { view.crumbsVisible = enable; } 
 
 } // end LFS class 
