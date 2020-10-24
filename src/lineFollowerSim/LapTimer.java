@@ -38,7 +38,7 @@ public class LapTimer {
  
   public boolean showStartTime = false;
   
-  public boolean lapTimerEnabled;
+  public boolean lapTimerModeEnabled;
 
   int lapStart = 0;
   int timerTick;
@@ -84,7 +84,7 @@ public class LapTimer {
 
   public void lapTimerAndCountReset()
   {	
-    lapTestEnabled = lapTimerEnabled;  
+    lapTestEnabled = lapTimerModeEnabled;  
     lapCount = 0;
 	resetLapDetector();
   }  
@@ -102,9 +102,9 @@ public class LapTimer {
    
     int n = lapList.size();
     if (showStartTime)
-      lapList.add(String.format("Lap %d %s    Start %s",n,lap,tim));  // mm:ss.mse   min:sec.milliseconds
+      lapList.add(String.format("Lap %d %s    Start %s",n+1,lap,tim));  // mm:ss.mse   min:sec.milliseconds
     else
-      lapList.add(String.format("Lap %d %s",n,lap)); 
+      lapList.add(String.format("Lap %d %s",n+1,lap)); 
    
     lapStart = timerTick;
   }
@@ -166,21 +166,21 @@ public class LapTimer {
 	   
  	
   /**
-  * Enable lap timer mode 
-  * @param enable
+  * Enable lap timer with option to run in lap timer mode or regular timer mode.
+  * @param lapMode if true run in lap timer mode, false normal timer  
   */
-  public void lapTimerEnable(boolean enable)
-  {	 lapTimerEnabled = enable;
+  public void lapTimerEnable(boolean lapMode)
+  {	 lapTimerModeEnabled = lapMode;
 	 lfs.lapTimer.clear();
   }
 
   
-  public void lapTimerUpdate(boolean simRequestStep)
+  public boolean lapTimerUpdate(boolean simRequestStep)
   {
-     if (lapTimerEnabled) 
+     if (lapTimerModeEnabled) 
        drawPanel ("Lap Timer ",4,60,480,250,160);
     
-     if (!simRequestStep) return;
+     if (!simRequestStep) return (false);
   
      PVector stopLoc = lfs.getStartLocationAndHeading();  // start location =  stop location (hardcoded OR last marker clicked) 
   
@@ -200,9 +200,16 @@ public class LapTimer {
        {
          logLapTime();
          resetLapDetector(); 
+        
+         if (lapList.size() >= lapCountMax)
+        	 lfs.contestStop();
+         
+         return true;
        }
      }
- 
+     return false; // no lap detected 
   } // end lapTimerUpdate  
+ 
+ 
  
 } // end LapTimer

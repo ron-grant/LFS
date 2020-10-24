@@ -21,9 +21,7 @@
      this new template. You can still use existing sketch built with 1.3 if you don't have need for 
      parameter editor.
     
-   
-     
-   
+      
    See Document  LFS-1.3-Changes.pdf
    See Document  LFS-1.4-Changes.pdf 
    
@@ -34,6 +32,9 @@
    Ron Grant
    Sept 30,2020 
    Oct 20, 2020   - last major modification
+   Oct 24, 2020   - lap counter for select courses, parameter dialog mouse making changes outside dialog fixed,
+                    defineCourse list support (UserInit). 
+  
    
    
    https://github.com/ron-grant/LFS
@@ -125,7 +126,9 @@ public void setup()
   
   clearScreen();
   
-  lfs.setShowSensorsOnSensorView(true);  // slight frame rate gain if false 
+  //lfs.setShowSensorsOnSensorView(true);  // slight frame rate gain if false (removed 1.4.1)
+  
+  userMiscSetup();  // UMisc setup - for optional audio init... 
 }
 
 
@@ -139,7 +142,7 @@ public void setup()
    // Other screen areas should be overwritten with solid rect before writing text.
    
    int alpha = 90;
-   if (courseTop) alpha = 219;
+   if (courseTop) alpha = 255;  // was 219
    
    if (courseTop)
    lfs.updateSensors(0,0,0,alpha);     // draws 64 DPI bitmap of current robot location on screen (can be covered)
@@ -162,7 +165,7 @@ public void setup()
      
    userDraw();
     
-   resetMatrix();
+   resetMatrix();       // reset transforms back to screen coordinates 
    camera();
     
        
@@ -170,27 +173,29 @@ public void setup()
    strokeWeight (1.0);  // added explicit  strokeWeight,strokeColor  for lib 1.31
    stroke (240);      
    fill (0);
-   rect (40,10,400,48);
-   rect (480,10,1200,48);
+   rect (40,10,400,48);        // top left of screen   time box
+   rect (480,10,1200,48);      // top right of screen  contestant name, robot, location velocity 
        
    if (showFPS)   // draw() frames per sec (fps)  - performance monitor 
    { textSize (18);
-     fill(150);
+     fill(220);
      if (frameCount%60 == 0) fr = frameRate;
-     text(String.format("%2.0f fps",fr),340,55);
+     text(String.format("%2.0f fps",fr),width-110,40);    // (lib 1.4.1) moved to right side of screen
    }
-    
+      
    fill(240);
    textSize(28);
    text(lfs.getContestTimeString(),51,46);
+  
+   // showLapCount (220,46); 
     
    text(lfs.getContestStateName(),width-248,47);
       
    text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);  
     
-    
-   lfs.drawRobotLocHeadingVel(974,47);        // draw x,y location and heading bitmap (values not available during contest run) 
-                                              // That is, getRobotX() getRobotY()..  are not available during contest run time. 
+   textSize (24); // (lib 1.4.1) shrunk text just a bit in case showing distance traveled
+   lfs.drawRobotLocHeadingVel(974,44);  // draw x,y location and heading bitmap (values not available during contest run) 
+                                        // That is, getRobotX() getRobotY()..  are not available during contest run time. 
     
     
    if (!simFreeze)                             // if simulation not frozen with speed=0, key='0' freezes
@@ -211,25 +216,37 @@ public void setup()
      
    if (lfs.controllerIsEnabled())    // if turned off, no update.
      userControllerUpdate();         // user reads sensors changes target speed and turn rate as needed.
+   
+   if (lfs.robotOutOfBounds())       // Moved up to just after userController update Oct 22, 2020
+   {
+    // lfs.stop();                     // keep issuing stop while out of bounds - overriding controller 
+                                       // up to userOutOfBounds now
+     push();                           // push Matrix and Style  
+     userOutOfBounds();
+     pop();
+   }
+   else userInBounds();    
+    
+    
     
    lfs.driveUpdate(simRequestStep);  // if step requested update robot position with current speed and turn rate
                                      // also stopwatch tick is counted. Note: if controller is not enabled 
-                                     // this call will insure robot position is updated allowing manual drive.   
+                                     // this call will insure robot position is updated allowing manual drive.
+                                     
+   if (lfs.lapTimer.lapTimerUpdate(simRequestStep))  // update lap timer including stopwatch if not lap mode                                   
+     userLapDetected();                              // call user method if lap detected (uMisc)                                    
                                              
    simRequestStep = false;           // ramping speed and/or turn rate toward targetSpeed and targetTurnRate
                                      // using defined acceleration/deceleration rates.
        
    lfsDrawPanel();                   // formerly userDrawPanel now LFS_DrawPanel method 
                                      // which will conditionally call userDrawPanel
-  
-   if (lfs.robotOutOfBounds())
-   {
-     lfs.stop();
-     userOutOfBounds();
-   }
-   else userInBounds();
-    
+      
    lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish"   
+   
+   
+   userMiscUpdate();
+ 
    
   } // end of draw()
   

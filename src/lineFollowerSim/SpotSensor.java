@@ -20,11 +20,14 @@ public class SpotSensor {
   private float intensity;    // normalized intensity 0.0 (black) to 1.0 (white)
   private int color; 
   private PApplet p;          // ref to processing applet
+  private Sensors sensors;
  
+  
  // no modifier = package private SpotSensor
  SpotSensor (PApplet parent, Sensors sensors, float xoff, float yoff, int spotWPix, int spotHPix)  // constructor 
  {
    p = parent; 
+   this.sensors = sensors;
 	 
    this.xoff = xoff;
    this.yoff = yoff;
@@ -141,7 +144,7 @@ float sampleSensorPixel (VP vp, int courseDPI, float xoff, float yoff)
  // sample all pixels in sensor pixel (rectangular cluster of screen pixels) - reading Green channel 0..255 0=black 255=bright white  
  
  int count = 0;
- int sum = 0;
+ float sum = 0.0f;
  
  for (int yr=-h2; yr<h2+1;yr++)
  for (int xr=-w2; xr<w2+1; xr++)
@@ -156,11 +159,20 @@ float sampleSensorPixel (VP vp, int courseDPI, float xoff, float yoff)
   {
   sum +=  (p.pixels[i] >> 8) & 0xFF;                // sample Green channel 0..255 
   
-  if ((Math.abs(yr)==h2) || (Math.abs(xr)==w2) )    // make sensor cell bounds visible
-    p.pixels[i] = p.color (40);                     // dark gray boundary pixels
-  else
-    p.pixels[i] = p.color (100,255,100);            // mark pixel as read - pale green 
-                                                    // requires updatePixels() call when finished 
+  /*  good diagnostic, but problems possibly with P3D and some pixels showing up
+   *  even without updatePixels... ??? not sure
+   *  problem reported by ChrisN  getting values like 0.85 on pure white 
+   *  
+  if (sensors.showSampledPixels)                      // eliminated over-draw at time of sample  (1.4.1)
+  {
+    if ((Math.abs(yr)==h2) || (Math.abs(xr)==w2) )    // make sensor cell bounds visible
+      p.pixels[i] = p.color (40);                     // dark gray boundary pixels
+    else
+      p.pixels[i] = p.color (100,255,100);            // mark pixel as read - pale green 
+                                                      // requires updatePixels() call when finished
+  } 
+  */
+  
   }
   
   count++;                                          // tally the number of pixels sampled   

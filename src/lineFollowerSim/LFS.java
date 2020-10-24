@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;   // for course list
 
 
 /** LFS Class is Line Follower Simulator main class that handles:
@@ -80,7 +81,7 @@ Marker marker;         // single instance of marker class - accessed from this c
  * for a correct file header to be generated. New in (lib 1.4.1), default is false, see userInit tab in 
  * simulation app.
  */
-public boolean contestReportIncludesDist;  // when true distance traveled included in run report  1.4.1
+public boolean reportDistanceTraveled;  // when true distance traveled included in run report  1.4.1
 /**
  * When set true, on screen display includes distance traveled since start. 
  * New feature in (lib 1.4.1) default is false. See UserInit tab in simulation app.
@@ -102,14 +103,13 @@ public String simContestFilename = "contest.cdf";
 
 /**
  * Show (or hide) indication of sensor data has been read by coloring screen bitmap pixels directly.
- * This method might find its way to being more of a diagnostic tool due to fact it shows sensor location and not
- * any information relating to user interpretation of data. 
+ * Support dropped for this feature. (lib 1.4.1). Drawing is performed after all sampling now.
  * 
  * @param show Set to false to hide display indicating sensor sampling location
  */
 
 public void setShowSensorsOnSensorView(boolean show)
-{ sensors.showSampledPixels = show; }
+{ p.println ("setShowSensorsOnSensorView support dropped lib 1.4.1"); }
 
 /** User first name supplied by call to setFirstNameLastNameRobotName
  */
@@ -123,7 +123,7 @@ public String nameRobot;                 // client supplied names (NAMES command
 
 
 
-private PGraphics rv; // robot view at 64 DPI
+//private PGraphics rv; // robot view at 64 DPI
 
 
 int  headingChangeX = -999; // used to log mouseX on right mouse press and hold and drag in X to change heading
@@ -619,7 +619,8 @@ nameRobot = robotName;
 
 
 /**
- * 
+ * Choose course to load from sketch datafolder, see defineCourse and chooseCourse methods which are more 
+ * handy for selecting from a list of possible courses.
  * @param fname file name of contest course .png or .jpg image file expected to be scaled to 64 DPI 
  * (dots per pixel). File is expected to be in sketch data sub folder.
  */
@@ -1030,28 +1031,42 @@ public void contestFinish()
   contestState = ContestStates.csFinished;
  
   
-  String comments = ""; // need to have csStop before cdFinished  with chance to enter comments !!!
+ 
   
   String name = nameFirst+" "+nameLast;
   String time = getContestTimeString();   // runtime including reset count (if resets enabled)
    
- 
-  String header,s;
-  
-  header = "Name,Robot,RunTime,FinalPos,CourseFile,Comments";       
-  s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);
-  
-  if (contestReportIncludesDist)
-  {
-    float d = robot.getDistanceTraveled();
+   
+  String header = "Name,Robot,RunTime,FinalPos,CourseFile,Comments";
+  if (reportDistanceTraveled)
     header =  "Name,Robot,RunTime,FinalPos,Dist,CourseFile,Comments";
-    s = String.format("%s,%s,%s,%1.0f,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,d,courseFilename,comments);
-  }  
   
+  float d = robot.getDistanceTraveled(); 
+ 
   
+  String comments = ""; 
+  if (lapTimer.lapTimerModeEnabled) comments = "Lap Mode Contest - Total Time - completed laps follow"; 
+ 
+	
+  String s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);  
+	  
+  if (reportDistanceTraveled)
+      s = String.format("%s,%s,%s,%1.0f,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,d,courseFilename,comments);
+   
   appendStringToFile(header,simContestFilename,s);
-    
-      
+   
+  if (lapTimer.lapTimerModeEnabled)
+  for (String lt : lapTimer.lapList)
+  {
+	 time = lt; 
+	 comments = "";
+	 if (reportDistanceTraveled)
+	      s = String.format("%s,%s,%s,%1.0f,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,d,courseFilename,comments);
+	 else s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);
+	 
+	 appendStringToFile(header,simContestFilename,s); 
+  }
+  
   requestScreenSaveInFrameCount = 2;  // give time for display of (F) in window before screen cap
   
   
@@ -1280,6 +1295,143 @@ public float getMinTimeStep() { return minTimeStep; }
 public float getMaxTimeStep() { return maxTimeStep; }
 
 
+class Course {
+	int num;
+	String fname;
+	boolean lapTimer;
+	float xpos,ypos,heading;
+	
+	Course (int n, boolean lap, String name, float x, float y, float h){
+	  num = n;
+	  lapTimer = lap;
+	  fname = name;
+	  xpos = x;
+	  ypos = y;
+	  heading = h;
+	}
+	
+}
+
+
+
+ArrayList <Course> courseList = new ArrayList <Course> ();
+int currentCourseNum = -1; // -1 allows chooseCourseFirstTime to work 
+
+
+// used by defineCourse / defineLapCourse methods
+private void defC (boolean lap, int num, String name, float x,float y, float h)
+{
+  for (Course c : courseList) if (c.num==num) return; // already in list, skip adding 
+  courseList.add(new Course(num,lap,name,x,y,h));
+}
+
+
+/**
+ * Choose a course defined by defineCouse defineLapCourse methods which specify course number and name. Subsequent
+ * calls to this method are ignored. Use chooseCourse method to bypass this "one time" feature.
+
+ * @param num Course number
+ */
+public void chooseCourseOneTime(int num)
+{
+  if (contestIsRunning())
+  { 
+	contestStop(); 
+	PApplet.println("Warning - Contest Stopped - new course being selected");
+    
+  }
+  
+  if (currentCourseNum != -1) return;   // First Time
+	  
+  for (Course c : courseList) {
+	  if (c.num==num)
+	  {	  
+		 setCourse(c.fname);  // sets and loads image 
+		 markerSetup();       // loads markers associated with course filename 
+		 lapTimer.lapTimerModeEnabled = c.lapTimer;
+		 if (c.xpos !=-999) setPositionAndHeading (c.xpos,c.ypos,c.heading);
+		 else setPositionAndHeading (12,12,0);
+		
+		 
+		 currentCourseNum = num;
+		 return; 
+	  }		  
+  }
+	
+  PApplet.println ("Error - Course number not defined. Check UserInit program tab.");
+}
+
+
+/**
+ * Choose a course defined by defineCouse defineLapCourse methods which specify course number and name. 
+ * See also chooseCourseOneTime method.
+ * @param num Course number. 
+ */
+public void chooseCourse(int num) { currentCourseNum = -1; chooseCourseOneTime(num); }
+
+
+/**
+ * Choose next course from list created typically in UserInit tab, by defineCourse method calls.
+ */
+public void chooseNextCourse()
+{
+  if (courseList.size()==0) {
+	  PApplet.println ("Error - chooseNextCourse failed, no courses have been defined with defineCourse method. Check UserInit.");
+	  return;
+  }
+	
+  for (Course c : courseList) 
+	  if (c.num > currentCourseNum) {
+		  currentCourseNum = -1;
+		  chooseCourse(c.num); return; }  // found next in list 
+ 
+ 
+  chooseCourse(courseList.get(0).num); // wrap around to first course 	
+	
+}
+
+
+
+
+/**
+ * Define a course that uses lap timer, with no initial position specified. When the course is chosen the robot
+ * will be placed in the center. Markers can always be defined to allow quick placement.
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ */
+public void defineLapCourse(int num, String name) {defC(true,num,name,-999,0,0); }
+/**
+ * Define a course that does not use lap timer, with no initial position specified. When the course is chosen the robot
+ * will be placed in the center. Markers can always be defined to allow quick placement.
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ * 
+ */
+public void defineCourse (int num, String name)   {defC(false,num,name,-999,0,0); }
+/**
+ * Define a course that uses lap timer, with initial position and heading specified. When the course is chosen the robot
+ * will be placed at the location specified. 
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ * @param x Robot Offset (inches) in course image 
+ * @param y Robot Offset (inches) in course image
+ * @param heading Robot heading 0..359 (degrees) 
+ */
+public void defineLapCourse(int num, String name, float x,float y,float heading) {defC(true,num,name,x,y,heading); }
+/**
+ * Define a course that does not use lap timer, with initial position and heading specified. When the course is chosen the robot
+ * will be placed at the location specified. 
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ * @param x Robot Offset (inches) in course image 
+ * @param y Robot Offset (inches) in course image
+ * @param heading Robot heading 0..359 (degrees) 
+ */
+public void defineCourse (int num,String name,float x,float y, float heading) {defC(false,num,name,x,y,heading);   }
 
 
 

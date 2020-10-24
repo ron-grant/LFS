@@ -2,18 +2,47 @@
 
    Additions at end of userInit for (lib 1.3). Init markers, get sensor names
    
-   
 */
 
 SpotSensor sensorL,sensorM,sensorR;
 LineSensor sensor1;  
+
 PImage bigIcon;     // this variable should be defined for use by userDraw method     
 
-int courseNum = 1;  // allow selection of see also UserReset tab
 
 void userInit()  // called by lfs to obtain robot information and for sensor definitions
 {
   lfs.setFirstNameLastNameRobotName("Ron","Grant","SimpleBot4");   // change to your name and robot
+  
+  // Define courses (64 DPI .png or .jpg) you might want to use with unique sequence number 1,2,3...  (lib 1.4.1) 
+  // Then choose the course you want to use.  Ctrl-C can be used to sequence to next course.
+  // Initial x,y,heading can be specified OR you can always use markers that are remembered with each unique file
+  // These course files must appear in sketch data sub-folder.
+  // For backward compatibility. If your program uses old lfs.setCourse("filename"), treated as single course that is
+  // chosen automatically. 
+   
+  lfs.defineLapCourse(1,"Novice_LF_course-Fall_2018_64DPI.jpg");      // LapCourses use lap timer  
+  lfs.defineLapCourse(2,"Advanced_LF_course_Fall-2018_64DPI.jpg");
+  lfs.defineCourse   (3,"DPRG_Challenge_2011_64DPI.jpg",71.7,120,0);  // not lap timer course, optional x,y,heading is used here 
+  lfs.defineLapCourse(4,"Test2x3.png");
+  lfs.defineLapCourse(5,"RG_5x7_Advanced_64DPI_R1.png");
+    
+  lfs.chooseCourseOneTime(4);          // here you choose a course to use. Because userInit may be called again
+                                       // the setting is only used one time. This allows the Ctrl-C Course 
+                                       // select command to work, where this method is called when robot 
+                                       // runs a contest.
+  
+  //lfs.setCourse("somecourse.jpg");   // commented out - the old way to select course including need to manually load markers            
+  //lfs.markerSetup();                 // load course markers, replaced by above code 
+  
+   
+  lfs.lapTimer.lapCountMax = 3;
+    
+  lfs.showDistanceTraveled = true;     // informational item (lib 1.4.1) 
+  lfs.reportDistanceTraveled =false;   // distance can be added to contest.cdf report (lib 1.4.1), suggest erase old 
+                                       // contest pdf, if changing state, for correct header to be written.
+ 
+ 
  
   /* Optional support for Robot Icons by popular request of people including DPRG President, Carl Ott  (lib 1.3.1)
      Load icon file(s) from data folder.
@@ -37,27 +66,24 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   lfs.setRobotIconScale(0.5);                   // scale up or down as needed, default scale is 1.0
                                                 // (lib 1.3.1)  
  
+ 
+  lfs.showDistanceTraveled = true;              // (lib 1.4.1) default false compatible with previous lfs versions 
+  lfs.reportDistanceTraveled= false;            // (lib 1.4.1) default false compatible with previous lfs versions
+                                                // setting true, would require erasing contest.cdf file to allow generation of
+                                                // correct header which includes "Dist"
+                                                // * If these statments are omitted in your application the library defaults 
+                                                // to false, keeping lib 1.4.1 compatible with (lib 1.3.1).
+                                                
+ 
   bigIcon = loadImage("SimpleBotBigIcon.png");  // image from data folder  to display in UserDraw tab userDraw method 
                                                 // for now using small image 
  
  
   // ------------- end of optional icon support
- 
-  if (courseNum==1)
-  {
-    lfs.setCourse("RG_5x7_Advanced_64DPI_R1.png");       // example of what I think is advanced  - demo robot will run this
-    lfs.setPositionAndHeading (48,6,0);       
-  } 
-
-  if (courseNum==2)
-  {
-    lfs.setCourse("DPRG_Challenge_2011_64DPI.jpg");   // challenge course     
-    lfs.setPositionAndHeading (71.7,120,0);           // initial position over DPRG logo
-  }
- 
- // lfs.setTimeStep(0.0166);   // 0.01 sec to 0.1 sec    0.166 default ~1/60
+   
   
- 
+       
+  lfs.setTimeStep(0.0166);   // 0.01 sec to 0.1 sec    0.166 default ~1/60
   
   // below acceleration and deceleration rates are subject to LFS maximums
   
@@ -86,8 +112,7 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
   sensorL = lfs.createSpotSensor(1,-2,12,12);         // example spot sensors 
   sensorM = lfs.createSpotSensor(1.5f,0,10,10);
   sensorR = lfs.createSpotSensor(1, 2,12,12);
-   
-  sensor1 = lfs.createLineSensor(2.0f, 0, 5, 5, 65); // x,y offset from robot center, spot size (5,5) ,
+  sensor1 = lfs.createLineSensor(2.0f, 0, 5,5, 65); // x,y offset from robot center, spot size (5,5) ,
                                                      // number of samples (if even, gets incremented to odd value 
                                                      // to place a spot directly at sensor x,y
                                                      // and make sensor symmetrical about x,y
@@ -103,6 +128,8 @@ void userInit()  // called by lfs to obtain robot information and for sensor def
                                  // in userController at robot run time. That is, every time step
                                  // provides an opportunity to modify these values for the next time step.
 
+  lfs.setShowSensorsOnSensorView(false);
+
   nameSensorsUsingVariableNames();   // look up sensor names and assign them to sensor name field (lib 1.3)
-  lfs.markerSetup();                 // load course markers (lib 1.3)
+ 
 }

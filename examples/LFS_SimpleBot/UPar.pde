@@ -19,6 +19,7 @@
 */        
  
   float v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,vf;  // demo variables 
+  int sampleInt;  // New Oct 22, 2020 !!! 
   
   void parEditorUpdate()
   {
@@ -34,7 +35,8 @@
       Kp = p.parF(Kp,"Kp","PD controller Proportional constant",10.0,0.0,100.0,0.1);
       Kd = p.parF(Kd,"Kd","PD controller Derivative constant",10.0,0.0,100.0,0.1);    
       maxSpeed = p.parF(maxSpeed,"maxSpeed","inches/sec ",6.0,0.0,24.0,1.0);
-     
+      sampleInt= p.parI(sampleInt,"sampleInt","sample integer",0,-10,10);  // new Int var demo
+      
      
       v1 = p.parF(v1,"v1","Test 1",10.0,0.0,100.0,0.1); 
       

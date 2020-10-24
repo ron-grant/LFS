@@ -62,6 +62,12 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
   case 'D'-64 :  // present for cases   
   case 'L'-64 : 
   case 'S'-64 :  break;  // do nothing here 
+  
+  case 'C'-64 : lfs.chooseNextCourse();    // experiment (lib 1.4.1)  
+                //userInit(); 
+                break;
+                
+  
  
   case 'C' :    lfs.setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
                 if (!lfs.controllerIsEnabled()) lfs.stop();           // position and heading of robot
@@ -69,7 +75,7 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                       
   
   case 'H' : helpPage++;
-             if (helpPage>2) helpPage = 0;
+             if (helpPage>helpPages) helpPage = 0;
              break;  
 
   case 'M' : lfs.markerAddRemove();   // interactive marker placement/removal  (lib 1.3)
@@ -92,7 +98,7 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
               lfs.contestFinish();
               break;
                                                  
-  case 'S' :   lfs.stop(); lfs.setEnableController(false); break;
+  case 'S' :  lfs.stop(); lfs.setEnableController(false); break;
   
   // Sideways Drive Mode - e.g. Mecanum Wheel  using < > keys (shifted or not shifted) 
   // controller would typically use lfs.setTargetSidewaysSpeed() method in addition to 
@@ -110,14 +116,21 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
              userControllerResetAndRun();
              lfs.setEnableController(true);
              lfs.crumbsEraseAll();
+             lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
+             
+             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+             
              simFreeze = false;
              break;
        
   case 'R' : lfs.clearSensors();
              userControllerResetAndRun();
-             lfs.contestStart();               // Run  enable controller, clear crumbs, reset stopwatch
-             helpPage =0;                      // help not visible
+             lfs.contestStart();               // Run  enable controller, clear crumbs, reset stopwatch, reset Distance Traveled
+             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+             
+             helpPage =0;                      // make help not visible
              parEditor.hide();                 // parameter editor not visible 
+             
              simSpeed = 9;
              simFreeze = false;
              break;
