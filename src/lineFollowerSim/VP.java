@@ -27,9 +27,13 @@ public class VP  {  // ViewPort  x,y upper-left,  width height         // simple
    * 	  
    * @param x1  horizontal offset from left side of screen
    * @param y1  vertical offset from top of screen
-   * @return
+   * @return true if point inside viewport
    */
   public boolean pointInside(int x1, int y1) { return (x1>x) && (x1<x+w) && (y1>y) && (y1<y+h); }
+  /**
+   * Get a copy of current viewport parameters
+   * @return safe copy of viewport data, does not allow modification of x,y,w,h values  
+   */
   public VP get() { return new VP(x,y,w,h);}  // generate a copy of viewport data
     
   

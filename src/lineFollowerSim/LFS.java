@@ -65,7 +65,6 @@ import java.io.IOException;
 
 public class LFS  {
 
-//private String Version = "Sep 14 2020";	
 
 View view;             // package private - important 
 private PApplet p;     // reference to current applet (processing sketch using this lib)
@@ -74,7 +73,19 @@ private PApplet p;     // reference to current applet (processing sketch using t
 Robot robot;           // single instance of robot class - accessed only from this 
                        // class  -- user must rely on this class' get/set methods 
 
-Marker marker;         // single instance of marker class - accessed from this class only 
+Marker marker;         // single instance of marker class - accessed from this class only
+/**
+ * When set true, finish Report written to cdf  includes distance traveled since start.
+ * If the file header is already written, the file should be erased if using this feature in order
+ * for a correct file header to be generated. New in (lib 1.4.1), default is false, see userInit tab in 
+ * simulation app.
+ */
+public boolean contestReportIncludesDist;  // when true distance traveled included in run report  1.4.1
+/**
+ * When set true, on screen display includes distance traveled since start. 
+ * New feature in (lib 1.4.1) default is false. See UserInit tab in simulation app.
+ */
+public boolean showDistanceTraveled;            // when true distance traveled included in on screen display 1.4.1
 
 /**
  *  Sensors class single instance - gives access to spot and line sensor lists.
@@ -126,7 +137,6 @@ float startDragLocX,startDragLocY;
 
 boolean drawRobotCoordAxes = true;   // show robot coordinate axes   
                                  
-int stopwatchTick;                 // run time in delta time counts   !!! public for now 
 int contestResetCount=0;
 
 boolean controllerEnabled = false;     // setcontrollerEnabled(t/f)   getcontrollerEnabled()                                
@@ -162,6 +172,8 @@ private int cvCount = 1;
 
 private int requestScreenSaveInFrameCount  = -1;
 
+public LapTimer lapTimer;
+
 enum ContestStates {csIdle,csStop,csRun,csResetRequest,csFinished};
 ContestStates contestState = ContestStates.csIdle;
 
@@ -181,9 +193,10 @@ public LFS (PApplet parent)
 
   System.out.println("##library.name## ##library.prettyVersion## by ##author##");
 
-  robot = new Robot(parent,0,0,0);  // pos heading set later 
-  sensors = new Sensors(parent);    // single instance of sensors 
-   
+  robot = new Robot(parent,0,0,0);     // pos heading set later 
+  sensors = new Sensors(parent);       // single instance of sensors 
+  lapTimer = new LapTimer(parent,this); 
+  
   view = new View (parent);
   view.defineRobotViewport(40,40,400,400);
   view.defineCourseViewport(480,40,1200,800);
@@ -635,21 +648,37 @@ public String getCourseFilename() { return courseFilename; }
 public void drawRobotLocHeadingVel(float x, float y)  
 {
 // does report "actual" robot x,y and heading, draws onto screen
-// idea is user not supposed to know actual location hence draw and not make vars available
+// idea is user not supposed to know actual location hence draw and not make values available
 
-if (robot.sidewaysSpeed != 0)	
-	p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f:%1.1f ips",
-            robot.x,robot.y,robot.heading,robot.speed,robot.sidewaysSpeed),x,y);
-else
-p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f ips",
-            robot.x,robot.y,robot.heading,robot.speed),x,y);
+	if (showDistanceTraveled) // if set true, include distance, might require smaller font to fit   new 1.4.1
+	{	
+		if (robot.sidewaysSpeed != 0)	
+			p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f:%1.1f ips dist %1.0f",
+		            robot.x,robot.y,robot.heading,robot.speed,robot.sidewaysSpeed,robot.distanceTraveled),x,y);
+		else
+		p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f ips dist %1.0f",
+		            robot.x,robot.y,robot.heading,robot.speed,robot.distanceTraveled),x,y);
+		
+	
+	}
+	else // default 
+	{	
+		if (robot.sidewaysSpeed != 0)	
+			p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f:%1.1f ips",
+		            robot.x,robot.y,robot.heading,robot.speed,robot.sidewaysSpeed),x,y);
+		else
+		p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f ips",
+		            robot.x,robot.y,robot.heading,robot.speed),x,y);
+	
+	}
+
 }
+
 
 
 void clearStopwatch() // package private - zero stop watch
 {
-stopwatchTick = 0; 
-contestResetCount=0;
+  lapTimer.clear();	
 }
 
 /** Called from draw() method, if stepRequseted simulator will calculate new position and heading of robot
@@ -666,7 +695,7 @@ public void driveUpdate(boolean stepRequested)
     view.crumbAdd(robot);
   }  
   
-  if (stepRequested && controllerEnabled) stopwatchTick++;
+  if (stepRequested && controllerEnabled) lapTimer.tick();
 } 
 
 
@@ -677,22 +706,12 @@ public void driveUpdate(boolean stepRequested)
  */
 public String getContestTimeString ()
 {
-
-int runtime = (int) Math.floor(stopwatchTick*timeStep*1000);
-int rsec = runtime / 1000;
-
-int mins =   rsec/60;
-
-int secs =   rsec%60;
-
-int msecs =  runtime %1000;
-
-//String rs = "";
-//if (simSupportContestReset) rs = String.format ("Resets %d",contestResetCount);
-
-return String.format("%2d:%02d.%03d",mins,secs,msecs);  // originally appended reset count  (sec.millisec)
-
+  return lapTimer.getTimeStr();  // now using lapTimer
 }
+
+
+
+
 
 
 /**
@@ -893,7 +912,8 @@ public void contestStart()
   contestState = ContestStates.csRun;
   controllerEnabled = true;
   crumbsEraseAll();
-  clearStopwatch();
+  lapTimer.clear();
+  robot.setDistanceTraveled(0.0f);         // clear distance counter new 1.4.1
   view.userRobotIconRotationBias = 0.0f;
 }
 
@@ -954,14 +974,14 @@ public void setPositionAndHeading (float x, float y, float heading)
  * @return X (inches) 
  */
 public float getRobotX () {  if (!contestIsRunning()) return robot.x;
-else { PApplet.println ("Contest Running robot location not available"); return 0; }
+else { PApplet.println ("Contest Running robot location not available"); return 0.0f; }
 }
 /**
  * If contest is not running return robot center, coordinate location Y value (inches)
  * @return Y (inches) 
  */
 public float getRobotY () {  if (!contestIsRunning()) return robot.y;
-else { PApplet.println ("Contest Running robot location not available"); return 0; }
+else { PApplet.println ("Contest Running robot location not available"); return 0.0f; }
 }
 /**
  * If contest is not running return robot heading value (degrees).
@@ -977,7 +997,18 @@ else { PApplet.println ("Contest Running robot location not available"); return 
  */
 public float getRobotHeading () {  if (!contestIsRunning()) return robot.heading;
 else { PApplet.println ("Contest Running robot heading not available"); return 0; } }
-
+/**
+ * If contest is not running return robot distance traveled since start. This information is 
+ * displayed if showDistanceTraveled is set true and reported in contest.cdf if finishIncludesDistance is
+ * set true.
+ * @return distance traveled since G)o  (lib 1.4.1)
+ */
+public float getDistanceTraveled() { if (!contestIsRunning()) return robot.distanceTraveled;
+else { PApplet.println("Contest Running, robot distance traveled not available"); return 0.0f; }}
+/**
+ * used when issuing Go or Run command to simulator
+ */
+public void clearDistanceTraveled() { robot.distanceTraveled=0.0f; }
 
 
 
@@ -1005,9 +1036,19 @@ public void contestFinish()
   String time = getContestTimeString();   // runtime including reset count (if resets enabled)
    
  
-  String header = "Name,Robot,RunTime,FinalPos,CourseFile,Comments";       
-     
-  String s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);
+  String header,s;
+  
+  header = "Name,Robot,RunTime,FinalPos,CourseFile,Comments";       
+  s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);
+  
+  if (contestReportIncludesDist)
+  {
+    float d = robot.getDistanceTraveled();
+    header =  "Name,Robot,RunTime,FinalPos,Dist,CourseFile,Comments";
+    s = String.format("%s,%s,%s,%1.0f,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,d,courseFilename,comments);
+  }  
+  
+  
   appendStringToFile(header,simContestFilename,s);
     
       
@@ -1104,6 +1145,20 @@ public void  moveToStartLocationAndHeading()
   marker.gotoStartLocation(this);  // goto default start location OR current clicked on marker location
 }
 
+/**
+ * Get start location used for contest run. Return as PVector where .x .y are (x,y) location of 
+ * start point, .z is heading in degrees
+ * @return PVector reference to start location and heading, e.g. PVector myStart = getStartLocationAndHeading();  
+ */
+public PVector getStartLocationAndHeading() 
+{
+  return new PVector (marker.startLocX,marker.startLocY,marker.startLocHeading);
+}
+
+
+
+
+
 /**Show sensors in Robot or Sensor viewport. Displays sensor color data as created (optionally) by user code.
  * Default is green if user does not modify sensor color (or colorTable in case of line sensor).
  * 
@@ -1179,5 +1234,53 @@ public boolean robotOutOfBounds() {
  * @param enable When true crumbs are drawn. 
  */
 public void setCrumbsVisible (boolean enable) { view.crumbsVisible = enable; } 
+
+
+
+/**
+ * Get simulator imposed maximum robot speed (inches/sec). 
+ * @return max speed inches/sec
+ */
+public float getSimMaxSpeed()    { return maxSpeed; }
+/**
+ * Get simulator imposed maximum turn rate (degrees/sec).
+ * @return max turn rate (degrees/sec) 
+ */
+public float getSimMaxTurnRate() {return maxTurnRate; }
+/**
+ * Get simulator imposed maximum acceleration rate (inches/sec^2).
+ * @return maximum acceleration rate (inches/sec^2).
+ */
+public float getSimMaxAcc( ) { return maxAcc; }
+/**
+ * Get simulator imposed maximum deceleration rate (inches/sec^2).
+ * @return maximum deceleration rate (inches/sec^2).
+ */
+public float getSimMaxDecel() { return maxDecel; }
+/**
+ * Get simulator impose maximum turn acceleration (and deceleration) rate (deg/sec^2).
+ * 
+ *  @return Simulator maximum turn acceleration rate (deg/sec^2).
+ */
+public float getSimMaxTurnAcc() {return maxTurnAcc; }
+/**
+ * Get simulator minimum time step (seconds). This is the amount of time that passes per controller
+ * update and also simulator integration time for constant acceleration/deceleration rates applied to calculate 
+ * speed change and speed integrated to become displacement (distance). This can be faster or slower than
+ * real-time. For example at a frame rate of 50 frames per second and a time step of 0.020 (1/50th second),
+ * the simulator runs in real time. If the frame rate is 100 frames/second, the simulator would run at 2X realtime.
+ *  
+ * @return Simulator minimum allowable time step (seconds).
+ */
+public float getMinTimeStep() { return minTimeStep; }
+/**
+ * Get simulator maximum time step (seconds). See getMinTimeStep method description.
+ * @return Simulator maximum allowable time step (seconds).
+ */
+public float getMaxTimeStep() { return maxTimeStep; }
+
+
+
+
 
 } // end LFS class 

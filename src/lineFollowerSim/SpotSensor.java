@@ -53,7 +53,7 @@ public class SpotSensor {
  /**
   * Set spot rgb color after analysis for sensor overlay display, e.g. setColor(color(255,0,0));   // red
   * <p>
-  * * @param color Specifies integer, suggest using color(r,g,b) or color(r,g,b,alpha)  where alpha= transparency
+  *@param color Specifies integer, suggest using color(r,g,b) or color(r,g,b,alpha)  where alpha= transparency
   * 
   */
  public void setColor (int color) { this.color = color; }

@@ -75,7 +75,7 @@ float maxTurnRate;
 float sidewaysSpeed;           // right+ left-  translation  
 float targetSidewaysSpeed;
 
-
+float distanceTraveled;  // new in 1.4.1  meant to be,reported, but not available during contest 
 
 Robot (PApplet p, float x, float y, float heading)
 {
@@ -95,8 +95,8 @@ void init()
 {
 	acclRate = 0.0f;      // by default, instantly apply speed vs ramp    -- assume both set to non-zero if changed
 	declRate = 0.0f;      // use setAccDecelRates() method to set.
-	turnAcc = 0.0f;       // turn acceleration in deg/sec^2   
-	hardStop();
+	turnAcc = 0.0f;       // turn acceleration in deg/sec^2
+    hardStop();
 
 }
 
@@ -199,6 +199,9 @@ turnRate = 0.0f;
 
 float radians (float r ) { return (float) (r*Math.PI/180.0f);   }
 
+void setDistanceTraveled (float d) {distanceTraveled = d;}
+float getDistanceTraveled() { return distanceTraveled;}
+
 
 void driveUpdate(float dt) // delta time in seconds typically value from 0.1 to 0.01 (seconds)
                          // not tied to real time e.g. simulation steps can be executed very slowly
@@ -274,7 +277,11 @@ if (turnRate != targetTurnRate)
 float dist = speed * dt;            // total distance traveled in this delta time timestep in inches
 float swDist = sidewaysSpeed * dt;  // total sideways (right angle to forward) distance - Mecanum wheels  
     
-                                        
+if (sidewaysSpeed==0.0)  distanceTraveled += dist; 
+else 
+  distanceTraveled += PApplet.sqrt(PApplet.sq(dist)+PApplet.sq(swDist));  // distance traveled if sideways speed component
+
+
  
 // resolve into changes in x and y  as a function of heading
 
