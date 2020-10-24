@@ -1,3 +1,27 @@
+### Library 1.4.1 released, doing some round up of minor bugs and testing over next few days.
+
+Features
+<p>
+Automatic lap timer for N laps, stopping on last. calculates closest distance to start point less then 3 inch maximum
+distance. Added a tiny course for quick trial of lap timer.
+<p>
+Course list added to UserInit, including ability to select initial course. Also added Ctrl-C cycle through listed courses.
+<p>
+Multi-page help includes simulator imposed maximum values for speed/acceleration turn rate/turn acceleration.
+<p>
+Distance measured for run, and can be included in report (See UserInit). 
+<p>
+Problems reported by Chris N, regarding mouse/keyboard able to make changes to parameters that did not have focus.
+<p>
+Problem reported by Chirs N, intensity reported wrong on sensors. Removed old code that colored pixels after read.
+Side-Effect is great speed boost of frame rate (about 50% in my case) due to CPU<->GPU frame buffer transfer overhead reduction.
+Working On
+<p>
+Ability to read distance run after run to allow for automation in restart and adjust parameter..
+<p>
+Looking for bugs.. 
+
+
 ### Library 1.4 released see LFS-1.4-Changes.pdf (doc to be posted)
 
 More cool new features including interactive parameter editor, improved sketch organization, clearly defined 
