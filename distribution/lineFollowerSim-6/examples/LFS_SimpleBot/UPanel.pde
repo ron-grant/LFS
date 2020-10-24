@@ -58,14 +58,15 @@ void userDrawPanel1()          // Panel located in same location as Parameters, 
   rect (0,0,panel.w-1,panel.h-1);  // sample green box extents of viewport 
   
   fill (240);        // text color (gray level if single value vs RGB)
-  textSize (22);
-  
+ 
+ 
+  textSize (16);  // suggest 18 to 22 for more readable text 
   int ypos = 30;
-  text ("userDrawPanel1 method, in UPanel tab, draws on this panel ",20,ypos);
+  text ("UPanel userDrawPanel1",20,ypos);
   ypos += 26;
-  text ("when parameter editor not displayed.",20,ypos);
+  // text ("when parameter editor not displayed.",20,ypos);
   ypos += 30;
-  text ("Set showUserPanel1 to false, if not using.",20,ypos); 
+  //text ("Set showUserPanel1 to false, if not using.",20,ypos); 
 
   
   
@@ -100,7 +101,15 @@ void userDrawPanel2()  // Panel located where help is displayed, but only visibl
   ypos += 30;
   text ("turned OFF via TAB",20,ypos);
   ypos += 60;
+ 
+  /*
+  lfs.getMaxSpeed();
+  lfs.getMaxTurnRate();
+  lfs.get
+  */
+  
+  
   text (String.format ("Sample Values  alpha = %1.4f  beta = %d ",alpha,beta),20,ypos);  
-    
+  
   
 }
