@@ -95,10 +95,6 @@ public ArrayList <SpotSensor> spotSensorList = new ArrayList<SpotSensor>();   //
  */
 public ArrayList <LineSensor> lineSensorList = new ArrayList<LineSensor>();   // list of line sensors, created automatically as line sensor instances are created
 
-/**
- * Show pixels that have been sampled by sensors, setting false may improve graphics frame draw rate.
- */
-boolean showSampledPixels = true; // package private 
 
 private int sensorTotalSpotCount;   // enumerated every call to updateSensors
 
@@ -234,8 +230,9 @@ void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI imag
    
  }
  
- if (showSampledPixels) 
-   p.updatePixels();  // update required since sampled pixels are have been colored green to help with visualization of locations sampled     
+ // eliminated overdrawing when sampling, rely on showSensors
+ //if (showSampledPixels) 
+ //  p.updatePixels();  // update required since sampled pixels are have been colored green to help with visualization of locations sampled     
 } 
 
 
@@ -268,16 +265,22 @@ void showSensors(LFS lfs, char vportID)  // call with viewport you wish to use f
    p.stroke(255,0,0);
    
    float sc = lfs.courseDPI ;
+   
+   float rvScale =  1.0f;  // robot view scale down factor   new 1.4 applied to rect w,h
+   
    // if robot view
    if (vportID=='R')
-     sc = sc * vp.w/svp.w;
+   {
+	 rvScale =  1.0f*vp.w/svp.w;  // robot view scale down factor   new 1.4 applied to rect w,h  
+     sc = sc * rvScale;
+   }  
      
    for (SpotSensor ss : lfs.sensors.spotSensorList)
    {
      float x = ss.getXoff();
      float y = ss.getYoff();
-     float w = ss.getSpotWPix();
-     float h = ss.getSpotHPix();
+     float w = rvScale * ss.getSpotWPix();
+     float h = rvScale * ss.getSpotHPix();
    
      float scrX = tx +y*sc;
      float scrY = ty -x*sc;
@@ -296,8 +299,8 @@ void showSensors(LFS lfs, char vportID)  // call with viewport you wish to use f
    {
      float xoff = ls.getXoff();
      float yoff = ls.getYoff();
-     float w = ls.getSpotWPix();
-     float h = ls.getSpotHPix();
+     float w = ls.getSpotWPix() * rvScale;
+     float h = ls.getSpotHPix() * rvScale;
    
      float[] sensorTable = ls.readArray();      // get a reference to sensor's sensorTable 
      int [] colorTable   = ls.getColorArray();  // get a reference to sensor's colorTable
@@ -338,9 +341,9 @@ void showSensors(LFS lfs, char vportID)  // call with viewport you wish to use f
 
 
 void showSensorName(VP vp, String name)       // overlay sensor name on robot or sensor view depending on which is visible
-{                                      // used when mouse location is close to sensor location 
+{                                             // used when mouse location is close to sensor location 
    
-  p.pushStyle();                         // display sensor name at bottom of viewport  
+  p.pushStyle();                              // display sensor name at bottom of viewport  
   p.fill (20);
   p.rectMode(PApplet.CORNER);
   p.rect (vp.x,vp.y+vp.h-50,vp.w,50);

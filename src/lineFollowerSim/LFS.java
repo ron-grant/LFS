@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;   // for course list
 
 
 /** LFS Class is Line Follower Simulator main class that handles:
@@ -65,16 +66,27 @@ import java.io.IOException;
 
 public class LFS  {
 
-//private String Version = "Sep 14 2020";	
 
-View view;
+View view;             // package private - important 
 private PApplet p;     // reference to current applet (processing sketch using this lib)
 
 
 Robot robot;           // single instance of robot class - accessed only from this 
                        // class  -- user must rely on this class' get/set methods 
 
-Marker marker;         // single instance of marker class - accessed from this class only 
+Marker marker;         // single instance of marker class - accessed from this class only
+/**
+ * When set true, finish Report written to cdf  includes distance traveled since start.
+ * If the file header is already written, the file should be erased if using this feature in order
+ * for a correct file header to be generated. New in (lib 1.4.1), default is false, see userInit tab in 
+ * simulation app.
+ */
+public boolean reportDistanceTraveled;  // when true distance traveled included in run report  1.4.1
+/**
+ * When set true, on screen display includes distance traveled since start. 
+ * New feature in (lib 1.4.1) default is false. See UserInit tab in simulation app.
+ */
+public boolean showDistanceTraveled;            // when true distance traveled included in on screen display 1.4.1
 
 /**
  *  Sensors class single instance - gives access to spot and line sensor lists.
@@ -91,14 +103,13 @@ public String simContestFilename = "contest.cdf";
 
 /**
  * Show (or hide) indication of sensor data has been read by coloring screen bitmap pixels directly.
- * This method might find its way to being more of a diagnostic tool due to fact it shows sensor location and not
- * any information relating to user interpretation of data. 
+ * Support dropped for this feature. (lib 1.4.1). Drawing is performed after all sampling now.
  * 
  * @param show Set to false to hide display indicating sensor sampling location
  */
 
 public void setShowSensorsOnSensorView(boolean show)
-{ sensors.showSampledPixels = show; }
+{ p.println ("setShowSensorsOnSensorView support dropped lib 1.4.1"); }
 
 /** User first name supplied by call to setFirstNameLastNameRobotName
  */
@@ -112,7 +123,7 @@ public String nameRobot;                 // client supplied names (NAMES command
 
 
 
-private PGraphics rv; // robot view at 64 DPI
+//private PGraphics rv; // robot view at 64 DPI
 
 
 int  headingChangeX = -999; // used to log mouseX on right mouse press and hold and drag in X to change heading
@@ -126,7 +137,6 @@ float startDragLocX,startDragLocY;
 
 boolean drawRobotCoordAxes = true;   // show robot coordinate axes   
                                  
-int stopwatchTick;                 // run time in delta time counts   !!! public for now 
 int contestResetCount=0;
 
 boolean controllerEnabled = false;     // setcontrollerEnabled(t/f)   getcontrollerEnabled()                                
@@ -162,6 +172,8 @@ private int cvCount = 1;
 
 private int requestScreenSaveInFrameCount  = -1;
 
+public LapTimer lapTimer;
+
 enum ContestStates {csIdle,csStop,csRun,csResetRequest,csFinished};
 ContestStates contestState = ContestStates.csIdle;
 
@@ -181,9 +193,10 @@ public LFS (PApplet parent)
 
   System.out.println("##library.name## ##library.prettyVersion## by ##author##");
 
-  robot = new Robot(parent,0,0,0);  // pos heading set later 
-  sensors = new Sensors(parent);    // single instance of sensors 
-   
+  robot = new Robot(parent,0,0,0);     // pos heading set later 
+  sensors = new Sensors(parent);       // single instance of sensors 
+  lapTimer = new LapTimer(parent,this); 
+  
   view = new View (parent);
   view.defineRobotViewport(40,40,400,400);
   view.defineCourseViewport(480,40,1200,800);
@@ -346,9 +359,27 @@ public void defineSensorViewport (int x, int y, int width, int height)
   view.defineSensorViewport (x,y,width,height); 	
 }
  
-// !!! need documentation 
+
+/**
+ * Get a reference to Robot viewport including  location and size in screen coordinates. Upper-left x,y and width,height 
+ * in pixels. Modification of viewport size and position may be possible, but results not guaranteed.
+ *   
+ * @return reference to viewport.
+ */
 public VP getRobotViewport()  { return view.robotVP;  }
+/**
+ * Get a reference to Course viewport including  location and size in screen coordinates. Upper-left x,y and width,height 
+ * in pixels. Modification of viewport size and position may be possible, but results not guaranteed.
+ *   
+ * @return reference to viewport.
+ */
 public VP getCourseViewport() { return view.courseVP; }
+/**
+ * Get a reference to Sensor viewport including  location and size in screen coordinates. Upper-left x,y and width,height 
+ * in pixels. Modification of this viewports size and position may be possible, but results not guaranteed.
+ *    
+ * @return reference to viewport.
+ */
 public VP getSensorViewport() { return view.sensorVP; }
 
 
@@ -588,7 +619,8 @@ nameRobot = robotName;
 
 
 /**
- * 
+ * Choose course to load from sketch datafolder, see defineCourse and chooseCourse methods which are more 
+ * handy for selecting from a list of possible courses.
  * @param fname file name of contest course .png or .jpg image file expected to be scaled to 64 DPI 
  * (dots per pixel). File is expected to be in sketch data sub folder.
  */
@@ -617,21 +649,37 @@ public String getCourseFilename() { return courseFilename; }
 public void drawRobotLocHeadingVel(float x, float y)  
 {
 // does report "actual" robot x,y and heading, draws onto screen
-// idea is user not supposed to know actual location hence draw and not make vars available
+// idea is user not supposed to know actual location hence draw and not make values available
 
-if (robot.sidewaysSpeed != 0)	
-	p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f:%1.1f ips",
-            robot.x,robot.y,robot.heading,robot.speed,robot.sidewaysSpeed),x,y);
-else
-p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f ips",
-            robot.x,robot.y,robot.heading,robot.speed),x,y);
+	if (showDistanceTraveled) // if set true, include distance, might require smaller font to fit   new 1.4.1
+	{	
+		if (robot.sidewaysSpeed != 0)	
+			p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f:%1.1f ips dist %1.0f",
+		            robot.x,robot.y,robot.heading,robot.speed,robot.sidewaysSpeed,robot.distanceTraveled),x,y);
+		else
+		p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f ips dist %1.0f",
+		            robot.x,robot.y,robot.heading,robot.speed,robot.distanceTraveled),x,y);
+		
+	
+	}
+	else // default 
+	{	
+		if (robot.sidewaysSpeed != 0)	
+			p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f:%1.1f ips",
+		            robot.x,robot.y,robot.heading,robot.speed,robot.sidewaysSpeed),x,y);
+		else
+		p.text (String.format ("loc(%3.0f,%3.0f) %03.0f deg  vel %1.1f ips",
+		            robot.x,robot.y,robot.heading,robot.speed),x,y);
+	
+	}
+
 }
+
 
 
 void clearStopwatch() // package private - zero stop watch
 {
-stopwatchTick = 0; 
-contestResetCount=0;
+  lapTimer.clear();	
 }
 
 /** Called from draw() method, if stepRequseted simulator will calculate new position and heading of robot
@@ -648,7 +696,7 @@ public void driveUpdate(boolean stepRequested)
     view.crumbAdd(robot);
   }  
   
-  if (stepRequested && controllerEnabled) stopwatchTick++;
+  if (stepRequested && controllerEnabled) lapTimer.tick();
 } 
 
 
@@ -659,22 +707,12 @@ public void driveUpdate(boolean stepRequested)
  */
 public String getContestTimeString ()
 {
-
-int runtime = (int) Math.floor(stopwatchTick*timeStep*1000);
-int rsec = runtime / 1000;
-
-int mins =   rsec/60;
-
-int secs =   rsec%60;
-
-int msecs =  runtime %1000;
-
-//String rs = "";
-//if (simSupportContestReset) rs = String.format ("Resets %d",contestResetCount);
-
-return String.format("%2d:%02d.%03d",mins,secs,msecs);  // originally appended reset count  (sec.millisec)
-
+  return lapTimer.getTimeStr();  // now using lapTimer
 }
+
+
+
+
 
 
 /**
@@ -864,7 +902,8 @@ void appendStringToFile(String header, String filename, String text)
 
 
 /**
- * Called to start contest, controller enabled, crumbs cleared, stopwatch cleared.
+ * Called to start contest, controller enabled, crumbs cleared, stopwatch cleared and any rotation bias added to
+ * animate optional robot icon is cleared.
  * Reading position and heading prohibited during run as is repositioning robot with setPositionAndHeading.
  * <p>
  * (Called by simulation core code.) 
@@ -874,7 +913,9 @@ public void contestStart()
   contestState = ContestStates.csRun;
   controllerEnabled = true;
   crumbsEraseAll();
-  clearStopwatch();
+  lapTimer.clear();
+  robot.setDistanceTraveled(0.0f);         // clear distance counter new 1.4.1
+  view.userRobotIconRotationBias = 0.0f;
 }
 
 /** Check to see if contest is running. If so, stopwatch is running, and some restrictions will apply including
@@ -934,14 +975,14 @@ public void setPositionAndHeading (float x, float y, float heading)
  * @return X (inches) 
  */
 public float getRobotX () {  if (!contestIsRunning()) return robot.x;
-else { PApplet.println ("Contest Running robot location not available"); return 0; }
+else { PApplet.println ("Contest Running robot location not available"); return 0.0f; }
 }
 /**
  * If contest is not running return robot center, coordinate location Y value (inches)
  * @return Y (inches) 
  */
 public float getRobotY () {  if (!contestIsRunning()) return robot.y;
-else { PApplet.println ("Contest Running robot location not available"); return 0; }
+else { PApplet.println ("Contest Running robot location not available"); return 0.0f; }
 }
 /**
  * If contest is not running return robot heading value (degrees).
@@ -957,7 +998,18 @@ else { PApplet.println ("Contest Running robot location not available"); return 
  */
 public float getRobotHeading () {  if (!contestIsRunning()) return robot.heading;
 else { PApplet.println ("Contest Running robot heading not available"); return 0; } }
-
+/**
+ * If contest is not running return robot distance traveled since start. This information is 
+ * displayed if showDistanceTraveled is set true and reported in contest.cdf if finishIncludesDistance is
+ * set true.
+ * @return distance traveled since G)o  (lib 1.4.1)
+ */
+public float getDistanceTraveled() { if (!contestIsRunning()) return robot.distanceTraveled;
+else { PApplet.println("Contest Running, robot distance traveled not available"); return 0.0f; }}
+/**
+ * used when issuing Go or Run command to simulator
+ */
+public void clearDistanceTraveled() { robot.distanceTraveled=0.0f; }
 
 
 
@@ -979,18 +1031,42 @@ public void contestFinish()
   contestState = ContestStates.csFinished;
  
   
-  String comments = ""; // need to have csStop before cdFinished  with chance to enter comments !!!
+ 
   
   String name = nameFirst+" "+nameLast;
   String time = getContestTimeString();   // runtime including reset count (if resets enabled)
    
+   
+  String header = "Name,Robot,RunTime,FinalPos,CourseFile,Comments";
+  if (reportDistanceTraveled)
+    header =  "Name,Robot,RunTime,FinalPos,Dist,CourseFile,Comments";
+  
+  float d = robot.getDistanceTraveled(); 
  
-  String header = "Name,Robot,RunTime,FinalPos,CourseFile,Comments";       
-     
-  String s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);
+  
+  String comments = ""; 
+  if (lapTimer.lapTimerModeEnabled) comments = "Lap Mode Contest - Total Time - completed laps follow"; 
+ 
+	
+  String s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);  
+	  
+  if (reportDistanceTraveled)
+      s = String.format("%s,%s,%s,%1.0f,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,d,courseFilename,comments);
+   
   appendStringToFile(header,simContestFilename,s);
-    
-      
+   
+  if (lapTimer.lapTimerModeEnabled)
+  for (String lt : lapTimer.lapList)
+  {
+	 time = lt; 
+	 comments = "";
+	 if (reportDistanceTraveled)
+	      s = String.format("%s,%s,%s,%1.0f,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,d,courseFilename,comments);
+	 else s = String.format("%s,%s,%s,%1.0f,%1.0f,%s,%s",name,nameRobot,time,robot.x,robot.y,courseFilename,comments);
+	 
+	 appendStringToFile(header,simContestFilename,s); 
+  }
+  
   requestScreenSaveInFrameCount = 2;  // give time for display of (F) in window before screen cap
   
   
@@ -1015,12 +1091,11 @@ public void contestScreenSaveIfRequested()  // need count down on this 1 frame
 
 }
 
-
-/**
+/** Convert robot location on course to screen x,y coordinates (0,0) top-left of screen  
  * 
- * @param worldX  course X in inches   
- * @param worldY  course Y in inches
- * @return PVector with screen absolute (x,y) location 
+ * @param worldX  robot world coordinate X value 
+ * @param worldY  robot world coordinate Y value
+ * @return Processing PVector with screen x,y values  
  */
 public PVector courseCoordToScreenCoord (float worldX, float worldY) 
 	{ return view.courseCoordToScreenCoord (worldX,worldY); }  
@@ -1085,6 +1160,20 @@ public void  moveToStartLocationAndHeading()
   marker.gotoStartLocation(this);  // goto default start location OR current clicked on marker location
 }
 
+/**
+ * Get start location used for contest run. Return as PVector where .x .y are (x,y) location of 
+ * start point, .z is heading in degrees
+ * @return PVector reference to start location and heading, e.g. PVector myStart = getStartLocationAndHeading();  
+ */
+public PVector getStartLocationAndHeading() 
+{
+  return new PVector (marker.startLocX,marker.startLocY,marker.startLocHeading);
+}
+
+
+
+
+
 /**Show sensors in Robot or Sensor viewport. Displays sensor color data as created (optionally) by user code.
  * Default is green if user does not modify sensor color (or colorTable in case of line sensor).
  * 
@@ -1106,12 +1195,243 @@ public void setRobotIcon(String filename, int alpha)  // replace blue pointer on
  * @param alpha Icon transparency 0 to 255   0=totally transparent 255=totally opaque
  */
 public void setRobotIconAlpha (int alpha) {view.setUserRobotIconAlpha(alpha); }
+public int getRobotIconAlpha ( ) { return view.userRobotIconAlpha; }
 
 /**
  * Set display scale for Robot icon
  * @param scale scale factor 1.0 = original size, 0.5 = 1/2 original size ... 
  */
 public void setRobotIconScale (float scale) { view.userRobotIconScale = scale; }
+public float getRobotIconScale () { return view.userRobotIconScale; }
+
+
+/**
+ * Set robot course icon rotation bias in radians - can be used to animate icon typically after a run. Default bias = 0 
+ * and bias is set to 0 at start of a contest run. Positive values rotate icon clockwise. This rotation has no
+ * impact on "actual" robot heading.
+ * @param rotationBias  rotation in radians, default 0
+ */
+
+public void setRobotIconRotationBias (float rotationBias) {
+	if (!contestIsRunning()) view.userRobotIconRotationBias = rotationBias; }
+/**
+ * Get robot icon rotation bias in radians.
+ * @return robot icon turn bias in radians 
+ */
+public float getRobotIconRotationBias() { return view.userRobotIconRotationBias; }
+
+/**
+ * Control if robot or course viewport respond to mouse.
+ * Program disables while variable editor in use which overlaps course view.
+ * This is a bit of a hack, while using light-weight viewports.
+ * @param enable Allow course view and robot view to respond to mouse commands for robot position and heading altering.
+ */
+public void setMouseActiveInViews(boolean enable) { view.mouseActive = enable; }
+
+/**
+ * Return true if robot has driven beyond course extents.
+ * @return true if robot outside course bounds 
+ */
+public boolean robotOutOfBounds() {
+	
+	
+	float xmax = course.width/courseDPI;
+	float ymax = course.height/courseDPI;
+	
+	return ((robot.x <0.0) || (robot.y<0.0) || (robot.x>xmax) || (robot.y>ymax));
+	
+	
+}
+
+/**
+ * LFS hides crumbs when help visible using this method. Problem with points bleeding 
+ * through solid rectangle. Drawing order or Z-buffer issue don't know.  
+ * @param enable When true crumbs are drawn. 
+ */
+public void setCrumbsVisible (boolean enable) { view.crumbsVisible = enable; } 
+
+
+
+/**
+ * Get simulator imposed maximum robot speed (inches/sec). 
+ * @return max speed inches/sec
+ */
+public float getSimMaxSpeed()    { return maxSpeed; }
+/**
+ * Get simulator imposed maximum turn rate (degrees/sec).
+ * @return max turn rate (degrees/sec) 
+ */
+public float getSimMaxTurnRate() {return maxTurnRate; }
+/**
+ * Get simulator imposed maximum acceleration rate (inches/sec^2).
+ * @return maximum acceleration rate (inches/sec^2).
+ */
+public float getSimMaxAcc( ) { return maxAcc; }
+/**
+ * Get simulator imposed maximum deceleration rate (inches/sec^2).
+ * @return maximum deceleration rate (inches/sec^2).
+ */
+public float getSimMaxDecel() { return maxDecel; }
+/**
+ * Get simulator impose maximum turn acceleration (and deceleration) rate (deg/sec^2).
+ * 
+ *  @return Simulator maximum turn acceleration rate (deg/sec^2).
+ */
+public float getSimMaxTurnAcc() {return maxTurnAcc; }
+/**
+ * Get simulator minimum time step (seconds). This is the amount of time that passes per controller
+ * update and also simulator integration time for constant acceleration/deceleration rates applied to calculate 
+ * speed change and speed integrated to become displacement (distance). This can be faster or slower than
+ * real-time. For example at a frame rate of 50 frames per second and a time step of 0.020 (1/50th second),
+ * the simulator runs in real time. If the frame rate is 100 frames/second, the simulator would run at 2X realtime.
+ *  
+ * @return Simulator minimum allowable time step (seconds).
+ */
+public float getMinTimeStep() { return minTimeStep; }
+/**
+ * Get simulator maximum time step (seconds). See getMinTimeStep method description.
+ * @return Simulator maximum allowable time step (seconds).
+ */
+public float getMaxTimeStep() { return maxTimeStep; }
+
+
+class Course {
+	int num;
+	String fname;
+	boolean lapTimer;
+	float xpos,ypos,heading;
+	
+	Course (int n, boolean lap, String name, float x, float y, float h){
+	  num = n;
+	  lapTimer = lap;
+	  fname = name;
+	  xpos = x;
+	  ypos = y;
+	  heading = h;
+	}
+	
+}
+
+
+
+ArrayList <Course> courseList = new ArrayList <Course> ();
+int currentCourseNum = -1; // -1 allows chooseCourseFirstTime to work 
+
+
+// used by defineCourse / defineLapCourse methods
+private void defC (boolean lap, int num, String name, float x,float y, float h)
+{
+  for (Course c : courseList) if (c.num==num) return; // already in list, skip adding 
+  courseList.add(new Course(num,lap,name,x,y,h));
+}
+
+
+/**
+ * Choose a course defined by defineCouse defineLapCourse methods which specify course number and name. Subsequent
+ * calls to this method are ignored. Use chooseCourse method to bypass this "one time" feature.
+
+ * @param num Course number
+ */
+public void chooseCourseOneTime(int num)
+{
+  if (contestIsRunning())
+  { 
+	contestStop(); 
+	PApplet.println("Warning - Contest Stopped - new course being selected");
+    
+  }
+  
+  if (currentCourseNum != -1) return;   // First Time
+	  
+  for (Course c : courseList) {
+	  if (c.num==num)
+	  {	  
+		 setCourse(c.fname);  // sets and loads image 
+		 markerSetup();       // loads markers associated with course filename 
+		 lapTimer.lapTimerModeEnabled = c.lapTimer;
+		 if (c.xpos !=-999) setPositionAndHeading (c.xpos,c.ypos,c.heading);
+		 else setPositionAndHeading (12,12,0);
+		
+		 
+		 currentCourseNum = num;
+		 return; 
+	  }		  
+  }
+	
+  PApplet.println ("Error - Course number not defined. Check UserInit program tab.");
+}
+
+
+/**
+ * Choose a course defined by defineCouse defineLapCourse methods which specify course number and name. 
+ * See also chooseCourseOneTime method.
+ * @param num Course number. 
+ */
+public void chooseCourse(int num) { currentCourseNum = -1; chooseCourseOneTime(num); }
+
+
+/**
+ * Choose next course from list created typically in UserInit tab, by defineCourse method calls.
+ */
+public void chooseNextCourse()
+{
+  if (courseList.size()==0) {
+	  PApplet.println ("Error - chooseNextCourse failed, no courses have been defined with defineCourse method. Check UserInit.");
+	  return;
+  }
+	
+  for (Course c : courseList) 
+	  if (c.num > currentCourseNum) {
+		  currentCourseNum = -1;
+		  chooseCourse(c.num); return; }  // found next in list 
+ 
+ 
+  chooseCourse(courseList.get(0).num); // wrap around to first course 	
+	
+}
+
+
+
+
+/**
+ * Define a course that uses lap timer, with no initial position specified. When the course is chosen the robot
+ * will be placed in the center. Markers can always be defined to allow quick placement.
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ */
+public void defineLapCourse(int num, String name) {defC(true,num,name,-999,0,0); }
+/**
+ * Define a course that does not use lap timer, with no initial position specified. When the course is chosen the robot
+ * will be placed in the center. Markers can always be defined to allow quick placement.
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ * 
+ */
+public void defineCourse (int num, String name)   {defC(false,num,name,-999,0,0); }
+/**
+ * Define a course that uses lap timer, with initial position and heading specified. When the course is chosen the robot
+ * will be placed at the location specified. 
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ * @param x Robot Offset (inches) in course image 
+ * @param y Robot Offset (inches) in course image
+ * @param heading Robot heading 0..359 (degrees) 
+ */
+public void defineLapCourse(int num, String name, float x,float y,float heading) {defC(true,num,name,x,y,heading); }
+/**
+ * Define a course that does not use lap timer, with initial position and heading specified. When the course is chosen the robot
+ * will be placed at the location specified. 
+ * @param num Sequence number. 
+ * @param name File name of contest course .png or .jpg image file expected to be scaled to 64 DPI and located in sketch
+ * data sub-folder.
+ * @param x Robot Offset (inches) in course image 
+ * @param y Robot Offset (inches) in course image
+ * @param heading Robot heading 0..359 (degrees) 
+ */
+public void defineCourse (int num,String name,float x,float y, float heading) {defC(false,num,name,x,y,heading);   }
 
 
 

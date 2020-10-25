@@ -1,0 +1,28 @@
+
+This is text from sketch data sub-folder userhelp.txt
+
+This is a new rendition of LFS_Simplebot.
+Verified at runtime as SimpleBot4  in top status line on screen.
+
+New to Library 1.4 and SimpleBot (and Demo Trike)
+
+* Parameter Editor 
+
+* Sample program frame work has been cleaned up, better separating
+  your code from LFS code 
+
+* Fun new feature, things can happen to your robot if it runs out of bounds.
+  See UMisc.
+
+Tabs named with following prefixes 
+
+LFS_     LFS code you probably won't need to modify
+User      Core user code  (unchanged in 1.4)
+U           New user code modules (or changed significantly) these 
+             contain optional code (except for their methods being present,
+             but disabled or empty)
+
+Program tab summary appears in LFS_SimpleBot main tab.
+Look for LFS-1.4 Changes.pdf to appear on git hub by Oct 23, 2020.
+
+Idea is to replace this file text with your own notes relevant to your robot. 
