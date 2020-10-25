@@ -1,3 +1,20 @@
+### Library 1.4.2 released
+
+Cleanup no new features except:
+<p>
+Auto robot icon generation available with your initials and favorite colors.
+<p>
+Improved fool proof contest run, that prompts for F)inish and report or X cancel in modal fashion (not allowing other commands). Also, lap beep added. Decided to make sound library addition manditory.
+<p>
+Auto lap timer really works now, run N laps and stop. On Finish, total time written to contest.cdf and each lap time. 
+<p>
+Controller status, delta step rate displayed.
+<p>
+Next release with only have bug fixes!  
+<p>
+No release manual yet, but lots of internal comments added to program, and to javadocs.
+
+
 ### Library 1.4.1 released, doing some round up of minor bugs and testing over next few days.
 
 Features

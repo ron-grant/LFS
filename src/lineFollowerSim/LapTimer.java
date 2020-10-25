@@ -26,16 +26,37 @@ package lineFollowerSim;
 import processing.core.*;
 import java.util.ArrayList;
 
-
+/**
+ * LapTimer provides stopwatch and lap timer support for LFS.
+ * @author Ron Grant
+ *
+ */
 public class LapTimer {
-  
+  /**
+   * ArrayList of lap times in String format "Lap X  mn:se.msc" X=lap,
+   *  mn = minutes, se = seconds, msc = milliseconds 0 to 999.
+   */
   public ArrayList <String> lapList; 
  
   PApplet p;          // reference to Processing Applet  
   LFS lfs;            // reference to LFS instance 
-    
-  public int backgroundColor,frameColor,textColor; 
+  /**
+   * lap timer pane background color, default dark blue  
+   */
+  public int backgroundColor;
+  /**
+   * lap timer window border color, default light blue
+   */
+  public int frameColor;
+  /**
+   * lap timer text color, default off-white rgb (240,240,240).
+   */
+  public int textColor; 
  
+  /**
+   * Set true to include lap start time in lapTimer panel display. Increases
+   * window width by about 90 pixels.
+   */
   public boolean showStartTime = false;
   
   public boolean lapTimerModeEnabled;
@@ -61,10 +82,14 @@ public class LapTimer {
    * distance starts increasing, lap time is logged. Technically will be one timeStep beyond
    * minimum distance.
    */
-  float lapLookForEndDist = 3.0f;                   // inches max distance 
+  public float lapLookForEndDist = 3.0f;                   // inches max distance 
   
     
-  
+  /**
+   * Constructor for single instance of LapTimer
+   * @param parent Parent Applet reference, "this"
+   * @param lfs Reference to single instance of LFS class, i.e., lfs
+   */
   public LapTimer (PApplet parent, LFS lfs)
   { 
     p = parent;
@@ -81,21 +106,32 @@ public class LapTimer {
        
   }
 
-
+ /**
+  * Reset stop watch timer, and clear lapList
+  */
   public void lapTimerAndCountReset()
   {	
     lapTestEnabled = lapTimerModeEnabled;  
     lapCount = 0;
+    clear();    // reset timer
 	resetLapDetector();
   }  
   
   
+  /**
+   * Call for every tick advance on lap timer
+   */
+  void tick() { timerTick++; }  // call for every tick advance on lap timer 
   
-  public void tick() { timerTick++; }  // call for every tick advance on lap timer 
   
-  public void clear(){ timerTick=0; lapStart = 0; lapList.clear(); }
+  
+  void clear(){ timerTick=0; lapStart = 0; lapList.clear(); }
 
-  public void logLapTime()
+  
+  /**
+   * Add current lap time to list, update lapStart time to now current (timerTick)
+   */
+  void logLapTime()
   {
     String lap = ticksToTimeStr(timerTick-lapStart);
     String tim = ticksToTimeStr(lapStart);
@@ -109,7 +145,11 @@ public class LapTimer {
     lapStart = timerTick;
   }
 
-  
+  /**
+   * Given number of timer ticks, convert to formatted time mn:se.millis   e.g. 1:02.345
+   * @param t number of ticks to be multiplied by timeStep to arrive at elapsed time.
+   * @return String formatted mn:se.millisec 
+   */
   public String ticksToTimeStr (int t )
   {
     int runtime = (int) Math.floor(t*lfs.getTimeStep()*1000);
@@ -122,8 +162,21 @@ public class LapTimer {
   
   }
   
-  public String getTimeStr() { return ticksToTimeStr (timerTick); }
   
+  /**
+   * Return time string for current time logged on stopwatch (total time elapsed)
+   * @return time string formatted  mn:se.millis 
+   */
+  public String getTimeStr() { return ticksToTimeStr (timerTick); }
+  /**
+   * Draw panel containing lap times or lap times and start of lap
+   * @param title  Title string to be placed top center of panel
+   * @param nvis   Number of visible lines (depends on h) up to user to calibrate 
+   * @param x      X offset of panel from screen upper-left corner (pixels)
+   * @param y      Y offset of panel
+   * @param w      panel width 
+   * @param h      panel height 
+   */
   public void drawPanel(String title, int nvis, int x, int y, int w, int h)
   {
      int ss= 0;
@@ -158,7 +211,7 @@ public class LapTimer {
   
  
   
-  public void resetLapDetector()
+  void resetLapDetector()
   {
      lapTriggered = false;   // wait for distance >8 inches then set trigger
 	 lapMinDist = 99;        // then will do min distance search.
@@ -174,7 +227,11 @@ public class LapTimer {
 	 lfs.lapTimer.clear();
   }
 
-  
+  /**
+   * Call every draw time, 
+   * @param simRequestStep set true if simulation is taking timestep, timer will increment one tick.
+   * @return Returns true if lap detected and logged
+   */
   public boolean lapTimerUpdate(boolean simRequestStep)
   {
      if (lapTimerModeEnabled) 
@@ -202,7 +259,10 @@ public class LapTimer {
          resetLapDetector(); 
         
          if (lapList.size() >= lapCountMax)
-        	 lfs.contestStop();
+         { 	 
+        	if (lfs.contestIsRunning()) lfs.contestStop();
+        	else lfs.stop();
+         }	
          
          return true;
        }

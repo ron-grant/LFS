@@ -1,14 +1,15 @@
-/* LFS_Panel (formerly UserDrawPanel)
-
-   Now UPanel is exclusively for user panel drawing.
-
-   For Library 1.4  Reworked this tab
-   Modified for ParEdit & New H)elp screen  library 1.4
+/* LFS_Panel 
+             
+   Command Summary and Help Panels Defined in this file.
+   Main method is lfsDrawPanel()
    
-   Command Summary Text and Help Text defined in this file.
-   Coordinate transforms and calls out to user panel drawing provided in this module (tab).
+   User panel data handeled by UPanel notebook tab
+   
+   User help (displayed as a help page) is stored in data folder file "userhelp.txt".
     
- 
+   Coordinate transforms and calls out to user panel drawing (UPanel tab) are provided in this notebook tab
+   (file).
+   
 */
 
   // using simple VP rectangle exposed in lib 1.3.2
@@ -32,6 +33,11 @@
  
   void help (String s) { text (s,helpVP.x+helpX,helpVP.y+helpY); helpY += helpLineSpace; }  // display line and advance down page
   void helpGap() { helpY+=8; }  // small vertical tab (gap)
+  int  helpPages = 3;           // lib 1.4.1 added page with simulator maximums 
+ 
+  void helpVu(String s, float val, String units)
+  { help(String.format ("%50s = %8.2f %s",s,val,units)); }
+  
  
   // command summary display - identical to help
   int cmdSumX;
@@ -51,19 +57,14 @@
     popStyle();
   }  
  
- 
- 
+  
 void lfsDrawPanel()  // called from draw() at frame rate
 {
+  // show sensors,markers and parEditorUpdate  moved into LFS_ main tab before this call - for clarity 
+  
+  stroke (240);
+  fill (240);
      
-    
-  lfs.showSensors((courseTop)?'R':'S');             // show user colorable sensors (lib 1.3)
-  if (courseTop && (helpPage==0)) lfs.markerDraw();  // only display markers when course visible (lib 1.3)
-                                                      // and not displaying help
-    
-  parEditorUpdate();  // support UserParEdit (Parameter Edit Dialog - new in lib 1.4)
-    
-    
   //String cs = lfs.controllerIsEnabled() ? "ON" : "off";
   //String fs = simFreeze ? "ON" : "off";
  
@@ -71,15 +72,38 @@ void lfsDrawPanel()  // called from draw() at frame rate
   // draw help if toggled on via H)elp
     
   if (focused)
-  if (helpPage>0) // draw Help if page 1 or 2 controlld by keypress H, else command summary
+ 
+  if (helpPage>0) // draw Help if page 1 or 2 or 3h controlld by keypress H, else command summary
   {
     drawEmptyVP(helpVP);
     helpX = 20;
     helpY = 20;
     helpLineSpace = 22;
     textSize (18);
+    
+    if (helpPage==2)
+    {
+      help ("PARAMETER DIALOG   Dialog that displays program variables included in list within UPar tab.");
+      helpGap();
+      help ("P)arameter dialog on/off (also click on [X] to hide parameter dialog.");
+      help ("ctrl-D)efault - Set selected parameter to default value. (ctrl-A Default ALL)");
+      help ("ctrl-S)ave    - Save Parameters to sketch's data sub-folder param.cdf");
+      help ("ctrl-L)oad    - Load Parameters from sketch's data sub-folder param.cdf (manual Load only 1.4)");
+      help("");
+      help("");
+      help ("LFS Simulator Imposed Maximum (& Minimum) Values ");   // new in lib 1.4.1
+      help ("");
+      helpVu("MaxSpeed",lfs.getSimMaxSpeed(),"inches/sec");
+      helpVu("MaxTurnRate ",lfs.getSimMaxTurnRate(),"degrees/sec");
+      helpVu("MaxAccRate",lfs.getSimMaxAcc( ),"deg/sec^2");
+      helpVu("Maximum Deceleration Rate ",lfs.getSimMaxDecel(),"inches/sec^2");
+      helpVu("Max Turn Acceleration Rate",lfs.getSimMaxTurnAcc(),"degrees/sec^2");
+      help("");
+      helpVu("Min Time Step",lfs.getMinTimeStep(),"seconds");
+      helpVu("Max Time Step",lfs.getMaxTimeStep(),"seconds"); 
+    }  
       
-    if (helpPage >1)
+    if (helpPage ==3)
     {
       help ("User Help ");
       helpGap();
@@ -92,16 +116,16 @@ void lfsDrawPanel()  // called from draw() at frame rate
       else
       for (String s: h) help (s);
     }
-    else
+    else if (helpPage == 1)
     {
-      help ("LFS Help ");
+      help ("LFS Help");
       helpGap();             // small vertical space  
-      help ("H)elp   - cycle display of help window with repetitive H press.   LFS Help > User Help > OFF");
+      help ("H)elp   - cycle help pages with repetitive H press.   LFS Help > Help Pg 2 > User Help > OFF");
       helpGap();
       help ("CONTEST RUN");
       help ("R)un    - Start robot in contest mode. The most recent marker click is used for the start location.");
       help ("             If no markers have been clicked (defined and clicked) then the programmed start location");
-      help ("             is used.");
+      help ("             is used. Parameter dialog not available when running contest, use G)o command instead. ");
       help ("SPACE  - Stop the contest run and stop the timer.");
       help ("F)inish - Log contest run information in sketch data folder contest.pdf and");
       help ("             save screenshot in sketch folder.");
@@ -126,34 +150,52 @@ void lfsDrawPanel()  // called from draw() at frame rate
       help (" Horz Arrows        - turn rate increase/decrease (signed value +right -left)");
       help (" < > (comma period) - sideways motion increase/decrease (signed value +right -left)");
       help ("");
-      help ("PARAMETER DIALOG   Dialog that displays program variables included in list within UPar tab.");
+      help ("More Commands ");
       helpGap();
-      help ("P)arameter dialog on/off (also click on [X] to hide parameter dialog.");
-      help ("ctrl-D)efault - Set selected parameter to default value. (ctrl-A Default ALL)");
-      help ("ctrl-S)ave    - Save Parameters to sketch's data sub-folder param.cdf");
-      help ("ctrl-L)oad    - Load Parameters from sketch's data sub-folder param.cdf (manual Load only 1.4)");
+      help ("TAB     Toggle visiblity of course vs User Panel 2");
+      help ("ALT     Toggle 90 degree rotation of course ");
+      help ("Ctrl-C  Course select (next course) from list defined in UserInit.");
+      help ("U)ser   Toggle user panel visibility");
+     
     } // end if help page 1   
+    
   } // end if helpVisible
     else
     {
+      
       drawEmptyVP(cmdVP);
       cmdSumX = 20;             // text offset
       cmdSumY = 20;
       cmdSumLineSpace = 22;     // vert offset for each cmdSum() call
       textSize (18);
       
-      cmdSum ("LFS Command Key Summary        H)elp       P)arameter dialog");
-      cmdSumGap();
-      cmdSum ("CONTEST  R)un SPACE-Stop F)inish    0..9 step speed ");
-      cmdSumGap();
-      cmdSum ("C)ontroller (on/off) G)o S)top  E)raseCrumbs M)arker");
-      cmdSum ("Tab course view    ALT Rotate Course");
-      cmdSum(userKeyCommands1); // draw user key commands 1
-      
-      if (userKeyCommands2.length() >0)
-        cmdSum(userKeyCommands2);
+      if (lfs.getContestState() == 'S')
+      {
+        cmdSum("LFS CONTEST Stopped or Completed.");
+        cmdSumGap();
+        cmdSum("Press F to Finish, appending run data to data folder contest.cdf and creating");
+        cmdSum("screen shot in sketch folder.");
+        cmdSum("");
+        cmdSum("OR Press X to cancel");
+      }
       else
-        cmdSum ("* If markers defined, G)o or R)un start at last clicked marker.");
+      {
+        cmdSum ("LFS Command Key Summary        H)elp       P)arameter dialog   U)ser panel");
+        cmdSumGap();
+        cmdSum ("CONTEST  R)un SPACE-Stop F)inish    0..9 step speed ");
+        cmdSumGap();
+        cmdSum ("C)ontroller (on/off) G)o S)top  E)raseCrumbs M)arker");
+        cmdSum ("Tab course view    ALT Rotate Course  h Ctrl-C Course select");    // Ctrl-C new (lib 1.4.1)
+        
+        
+        cmdSum(userKeyCommands1); // draw user key commands 1
+        
+        if (userKeyCommands2.length() >0)  // replace bottom line with 2nd line of user commands 
+          cmdSum(userKeyCommands2);
+        else
+          cmdSum ("* If markers defined, G)o or R)un start at last clicked marker.");
+      }  
+        
     }
     
         
@@ -231,7 +273,9 @@ void lfsDrawPanel()  // called from draw() at frame rate
   {
        
    userVP1.x = parEditor.parVP.x;
-   userVP1.y = cmdVP.y;    
+   userVP1.y = cmdVP.y;  
+   
+   if (!courseTop) userVP1.y -= 50;   // hack to make sensor data visible bottom of Sensor view (lib 1.4.1)
    userVP1.w = parEditor.parVP.w;
    userVP1.h = cmdVP.h;
     

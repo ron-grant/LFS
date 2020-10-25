@@ -114,6 +114,14 @@ class View {  // no modifier = package protected
 	userRobotIconAlpha = alpha;
   }
   
+  void setUserRobotIconImage(PImage im, int alpha)  // called by LFS  - replace blue pointer on course image
+  {
+	userRobotIconImage = im;
+	userRobotIconAlpha = alpha;
+  }
+  
+  
+  
   void setUserRobotIconAlpha (int alpha)            // called by LFS
   { userRobotIconAlpha = alpha; }
   
