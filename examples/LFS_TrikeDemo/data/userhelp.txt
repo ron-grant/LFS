@@ -1,23 +1,22 @@
 This is text from sketch data sub-folder userhelp.txt (replace with your own notes..)
+New Renditions of LFS_SampleBot and LFS_DemoTrikeBot Example programs for each library 
+release. 
 
-This is a new rendition of LFS_Simplebot.
-Verified at runtime as SimpleBot5  in top status line on screen.
-
-New to Library 1.4.2 and SimpleBot (and Demo Trike)
-
-* Fixed issues with parameter editor responding to mouse when outside window.
-* Added Lap Timer for courses with lap timing
-* Added course list, optional starting location, Lap timer mode option N laps.
-* Ctrl-C select next course from list. (UserInit)
-* Run more fool proof. Press R then SPACE to stop (or auto stop N laps), then modal
-  box requests F)inish & report or X cancel.
-
-New to Library 1.4
-* Parameter Editor 
-* Sample program frame work has been cleaned up, better separating
-  your code from LFS code 
-* Robot stops out of bounds   See UMisc.
-* Sound supported for events like lap counter 
+Library 1.4.2/1.4 
+	* Fixed issues with parameter editor responding to mouse when outside window.
+	* Added Lap Timer for courses with lap timing
+	* Added course list, optional starting location, Lap timer mode option N laps.
+	* Ctrl-C select next course from list. (UserInit)
+	* Run more fool proof. Press R then SPACE to stop (or auto stop N laps), then modal
+	  box requests F)inish & report or X cancel.
+	* Parameter Editor 
+	* Sample program frame work has been cleaned up, better separating
+	  your code from LFS code 
+	* Robot stops out of bounds   See UMisc.
+	* Sound supported for events like lap counter 
+	* Sensor visual data as sample time corrupted sensor readings & slowed down LFS
+Lib 1.5
+	* Save and Restore of non-contest run data. See: Header comment LFS_RS tab.
 
 Tabs named with following prefixes 
 
@@ -27,5 +26,7 @@ U           New user code modules (or changed significantly) these
              contain optional code (except for their methods being present,
              but disabled or empty)
 
-Program tab summary appears in LFS_SimpleBot main tab.
-Look for LFS-1.4 Changes.pdf to appear on git hub soon.
+Program tab summary appears in LFS_M main tab.
+LFS_YourSketchName, main tab now includes simple program skeleton.
+Goal is with new library code, you can drop in other LFS_ tab (.pde files)
+to update your LFS application program.

@@ -3,8 +3,9 @@
    Ron Grant
    Oct 15,2020  
    
-   See UserParEdit tab for example user code.
-   Hopefully you will not need to dig into this code.
+   See UPar tab for example user code.
+   
+   You should not need to dig into (or even look at) this code.
    
     
      * sets initial value of vars on first invocation 

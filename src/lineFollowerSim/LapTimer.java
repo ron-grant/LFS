@@ -124,6 +124,19 @@ public class LapTimer {
   void tick() { timerTick++; }  // call for every tick advance on lap timer 
   
   
+  /**
+   * Get current timer tick, not available if contest is running.
+   * @return timerTick in time steps taken
+   */
+  public int getTick() { if (lfs.contestIsRunning()) return 0; else return timerTick; }
+  
+  /**
+   * Get current timer tick, not available if contest is running.
+   * @param current timer tick, time in time steps taken 
+   */
+  public void setTick(int tick) { if (!lfs.contestIsRunning()) timerTick = tick; }
+  
+  
   
   void clear(){ timerTick=0; lapStart = 0; lapList.clear(); }
 

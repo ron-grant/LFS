@@ -772,6 +772,44 @@ if (Math.abs(s)>maxSpeed)
 robot.setTargetSpeed(s);
 }
 
+/**
+ * Available only when contest not running. Used by LFS in restoring robot state
+ * when clicking on a marker that was generated during a robot non-contest run. That is,
+ * a run started by G)o. User is advised to use setTargetSpeed method, as this method
+ * does not work if called while contest run is in progress.
+ * @param s Speed (inches/sec)
+ */
+public void setInstantSpeed(float s)
+{  if (!contestIsRunning()) robot.speed = s; 
+   else p.println ("ERROR setInstantSpeed non-functional during contest run.   ");
+} 
+
+/**
+ * Available only when contest not running. Used by LFS in restoring robot state
+ * when clicking on a marker that was generated during a robot non-contest run. That is,
+ * a run started by G)o. User is advised to use setTargetSidewaysSpeed method, as this method
+ * does not work if called while contest run is in progress.
+ * @param ss Speed (inches/sec)
+ */
+	
+public void setInstantSidewaysSpeed(float ss)
+{ if (!contestIsRunning()) robot.sidewaysSpeed = ss;
+ else p.println ("ERROR setInstantSidewaysSpeed non-functional during contest run.   ");
+}
+/**
+ * Available only when contest not running. Used by LFS in restoring robot state
+ * when clicking on a marker that was generated during a robot non-contest run. That is,
+ * a run started by G)o. User is advised to use setTargetTurnRate, as this method
+ * does not work if called while contest run is in progress.
+ * @param tr Turn rate (degrees/sec)
+ */
+
+public void setInstantTurnRate(float tr)
+{ if (!contestIsRunning()) robot.turnRate = tr;
+  else  p.println ("ERROR setInstantTurnRate non-functional during contest run.");
+}
+
+
 /** Set target sideways drive speed (inches/sec) where the simulation will ramp up or ramp down
  * using defined acceleration rate or deceleration rate to attain the target sideways speed over 
  * succeeding simulation steps. 
@@ -822,6 +860,11 @@ public float getSpeed()    { return robot.getSpeed();    }
  */
 public float getSidewaysSpeed()    { return robot.getSidewaysSpeed();    }  
 
+/**
+ * Current robot heading. Not available during contest run (0 returned)
+ * @return current robot heading if contest not running.
+ */
+public float getHeading() { if (contestIsRunning()) return 0; else return robot.heading; }
 
 
 /** Current robot turn rate, when less than targetTurnRate robot is accelerating its turn rate when greater than 
@@ -1131,6 +1174,27 @@ public void markerSetup() {if (contestIsRunning()) marker.setup(0,0,0);
  */
 public void markerDraw() {marker.draw(); }
 
+/**
+ * LFS application gives notice to marker that saved robot state information is present at this marker location.
+ * This is done before markerDraw and after marker draw, this notice is cleared.
+ * @param x Course location X value 
+ * @param y Course location Y value 
+ */
+public void markerNotifySavedState(float x, float y) { marker.markerNotifySavedState(x,y); }  
+
+/**
+ * Animate Saved State Markers (fluff).
+ * @param r Red component of color 0..255
+ * @param r Green component of color 0..255 
+ * @parem b Blue component of color 0..255
+ * @param scale Scale of square
+ * @param rotationSpeed  Rotation speed of marker 
+ */
+public void markerSavedStateColorScaleSpeed (int r, int g, int b, float scale, float rotationSpeed)
+{
+  marker.savedStateColorScaleSpeed (r,g,b,scale,rotationSpeed);	
+}
+
 /**This method call should be added to keypressed() method defined in UserKey 
  * If method has not been implemented then code would be written: 
  * <p>
@@ -1152,14 +1216,17 @@ public boolean markerHandleMouseClick() {
 /**
  * Add / remove marker at current robot location when contest not running.
  * Typically this method is called from keyPressed(), e.g.
+ * @return Returns true if marker placed, false if marker removed.
  * <p>
  * if (key == 'M') lfs.markerAddRemove();  
  */
-public void markerAddRemove() {
+public boolean markerAddRemove() {
 	if (!contestIsRunning())
-		marker.addRemove(robot.x, robot.y, robot.heading);
-	}  // should be called when M pressed 
-
+	{	
+		return marker.addRemove(robot.x, robot.y, robot.heading);
+	}  // should be called when M pressed
+    return false;
+}
 
 /**
  * Typically called from userControllerResetAndRun() to locate robot at default location OR
