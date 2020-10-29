@@ -72,7 +72,7 @@ void rsprintln(String s) { if (verboseStateRW) println (s); }            // cont
 
 void informMarkersAboutSavedRobotState() // System method used to notify marker system about markers with state information
 {
-  lfs.markerSavedStateColorScaleSpeed (100,50,255,0.71,0.2);  
+  lfs.markerSavedStateColorScaleSpeed (100,50,255,0.71,90.0/(frameRate+1));  
   
   for (RobotState s : robotStateList)
     lfs.markerNotifySavedState(s.markerX,s.markerY);  // give locations of saved state present 
