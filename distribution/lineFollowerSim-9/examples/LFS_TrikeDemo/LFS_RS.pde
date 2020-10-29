@@ -138,6 +138,7 @@ void lfsNewMarkerPlaced(boolean placed)  //called when a new marker placed or re
     ss.robotSpeed = lfs.getSpeed();                     // instantaneous speed and turn rate           
     ss.robotSidewaysSpeed = lfs.getSidewaysSpeed();     // these are always available from simulator.
     ss.robotTurnRate = lfs.getTurnRate();
+    ss.timerTick = lfs.lapTimer.getTick();              // save current stop watch time
  
     objectSave(ss,"tempMod$.srs");  // save new modified snapshot  
  
