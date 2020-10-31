@@ -38,10 +38,13 @@ import java.util.ArrayList;   // for course list
  * 
  *  <ul>
  *  <li> tracking the position and heading of a virtual robot based on user specified target speed and turn rate</li>
+ *  <li> managing robot acceleration and speed (drive and turn) subject to simulator maximums</li>
  *  <li> generating the view of immediate surroundings of a robot</li>
  *  <li> reading sensor values from user defined spot and line sensors</li> 
- *  <li> presentation of an image of the course with cookie crumb trail tracking progress of robot</li>
- *  <li> implements interactive marker system allowing storing multiple robot start locations and headings on a course.</li>
+ *  <li> presentation of an image of the course with robot image and cookie crumb trail tracking progress of robot</li>
+ *  <li> implements interactive marker system allowing storing multiple robot start locations and headings on a course</li>
+ *  <li> managing list of contest courses with optional starting location and heading, also timer mode stopwatch or lap time</li>
+ *  <li> managing contest states and producing contest run report</li>
  *  </ul>
  *  <p>
  *  Using LFS features, user controller code reads sensor data, updates internal state, and finally sets robot target speed and turn rate. 
@@ -61,7 +64,7 @@ import java.util.ArrayList;   // for course list
  * Note that several methods documented are not called by user code. These are highlighted by 
  * <p>
  * (Called by simulation core code.) 
- *  @author Ron Grant
+ *  @author Ron Grant           Line Follower Sim (LFS) Processing Library   published at http://github.com/ron-grant/LFS
  */  
 
 public class LFS  {
@@ -76,17 +79,19 @@ Robot robot;           // single instance of robot class - accessed only from th
 
 Marker marker;         // single instance of marker class - accessed from this class only
 /**
- * When set true, finish Report written to cdf  includes distance traveled since start.
- * If the file header is already written, the file should be erased if using this feature in order
- * for a correct file header to be generated. New in (lib 1.4.1), default is false, see userInit tab in 
- * simulation app.
+ * When set true, report data written to data folder file "contest.cdf" after a run, will
+ * include distance traveled since start.
+ * If an old contest.cdf exists, it will not have the Dist field in its header. Erasing the 
+ * file will cause LFS to generate a new contest.cdf file, containing Dist field, after the
+ * next contest run. 
+ * 
  */
 public boolean reportDistanceTraveled;  // when true distance traveled included in run report  1.4.1
 /**
- * When set true, on screen display includes distance traveled since start. 
+ * When set true (default value), on screen display includes distance traveled since start. 
  * New feature in (lib 1.4.1) default is false. See UserInit tab in simulation app.
  */
-public boolean showDistanceTraveled;            // when true distance traveled included in on screen display 1.4.1
+public boolean showDistanceTraveled = true;            // when true distance traveled included in on screen display 1.4.1
 
 /**
  *  Sensors class single instance - gives access to spot and line sensor lists.
@@ -397,10 +402,10 @@ public VP getSensorViewport() { return view.sensorVP; }
 // public void updateSensors (PApplet.color c)
 public void updateSensors(int r, int g, int b, int a)
 {
-  view.drawSensorView(course,robot,courseDPI);  // for now VP  at 0,0  Sept 22  !!!
+  view.drawSensorView(course,robot,courseDPI);  
   view.sensorUpdate(sensors,courseDPI);
                                                        // draws into screen frame buffer now - fast
-  view.coverSensorView(r,g,b,a);                       // rgb,alpha
+  if (a>0) view.coverSensorView(r,g,b,a);              // rgb,alpha, skip if alpha 0
  
   
   
@@ -767,6 +772,44 @@ if (Math.abs(s)>maxSpeed)
 robot.setTargetSpeed(s);
 }
 
+/**
+ * Available only when contest not running. Used by LFS in restoring robot state
+ * when clicking on a marker that was generated during a robot non-contest run. That is,
+ * a run started by G)o. User is advised to use setTargetSpeed method, as this method
+ * does not work if called while contest run is in progress.
+ * @param s Speed (inches/sec)
+ */
+public void setInstantSpeed(float s)
+{  if (!contestIsRunning()) robot.speed = s; 
+   else p.println ("ERROR setInstantSpeed non-functional during contest run.   ");
+} 
+
+/**
+ * Available only when contest not running. Used by LFS in restoring robot state
+ * when clicking on a marker that was generated during a robot non-contest run. That is,
+ * a run started by G)o. User is advised to use setTargetSidewaysSpeed method, as this method
+ * does not work if called while contest run is in progress.
+ * @param ss Speed (inches/sec)
+ */
+	
+public void setInstantSidewaysSpeed(float ss)
+{ if (!contestIsRunning()) robot.sidewaysSpeed = ss;
+ else p.println ("ERROR setInstantSidewaysSpeed non-functional during contest run.   ");
+}
+/**
+ * Available only when contest not running. Used by LFS in restoring robot state
+ * when clicking on a marker that was generated during a robot non-contest run. That is,
+ * a run started by G)o. User is advised to use setTargetTurnRate, as this method
+ * does not work if called while contest run is in progress.
+ * @param tr Turn rate (degrees/sec)
+ */
+
+public void setInstantTurnRate(float tr)
+{ if (!contestIsRunning()) robot.turnRate = tr;
+  else  p.println ("ERROR setInstantTurnRate non-functional during contest run.");
+}
+
+
 /** Set target sideways drive speed (inches/sec) where the simulation will ramp up or ramp down
  * using defined acceleration rate or deceleration rate to attain the target sideways speed over 
  * succeeding simulation steps. 
@@ -817,6 +860,11 @@ public float getSpeed()    { return robot.getSpeed();    }
  */
 public float getSidewaysSpeed()    { return robot.getSidewaysSpeed();    }  
 
+/**
+ * Current robot heading. Not available during contest run (0 returned)
+ * @return current robot heading if contest not running.
+ */
+public float getHeading() { if (contestIsRunning()) return 0; else return robot.heading; }
 
 
 /** Current robot turn rate, when less than targetTurnRate robot is accelerating its turn rate when greater than 
@@ -930,7 +978,7 @@ public void contestStart()
  */
 public boolean contestIsRunning()
 {
-  return contestState == ContestStates.csRun;
+  return contestState != ContestStates.csIdle;   // was == csRun
 }
 
 
@@ -1002,9 +1050,10 @@ else { PApplet.println ("Contest Running robot heading not available"); return 0
  * If contest is not running return robot distance traveled since start. This information is 
  * displayed if showDistanceTraveled is set true and reported in contest.cdf if finishIncludesDistance is
  * set true.
- * @return distance traveled since G)o  (lib 1.4.1)
+ * @return distance traveled since G)o R)un  (lib 1.4.1)
  */
-public float getDistanceTraveled() { if (!contestIsRunning()) return robot.distanceTraveled;
+public float getDistanceTraveled() { if (contestState != ContestStates.csRun) 
+  return robot.distanceTraveled;
 else { PApplet.println("Contest Running, robot distance traveled not available"); return 0.0f; }}
 /**
  * used when issuing Go or Run command to simulator
@@ -1069,9 +1118,15 @@ public void contestFinish()
   
   requestScreenSaveInFrameCount = 2;  // give time for display of (F) in window before screen cap
   
-  
+  contestEnd();
 }
 
+/**
+ * Called internally after contestFinish, or by user program to end contest, skipping report,
+ * returning to contest idle (inactive) state.
+ */
+public void contestEnd()
+{ contestState = ContestStates.csIdle; }
 
 /** Called at end of sketch draw() method, checks to see if screen save has been requested by simulator and saves image if so.
  * <p>
@@ -1119,6 +1174,27 @@ public void markerSetup() {if (contestIsRunning()) marker.setup(0,0,0);
  */
 public void markerDraw() {marker.draw(); }
 
+/**
+ * LFS application gives notice to marker that saved robot state information is present at this marker location.
+ * This is done before markerDraw and after marker draw, this notice is cleared.
+ * @param x Course location X value 
+ * @param y Course location Y value 
+ */
+public void markerNotifySavedState(float x, float y) { marker.markerNotifySavedState(x,y); }  
+
+/**
+ * Animate Saved State Markers (fluff).
+ * @param r Red component of color 0..255
+ * @param r Green component of color 0..255 
+ * @parem b Blue component of color 0..255
+ * @param scale Scale of square
+ * @param rotationSpeed  Rotation speed of marker 
+ */
+public void markerSavedStateColorScaleSpeed (int r, int g, int b, float scale, float rotationSpeed)
+{
+  marker.savedStateColorScaleSpeed (r,g,b,scale,rotationSpeed);	
+}
+
 /**This method call should be added to keypressed() method defined in UserKey 
  * If method has not been implemented then code would be written: 
  * <p>
@@ -1140,14 +1216,17 @@ public boolean markerHandleMouseClick() {
 /**
  * Add / remove marker at current robot location when contest not running.
  * Typically this method is called from keyPressed(), e.g.
+ * @return Returns true if marker placed, false if marker removed.
  * <p>
  * if (key == 'M') lfs.markerAddRemove();  
  */
-public void markerAddRemove() {
+public boolean markerAddRemove() {
 	if (!contestIsRunning())
-		marker.addRemove(robot.x, robot.y, robot.heading);
-	}  // should be called when M pressed 
-
+	{	
+		return marker.addRemove(robot.x, robot.y, robot.heading);
+	}  // should be called when M pressed
+    return false;
+}
 
 /**
  * Typically called from userControllerResetAndRun() to locate robot at default location OR
@@ -1190,6 +1269,19 @@ public void showSensors(char vportID) { sensors.showSensors(this,vportID); }
 public void setRobotIcon(String filename, int alpha)  // replace blue pointer on course image
 { view.setUserRobotIcon(filename, alpha);
 }
+
+/**Define reference to existing PImage to be used as robot image on course 
+ * (replacing blue pointer). Suggest image 400x400 or smaller.
+ *  Use setRobotIconScale method to scale down as needed.
+ * 
+ * @param img Reference to PImage  
+ * @param alpha Icon transparency 0 to 255   0=totally transparent 255=totally opaque
+ */
+public void setRobotIconImage(PImage img, int alpha)  // replace blue pointer on course image
+{ view.setUserRobotIconImage(img, alpha);
+}
+
+
 /**
  * Set alpha channel for robot icon image defined by setUserRobotIcon
  * @param alpha Icon transparency 0 to 255   0=totally transparent 255=totally opaque
@@ -1349,9 +1441,14 @@ public void chooseCourseOneTime(int num)
 		 setCourse(c.fname);  // sets and loads image 
 		 markerSetup();       // loads markers associated with course filename 
 		 lapTimer.lapTimerModeEnabled = c.lapTimer;
-		 if (c.xpos !=-999) setPositionAndHeading (c.xpos,c.ypos,c.heading);
-		 else setPositionAndHeading (12,12,0);
-		
+		 if (c.xpos !=-999)
+		 {  setPositionAndHeading (c.xpos,c.ypos,c.heading);
+		    marker.markerSetStartLoc (c.xpos,c.ypos,c.heading);  // Use this same location if no marker clicked before run.
+		 }
+	     else 
+		 {  setPositionAndHeading (12,12,0);
+		    marker.markerSetStartLoc (12,12,0);       // Use this same location if no marker clicked before run.
+		 }
 		 
 		 currentCourseNum = num;
 		 return; 

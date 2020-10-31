@@ -1,3 +1,32 @@
+### Library 1.5 released
+
+Robot state save / recover. Create M)arker while robot running in non-contest mode and state information is saved.
+This is a time saver. Record point before fail, and jump back to that location instantly. This is an enhancement over 
+marker system that restored only location and heading. See LFS_RS tab.
+<p>
+Extensive comments (20 pages)  included in LFS_SampleBot/LFS_DemoTrike sketch notebook tab (file) headers.
+<p>
+New experimental ability to for controller to notify simulator it does not need update on sensor data for next step.
+This can speed up simulation execution rate, while not affecting robot "run time"
+
+
+### Library 1.4.2 released
+
+Cleanup no new features except:
+<p>
+Auto robot icon generation available with your initials and favorite colors.
+<p>
+Improved fool proof contest run, that prompts for F)inish and report or X cancel in modal fashion (not allowing other commands). Also, lap beep added. Decided to make sound library addition manditory.
+<p>
+Auto lap timer really works now, run N laps and stop. On Finish, total time written to contest.cdf and each lap time. 
+<p>
+Controller status, delta step rate displayed.
+<p>
+Next release with only have bug fixes!  
+<p>
+No release manual yet, but lots of internal comments added to program, and to javadocs.
+
+
 ### Library 1.4.1 released, doing some round up of minor bugs and testing over next few days.
 
 Features

@@ -24,9 +24,13 @@
     {
       if (parEditor.handleMouseClick()) return;   // handle mouse clicks in param editor window
                                                   // returns true if event consumed.
-      if (lfs.markerHandleMouseClick()) return;   // markerHandleMouseClick returns true if clicked
-                                                  // in a marker circle, then this mouseClick is considered 
-                                                  // consumed, hence return (lib 1.3)
+                                                  
+      if (lfs.markerHandleMouseClick()) {         // markerHandleMouseClick returns true if clicked
+         lfsMarkerClicked();                      // see LFS_RS or LFS_M (if LFS_RS tab not present)   (lib 1.4.3)    
+         userMarkerClicked();                     // in a marker circle, then this mouseClick is considered 
+         return;                                  // consumed, hence return (lib 1.3)
+      }                                           // call userMarkerClicked new (lib 1.4.2)
+     
       userHandleMouseClick(); 
       // user / other mouse click handlers here
       // should reactivate if mouse outside box 
@@ -41,6 +45,25 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
   
   
   if ((key>='a')&&(key<='z')) key -=32; // shift to uppercase  
+ 
+  // override key decode after contest stop
+  if (lfs.getContestState() == 'S')
+  {
+    if (key == 'F') { 
+      courseTop=true;
+      helpPage =0;            // help not visible
+      parEditor.hide();       // parameter editor not visible 
+      lfs.contestFinish();
+      return;
+    }
+    
+    if (key == 'X') {
+      lfs.contestEnd();       // back to idle state  (lib 1.4.2)
+      return;
+    } 
+    
+    return;
+  }
  
   if ((key >= '0') && (key <= '9')) 
   { simSpeed = key-'0';
@@ -62,6 +85,12 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
   case 'D'-64 :  // present for cases   
   case 'L'-64 : 
   case 'S'-64 :  break;  // do nothing here 
+  
+  case 'C'-64 : lfs.chooseNextCourse();    // get next course in list, see UserInit tab.  (lib 1.4.1)  
+                //userInit(); 
+                break;
+                
+  
  
   case 'C' :    lfs.setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
                 if (!lfs.controllerIsEnabled()) lfs.stop();           // position and heading of robot
@@ -69,10 +98,12 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                       
   
   case 'H' : helpPage++;
-             if (helpPage>2) helpPage = 0;
+             if (helpPage>helpPages) helpPage = 0;
              break;  
 
-  case 'M' : lfs.markerAddRemove();   // interactive marker placement/removal  (lib 1.3)
+  case 'M' : boolean placed = lfs.markerAddRemove();  // interactive marker placement/removal  (lib 1.3)
+             lfsNewMarkerPlaced(placed);            // true if placed, false if removed. See LFS_RS OR LFS_M   (lib 1.4.3)
+             userNewMarkerPlaced(placed);  
              break;
   
   case ' ' : if (lfs.contestIsRunning()) 
@@ -81,18 +112,21 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
              {
                if (simSpeed == 0) simRequestStep = true;
                if (simSpeed > 0) simFreeze = ! simFreeze;
-             }  
+             }
+            
              break;  
                                                                   
   case 'E' :  lfs.crumbsEraseAll();
               break;
-  case 'F' :  courseTop=true;
-              helpPage =0;            // help not visible
-              parEditor.hide();       // parameter editor not visible 
-              lfs.contestFinish();
-              break;
+ 
                                                  
-  case 'S' :   lfs.stop(); lfs.setEnableController(false); break;
+  case 'S' :  lfs.stop(); lfs.setEnableController(false);
+              userStop();  // allow user to add custom actions to be taken on S)top (lib 1.4.3)
+              break;
+  
+  case 'U' :  userPanel1Visible = !userPanel1Visible;
+              if (userPanel1Visible) parEditor.visible = false;
+              break;
   
   // Sideways Drive Mode - e.g. Mecanum Wheel  using < > keys (shifted or not shifted) 
   // controller would typically use lfs.setTargetSidewaysSpeed() method in addition to 
@@ -110,38 +144,51 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
              userControllerResetAndRun();
              lfs.setEnableController(true);
              lfs.crumbsEraseAll();
+             lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
+             
+             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+             
              simFreeze = false;
-             lfs.setRobotIconAlpha(255); // added for trike !!! 
+             userStartedRun();
              break;
        
   case 'R' : lfs.clearSensors();
              userControllerResetAndRun();
-             lfs.contestStart();               // Run  enable controller, clear crumbs, reset stopwatch
-             helpPage =0;                      // help not visible
+             lfs.contestStart();               // Run  enable controller, clear crumbs, reset stopwatch, reset Distance Traveled
+             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+             
+             helpPage =0;                      // make help not visible
              parEditor.hide();                 // parameter editor not visible 
+             
              simSpeed = 9;
              simFreeze = false;
-             lfs.setRobotIconAlpha(255); // added for trike !!! 
+             userStartedRun();
              break;
   
  case TAB   : courseTop = !courseTop;   //  Ctrl-I
+              break;
  
    default  : if (key<128) userKeypress(key);   // call user method with key not decoded by LFS    
               break;
              
   } // end switch              
+   
+  if ((keyCode == UP) || (keyCode == DOWN) || (keyCode == LEFT) || (keyCode == RIGHT))
+  {
+    if (!userArrowKeyDecode(keyCode)) // user can decode their own actions and/or allow default actions
+    {
+        // userArrowKeyDecode returns false, normal decode proceeds   (lib 1.4.3)
+      
+        switch (keyCode) {
+        case UP  :  lfs.changeTargetSpeed(1.0f);       break;    // default behaviors 
+        case DOWN:  lfs.changeTargetSpeed(-1.0f);      break;
+        case LEFT:  lfs.changeTargetTurnRate(-11.25f); break;
+        case RIGHT: lfs.changeTargetTurnRate(11.25f);  break;
+        } // end switch
+    }
+  }    
   
-  decodeKeysTrike  (key,keyCode);    // method in UKey -- decodes UP DOWN LEFT RIGHT arrows and S  
-  
-  // commented out below for TRIKE
-  //if (keyCode ==  UP)   lfs.changeTargetSpeed(1.0f);
-  //if (keyCode == DOWN)  lfs.changeTargetSpeed(-1.0f);
-  //if (keyCode == LEFT)  lfs.changeTargetTurnRate(-11.25f);
-  //if (keyCode == RIGHT) lfs.changeTargetTurnRate(11.25f);
-  
-  
-  
-  if (keyCode == ALT)   { rotate90 = !rotate90; clearScreen(); }
+  if (keyCode == ALT)   { rotate90 = !rotate90;}
      
   // note also PAGEUP and PAGEDN used by Parameter Editor 
   

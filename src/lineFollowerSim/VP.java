@@ -1,10 +1,12 @@
 package lineFollowerSim;
 
 /**
- Rectangular viewport for Course and Robot views defined in screen absolute coordinates where the origin (0,0)
+ Very light-weight rectangular viewport for Course,Robot,Sensor and other views defined in screen absolute coordinates where the origin (0,0)
  is located at upper-left corner of screen. The positive X axis is directed to the right, and positive Y axis,
- down. In processing, the screen size can be determined by reading width and height which are defined at start of 
- program execution by size method call in setup method.
+ down.
+ <p>
+ Note: In processing, the screen size can be determined by reading width and height variables which are defined at start of 
+ program execution by size method call in setup or settings method.
 */
 
 public class VP  {  // ViewPort  x,y upper-left,  width height         // simple viewport 
