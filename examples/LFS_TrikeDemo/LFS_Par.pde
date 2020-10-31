@@ -3,8 +3,9 @@
    Ron Grant
    Oct 15,2020  
    
-   See UserParEdit tab for example user code.
-   Hopefully you will not need to dig into this code.
+   See UPar tab for example user code.
+   
+   You should not need to dig into (or even look at) this code.
    
     
      * sets initial value of vars on first invocation 
@@ -54,10 +55,17 @@
     2. parEditor.processKey(key); // call added to UserKey keypressed method  decodes  E, +, - keys
     3. parEditorUpdate() included as below with parameter list 
   
+  Oct 22,2020   Problem Reported by Chris N, parameters can be changed when editor not visible.
+                This should be cured in this version.
+                   * If item does not have focus can't be changed.
+                   * If Param editor not visible mouse wheel delta count events not logged.
+                   
+                Also fixed problem with ParI bad format float vs int (causing error if ParI used)
+  
    
 */
 
-ParEditor parEditor = new ParEditor(); // single instance of ParEditor 
+ParEditor parEditor;  // instance created in setup after screen size known 
 
 // Keep this event in user application 
 
@@ -114,6 +122,7 @@ class ParEditor {
   boolean requestLoad;
   boolean loadActive;
   
+  int notAvailNoticeTime;    
   
   void statusMessage(String s)
   {
@@ -123,7 +132,9 @@ class ParEditor {
  
   void notifyMouseWheelDelta(float delta)   // mouseWheel Event should call this method 
   {
-    if (parCurIndex > -1) mouseWheelDelta = delta;  // must have current selected variable to apply delta to
+     // if (parCurIndex > -1)  Oct 22,2020 remove !!!
+    if (visible)              // added Oct 22 !!!
+    mouseWheelDelta = delta;  // must have current selected variable to apply delta to
   }
  
   boolean mouseInView()  // true, if parameter box is visible and mouse in it 
@@ -140,9 +151,12 @@ class ParEditor {
   ParEditor()   // constructor  
   {
     parCurIndex = -1;   // first pass through param list will set var defaults
+   
+    int yp = 650;                    // position on 1800x900 display 
+    if (height >1070) yp += 70;      // slight tweak on position on 1080 display 
     
-    parVP = new VP(40,650,700,240);       // define location x,y and width,height of parameter dialog box
-    txtVP = new VP(60,parVP.y+4,660,26); // define topmost parameter box, others offset in Y direction
+    parVP = new VP(40,yp,700,240);       // define location x,y and width,height of parameter dialog box
+    txtVP = new VP(60,parVP.y+4,660,26);  // define topmost parameter box, others offset in Y direction
   
   }
   
@@ -173,13 +187,32 @@ class ParEditor {
     
     parIndex = 0;
     
-    if (visible)
+    if (visible) 
     {
    
       rectMode (CORNER);
       stroke (100,100,200);
       fill (0,0,20);
       rect (parVP.x,parVP.y,parVP.w,parVP.h);
+      
+      if (notAvailNoticeTime != 0)
+      {
+        if (millis() - notAvailNoticeTime > 2500)
+        {
+          notAvailNoticeTime = 0;
+          visible = false;
+        }
+        push();  // style and matrix 
+        fill (240);
+        translate (parVP.x+20,parVP.y+30);
+        text ("Parameter dialog not available during",0,20);
+        text ("contest Run, use G)o command instead",0,45);
+        pop();
+        
+        return; 
+      }
+      
+      
       rect (parVP.x+parVP.w-30,parVP.y+8,22,22);    // close box
       mouseInCloseBox = (mouseX>parVP.x+parVP.w-30) && (mouseX<parVP.x+parVP.w-30+22) &&
                         (mouseY>parVP.y+8)          && (mouseY<parVP.y+8+22);
@@ -228,6 +261,9 @@ class ParEditor {
    
   float parF(float v, String vname, String id, float defaultV, float minV, float maxV, float deltaV)
   {
+    if (notAvailNoticeTime != 0) return v;  // contest running, param dialog not available
+    
+    
     if (loadActive)
     {
        // search load lines for variable then set variable value, 
@@ -247,6 +283,8 @@ class ParEditor {
       paramFile.println(String.format("%s,%1.4f",vname,v));
     }
     
+    
+    
     float dv = maxV-minV;       
     float posN = (v-minV)/dv;  // normalized position 
  
@@ -259,6 +297,8 @@ class ParEditor {
      {
        parCurIndex = parIndex;
      }
+     else parCurIndex = -99;  // New Oct 22, 2020  
+    
    }
    
    if (parCurIndex == -1) { return defaultV; }  // special case before first parEnd() call -- set defaults 
@@ -315,7 +355,7 @@ class ParEditor {
    
  int parI(int v, String vname, String id, int defaultV, int minV, int maxV)  // integer parameter  val = parI (val,default,min,max)
  {
-   
+    if (notAvailNoticeTime != 0) return v;  // contest running, param dialog not available
     if (loadActive)
     {
        // search load lines for variable then set variable value, 
@@ -336,12 +376,13 @@ class ParEditor {
    
    if (visible) 
    {
-     String txt =  String.format("%s  %s  = %1.2f",vname,id,v);
+     String txt =  String.format("%s  %s  = %d",vname,id,v);   // Oct 22, 2020  changed to int %d
      if (textBox(txt,posN,txtVP.x,txtVP.y+(parIndex+1-parPageTopIndex)*txtVPLineH,txtVP.w,txtVP.h))      // return true if mouse clicked in box
      {
        parCurIndex = parIndex;
    
      }
+     else parCurIndex = -99;  // New Oct 22,2020   
    }
    
    if (parCurIndex == -1) { return defaultV; }  // special case before first parEnd() call -- set defaults 
@@ -395,6 +436,12 @@ class ParEditor {
   
   void processKey(char k, int kcode)
   { 
+    if (lfs.contestIsRunning())
+    {
+      if (k=='P') { notAvailNoticeTime = millis(); visible = true; }     
+      return;
+    }  
+    
     if (k == 'P') parEditor.visible = !parEditor.visible;
     
     if (!visible) return;  // skip decode if panel not visible
@@ -443,7 +490,7 @@ class ParEditor {
  
   void handleMouse()  
   {
-   if (mousePressed && (mouseButton == LEFT))
+   if (mousePressed && (mouseButton == LEFT) && mouseInView())   // Oct 22 added mouseInView()
    {
      if (!mouseDownL) 
      {  mouseJustPressedL = true;  // param editor will handle 

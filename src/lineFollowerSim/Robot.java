@@ -34,7 +34,7 @@ public float x;           // robot position on course in inch coordinates
 public float y;
 public float heading;     // robot heading, 0 to 360 degrees CW, 0 is world x-
 
-private float turnRate;    // robot turn rate CW in degrees/second   use setTurnRate *
+public  float turnRate;    // robot turn rate CW in degrees/second   use setTurnRate *
 public  float speed;       // robot forward speed in inches/second    use setSpeed *
                         // * subject to accRate and decelRate if changed from default 
 
