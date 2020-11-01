@@ -1,171 +1,66 @@
-/* Line Following Simulator User Application - Processing Environment
-  
-   This version compatible of "main program tab" is compatible with library release
-   that orignally contained it.  
-   
-   Ron Grant
-   Sept 30,2020 
-   https://github.com/ron-grant/LFS
-   
-     
-   Refer to LFS User's Guide for a description of tabs and methods
-   Short summary here:
-   
-   Program Tab  Methods called by LFS           Short Description 
-   
-   LFS_XXX        NA                            Sketch main program - high level code usually not  
-                                                user modified - may be library version dependent! 
-                                                
-   UserCon     userControllerUpdate()           your controller called by simulator at each time step
-   UserDraw    userDraw()                       add features to overlay on robot view
-   UserPanel   userDrawPanel()                  display status on screen
-   UserInit    userInit()                       define name, course, sensors, acceleration...
-   UserKey     keyPressed()                     command key decoder 
-   UserReset   userControllerResetAndRun()      method called by simulator to start robot running                                         
-  
-*/  
+ /* Line Following Simulator User Application - Processing Environment
+   (Main file (notebook tab) of multi-file project)
 
-import lineFollowerSim.*;  // Simulator API - accepts turn rate and speed commands 
-                           // tracks virtual robot position and heading
-                           // renders robot and course views, reads sensor data
-
-LFS lfs;  // line following simulator - single instance created in setup()
-
-// pull into lib - hide implementation details 
-
-int simSpeed = 9;                     // simulation speed 0=single step 1 slow to 9 normal  -- controlled by Keypress           
-boolean simFreeze = false;            // toggled by space bar (when simSpeed>0) else single step -- controlled by Keypress
-boolean simRequestStep = false;       // program has decided it needs to take a simulation step
-int panelDisplayMode = 2;
-
-boolean showFPS = true;  // show frames per second being drawn - does not affect robot 
-                          // stopwatch time, or simulation behavior, just real time
-                          // ideally 60 fps will run robot actual speed with default time step
-                          // equal to 1/60th secm, 30fps robot appears to run 1/2 speed - slow
-                          // motion - as would be noted by slow stop watch.
+   LFS_XXX  Main Tab   new (lib 1.5)
    
-boolean courseTop = true;   // couse view top or bottom                     
-                     
-PImage ci;
-float fr;
-    
-void clearScreen() { background(0,0,20); } // called initally and  when changing course orientation     
-    
-public void setup()
-{
-  size (1800,900,P3D);       // window width,height in pixels
-  frameRate(8*120);
-  
-  lfs = new LFS(this);   // single instance of LFS  ref to this applet, robotView width,height e.g. typical 800,600
-  
-  lfs.defineRobotViewport(40,70,400,400);
-  lfs.defineCourseViewport(480,70,1280,640);
- 
- 
-    
-  userInit(); // called here - and also on robot start (contest start)
-  
-  //for (SpotSensor ss : lfs.sensors.spotSensorList) println (ss.getXoff(),ss.getYoff(),ss.read());
-  
-  simSpeed =9;
-  
-  clearScreen();
-  
- // ci = lfs.getCourse();
-  
-  lfs.setShowSensorsOnSensorView(true);  // slight frame rate gain if false 
-}
-
-
-
-  public void draw ()  // method called by Processing at 30 to 60 times per second (1 frame time)
-  {
-   // Screen not erased upon entry to draw, e.g. with background() method call.
+   The main tab now contains basic skeleton of sketch.
+   It contains core functions setup() and draw() with calls to methods that are 
+   effectively the body of setup and draw. It is easy to right click on them below and be taken 
+   to their declarations via (Jump to declaration)
    
-   // Robot view and Course view overwrite viewport areas - but not every frame unless view rate dividers set to 1 (see below)
-   // Other screen areas should be overwritten with solid rect before writing text.
+   This tab shows what libraries are imported and also gives easy access to basic settings relating to
+   screen resolution.
    
-   int alpha = 90;
-   if (courseTop) alpha = 219;
+   A big goal here is that updates to the library or application code should only affect
+   LFS_tabs other than this one.
    
-   if (courseTop)
-   lfs.updateSensors(0,0,0,alpha);     // draws 64 DPI bitmap of current robot location on screen (can be covered)
-                                       // sensor updates, making sensor data available for user controller
-    
-   lfs.drawRobotAndCourseViews(1,1,rotate90);  // draw robot and course, using frame divider
+   That is, with a new library release and download the .pde files should be able to be copied
+   over the files in your sketch if your release is (lib 1.4.3) or later.
    
-   // Frame divider (1,1,.. ) used for display every frame. Normal case.
-   // To attempt to improve performance read on:
-   // robot view rate divider, course view rate divider
-   // 0=disable 1=every frame 2=every other frame, 3= every 3..
-   // when mouse pressed and not disabled, LFS will temporarily insure every frame
-   // Using GPU may eliminate this feature... 
-    
-   if (!courseTop) lfs.updateSensors(0,0,0,alpha); 
-     
-   if (courseTop) userDraw();
-    
-    resetMatrix();
-    camera();
-    
-       
-    rectMode (CORNER);   // text boxes - backgrounds 
-    fill (0);
-    rect (40,10,400,48);
-    rect (480,10,1200,48);
-       
-    if (showFPS)   // draw() frames per sec (fps)  - performance monitor 
-    { textSize (18);
-      fill(150);
-      if (frameCount%60 == 0) fr = frameRate;
-      text(String.format("%2.0f fps",fr),340,55);
-    }
-    
-    fill(240);
-    textSize(28);
-    text(lfs.getContestTimeString(),51,46);
-    
-    text(lfs.getContestStateName(),width-248,47);
+   LFS_Key
+   LFS_M
+   LFS_Panel
+   LFS_Par
+   LFS_RS
       
-    text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);  
-    
-     
-     
-    
-    lfs.drawRobotLocHeadingVel(974,47);        // draw x,y location and heading bitmap (values not available) 
-                                               
-    
-    
-   if (!simFreeze)                             // if simulation not frozen with speed=0, key='0' freezes
-   {
-     if (simSpeed == 0)
-     { }
-     else
-     if (simSpeed == 1)
-     { if ((frameCount % 60) == 0)             // 1 is really slow   e.g. about frame per second typical
-       simRequestStep = true;
-     }  
-     else 
-     if (simSpeed==9) simRequestStep = true;
-     else
-     if ((frameCount % (60-simSpeed*60/9) == 0))   // allow keys 1..9 to control speed  
-       simRequestStep = true;                      // simSpeed of 9 requests frame every time
-   }
-     
-   if (lfs.controllerIsEnabled())    // if turned off, no update.
-     userControllerUpdate();         // user reads sensors changes target speed and turn rate as needed.
-    
-   lfs.driveUpdate(simRequestStep);  // if step requested update robot position with current speed and turn rate
-                                     // also stopwatch tick is counted. Note: if controller is not enabled 
-                                     // this call will insure robot position is updated allowing manual drive.   
-                                             
-   simRequestStep = false;           // ramping speed and/or turn rate toward targetSpeed and targetTurnRate
-                                     // using defined acceleration/deceleration rates.
-       
-   userDrawPanel();
-    
-   lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish"   
+  
+   The Processing sound library is required for this program   
    
-  } // end of draw()
+   To install the sound library:
+   On the Processing command menu bar click Sketch > Import Library... > Add Library ... 
+   The Contribution Manager Window will appear.
+   Click on the Filter Box and enter the word "sound"  
+   Then click on item  Sound | Provides a simple way to work with audio.
+   Then click Install at bottom right of window. 
+   After the library installs completes, close the Contribution Manager window and
+   run your sketch.
+   
+*/
 
- 
+import lineFollowerSim.*;   // LFS Simulator API, renders views, calculates robot location, generates sensor data and more.
+import processing.sound.*;  // Sound library. See above for installation instructions.
+
+  
+boolean  fullScreenDisplay  = false;    // full screen (designed for 1920x1080 display only) (lib 1.4.2)
+                                        // sketch has a few tweaks to display correctly on 1920x1080 (HD) display
+                                        // when this setting is true
+
+void settings()  // processing calls this one time at start of program
+{                // allows selection of different sizes, not allowed in setup. 
+
+  if (fullScreenDisplay) fullScreen(P3D);     
+  else size (1800,900,P3D);                  // window width,height in pixels
+}
+   
+void setup()  {
+  frameRate(1000);       // request high frame rate, e.g. 1000 max,  to run simulator as fast as possible.
+                         // frame rate (frames per second - fps) reported top right of display.
+                         // A frame rate of 60 would closely match the simulator default time step, but 
+                         // there is no need to restrict the simulator speed. The stopwatch will count the 
+                         // same amount of time regardless of how fast the simulator executes.
+                         
+  setupLFS();            // LFS related setup, see LFS_M tab
+} 
+
+void draw() { lfsDraw(); } // called by Processing at frame display rate (as fast as possible with frameRate(1000)
+                           // See LFS_M tab
