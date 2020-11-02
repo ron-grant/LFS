@@ -27,7 +27,7 @@
         
 */
 
-SpotSensor sensorL,sensorM,sensorR,sensorDimensionCheck;
+// SpotSensor sensorL,sensorM,sensorR,sensorDimensionCheck;
 LineSensor sensor1;  
 
 
@@ -47,12 +47,12 @@ void userInit()  // called at startup and typically by UserReset tab's userContr
   
  
   lfs.defineLapCourse(1,"Novice_LF_course-Fall_2018_64DPI.jpg");      // LapCourses use lap timer  
-  lfs.defineLapCourse(2,"Advanced_LF_course_Fall-2018_64DPI.jpg");
-  lfs.defineCourse   (3,"DPRG_Challenge_2011_64DPI.jpg",71.7,120,0);  // not lap timer course, optional x,y,heading is used here 
+  lfs.defineLapCourse(2,"Advanced_LF_course_Fall-2018_64DPI.jpg",54,12,0);
+  lfs.defineCourse   (3,"DPRG_Challenge_2011_64DPI.jpg",53,12,0);  // not lap timer course, optional x,y,heading is used here 
   lfs.defineLapCourse(4,"Test2x3.png",24,12,20);
   lfs.defineLapCourse(5,"RG_5x7_Advanced_64DPI_R1.png");
     
-  lfs.chooseCourseOneTime(3);          // Here you choose an initial course to use. 
+  lfs.chooseCourseOneTime(2);          // Here you choose an initial course to use. 
                                        // If Ctrl-C command is issued it advances the selection to the next course, 
                                        // wrapping around to the start of list when advancing past the end. To preserve 
                                        // the Ctrl-C selection, this setting is ignored on subsequent userInit calls
@@ -108,14 +108,14 @@ void userInit()  // called at startup and typically by UserReset tab's userContr
    
   // Sept 16, need to change new SpotSensor to lfs.create..   to save having to include reference to sensors.. 
          
-  sensorL = lfs.createSpotSensor(1,-1,64,64);         // example spot sensors 
-  sensorM = lfs.createSpotSensor(1.5f,0,32,32);
-  sensorR = lfs.createSpotSensor(1, 1,64,64);
+  // sensorL = lfs.createSpotSensor(1,-1,64,64);         // example spot sensors 
+  // sensorM = lfs.createSpotSensor(1.5f,0,32,32);
+  // sensorR = lfs.createSpotSensor(1, 1,64,64);
 
-  sensorDimensionCheck = lfs.createSpotSensor(1, 0,154,16); // up 1 inch, horizontal centered about 0, 154px/2.4in wide and 25px/0.25in tall)
+  // sensorDimensionCheck = lfs.createSpotSensor(1, 0,154,16); // up 1 inch, horizontal centered about 0, 154px/2.4in wide and 25px/0.25in tall)
 
-  // 8 sensor array to model Polulu QTRX-MD-08A https://www.pololu.com/product/4448/pictures
-  sensor1 = lfs.createLineSensor(2.0f, 0, 19, 19, 8); // x,y offset from robot center, spot size (5,5) ,
+  // 13 sensor array to model Polulu QTRX-MD-13A https://www.pololu.com/product/4253/pictures
+  sensor1 = lfs.createLineSensor(2.0f, 0, 19, 19, 13); // x,y offset from robot center, spot size (5,5) ,
                                                      // number of samples (if even, gets incremented to odd value 
                                                      // to place a spot directly at sensor x,y
                                                      // and make sensor symmetrical about x,y

@@ -58,18 +58,18 @@ void userControllerUpdate ()
     colorTable[i] = c;
   }
   
-  // update sensor colors on spot sensors even though not used in this demo
+  // // update sensor colors on spot sensors even though not used in this demo
   
-  if (sensorL.read() > 0.5) sensorL.setColor (color(0,0,100));
-  else sensorL.setColor(color(255,0,0));
+  // if (sensorL.read() > 0.5) sensorL.setColor (color(0,0,100));
+  // else sensorL.setColor(color(255,0,0));
  
-  if (sensorM.read() > 0.5) sensorM.setColor (color(0,0,100));
-  else sensorM.setColor(color(255,0,0));
+  // if (sensorM.read() > 0.5) sensorM.setColor (color(0,0,100));
+  // else sensorM.setColor(color(255,0,0));
  
-  if (sensorR.read() > 0.5) sensorR.setColor (color(0,0,100));
-  else sensorR.setColor(color(255,0,0));  
+  // if (sensorR.read() > 0.5) sensorR.setColor (color(0,0,100));
+  // else sensorR.setColor(color(255,0,0));  
 
-  // -------------------------------------------------------------------------------------------
+  // // -------------------------------------------------------------------------------------------
 
   controllerMessageString = String.format("sensed line position error %3.1f",e);  // displayed by UPanel code
 
