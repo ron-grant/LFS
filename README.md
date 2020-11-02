@@ -23,7 +23,7 @@ Check out various DPRG line following courses at https://github.com/dprg/Contest
 Shown below is an image of the DPRG Challenge Course. Join in and create your controller to solve this course! 
 <p>
   
-![](ChallengeSmallImage.jpg)
+![](LFS_ScreenImage.jpg)
 
 
 ### LineFollowerSim (LFS) Installation
