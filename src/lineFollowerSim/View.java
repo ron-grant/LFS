@@ -62,9 +62,16 @@ class View {  // no modifier = package protected
  
   private float curCrumbX;
   private float curCrumbY;
- 
+  /**
+   *  Crumb threshold distance apart. Default is 0.5 inches, increase to reduce drawing overhead
+   *  and potentially increase frame rate, particularly late in a run where many crumbs are displayed  
+   */
   public float crumbThresholdDist;     // cookie crumbs - used for path tracking
-  public  boolean crumbsEnabled;    
+  
+  /**
+   * Disable addition of crumbs when false.
+   */
+  public  boolean crumbsEnabled = true;    
  
   public boolean drawRobotCoordAxes = true;  // set false to hide robot coordinate axes 
   
@@ -94,7 +101,7 @@ class View {  // no modifier = package protected
   boolean mouseActive;
   public boolean crumbsVisible;   // bit of a hack needed to hide crumbs when help window drawn over-top
                                   // course window -- for some reason they are bleeding through. 
-                                  // drawing order or Z-depth isssue. Taking the easy route - hide 'em when 
+                                  // drawing order or Z-depth issue. Taking the easy route - hide 'em when 
                                   // help visible 
   
   View(PApplet parent)
@@ -184,10 +191,13 @@ class View {  // no modifier = package protected
    * @param width      viewport width 
    * @param height     viewport height 
    */
-
+  
+  
+  
   public void defineSensorViewport (int x, int y, int width, int height)  
   {
 	sensorVP = new VP(x,y,width,height);  
+	
   }
   
   
@@ -232,58 +242,91 @@ void vertRotateScale (PVector[] v,float theta,float scaleX, float scaleY)  // 2D
   }
 }
 
+
+void vertRotateTranslate (PVector[] v,float theta,float tx, float ty)  // 2D rotation 
+{
+  float ca = PApplet.cos(theta);
+  float sa = PApplet.sin(theta);
+  
+  for (int i=0; i<v.length; i++)
+  {
+    float x = v[i].x;
+    float y = v[i].y;
+    v[i].x = (x*ca-y*sa) + tx;
+    v[i].y = (x*sa+y*ca) + ty;
+  }
+}
+
+
+PVector[] sUV = null;  // vertex list for sensor view, allocated one time in createSensorViewQuad
+PShape svq = null;  // sensor view quad allocated one time, xyz preset, uv set every frame
+
+
+void createSensorViewQuad(PImage courseImage)
+{
+	// define vertices used for uv coordinates in drawSensorView -- previously done in draw loop
+	sUV = new PVector[4];
+	for (int i=0; i<4; i++) sUV[i] = new PVector (0,0,0);
+	  
+	svq = p.createShape(); 
+	  
+	svq.beginShape(PApplet.QUAD); // QUAD did not appear to be needed 
+	  
+		svq.noStroke();                // 1.3.1 get rid of any border 
+		
+		svq.texture(courseImage);
+		  
+		svq.textureMode(PApplet.IMAGE);        // uv coordinates in image pixels not normalized
+		 
+		int w = sensorVP.w;
+		int h = sensorVP.h;
+		   
+		svq.vertex(0,0,0, 0,0);      // xyzuv   uv assigned at frame draw
+		svq.vertex(h,0,0, 0,0);
+		svq.vertex(w,h,0, 0,0);
+		svq.vertex(0,w,0, 0,0);  
+	   
+	svq.endShape();
+	  
+	
+}
+
   
 public void drawSensorView(PImage courseImage, Robot robot, int courseDPI)  // draw robot view for sensor reading at 1:1 scale (64 DPI)
 {
   int w = sensorVP.w;
   int h = sensorVP.h;
   
-  PVector[] v = new PVector[4];
+  if (svq==null) createSensorViewQuad(courseImage); // do one time  !!! if viewport altered need to set v null 
   
-  v[0] = new PVector(0,0);          // sample region of course bitmap 
-  v[1] = new PVector(h,0);          // 1:1 course bitmap is 64DPI and we want to sample 64DPI image
-  v[2] = new PVector(w,h);
-  v[3] = new PVector(0,h);
 
+  sUV[0].set(0,0);   // robot view, actually at w/2,h/2 which gets corrected with translate
+  sUV[1].set(h,0);
+  sUV[2].set(w,h);
+  sUV[3].set(0,w);    // think this is correct   square area w=h  would not matter
+  
   // calculate position and orientation of u,v coordinates to sample course texture map
   
-  vertTranslate(v,-w/2,-h/2);                              // translate center of view to origin
-  vertRotateScale(v,PApplet.radians(robot.heading-90),1.0f,1.0f);   // rotate (about origin)  and scale e.g. 2.0 doubles sample region size
+  vertTranslate(sUV,-w/2,-h/2);                              // translate center of view to origin
+  vertRotateScale(sUV,PApplet.radians(robot.heading-90),1.0f,1.0f);   // rotate (about origin)  and scale e.g. 2.0 doubles sample region size
  
  
-  vertTranslate(v,robot.x*courseDPI,robot.y*courseDPI);    
+  vertTranslate(sUV,robot.x*courseDPI,robot.y*courseDPI);    
   
-  PShape rv;
+  //moved shape def to init 
   
-  rv = p.createShape();
-  rv.beginShape();
-  
-  rv.noStroke();                // 1.3.1 get rid of any border 
-  rv.texture(courseImage);
-  
-  rv.textureMode(PApplet.IMAGE);              // uv coordinates in image pixels not normalized
+  for (int i = 0; i<4; i++)
+    svq.setTextureUV(i, sUV[i].x,sUV[i].y);
  
- 
-  rv.vertex(0,0,0, v[0].x,v[0].y);      // xyzuv
-  rv.vertex(h,0,0, v[1].x,v[1].y);
-  rv.vertex(w,h,0, v[2].x,v[2].y);
-  rv.vertex(0,h,0, v[3].x,v[3].y);
-  
-  
-  //rv.vertex(w,0,0, v[1].x,v[1].y);
-  //rv.vertex(w,h,0, v[2].x,v[2].y);
-  //rv.vertex(0,h,0, v[3].x,v[3].y);
-  
-  rv.endShape();
-  
+    
   p.resetMatrix();  // temp ?
   p.camera();
   
   p.translate(sensorVP.x,sensorVP.y);       // offset window origin 
   
-  p.shape(rv);                              // draw shape to display window  
+  p.shape(svq);                              // draw shape to display window  
   
-  p.translate(-sensorVP.x,-sensorVP.y);     // undo transform  	  
+  p.translate(-sensorVP.x,-sensorVP.y);     // undo transform  	   needed?
 
  
   
@@ -316,7 +359,39 @@ public void coverSensorView(int r, int g, int b, int a)    // color including al
   p.popStyle();
 	
 }
-        
+   
+PShape rvq = null;  // sensor view quad allocated one time, xyz preset, uv set every frame
+PVector[] rvv;      // robot view quad uv coordinates 
+
+void createRobotViewQuad(PImage courseImage)
+{
+	// define vertices used for uv coordinates in drawSensorView -- previously done in draw loop
+	rvv = new PVector[4];
+	for (int i=0; i<4; i++) rvv[i] = new PVector (0,0,0);
+	  
+	rvq = p.createShape(); 
+	  
+	rvq.beginShape(PApplet.QUAD); // QUAD did not appear to be needed 
+	  
+		rvq.noStroke();                // 1.3.1 get rid of any border 
+		
+		rvq.texture(courseImage);
+		  
+		rvq.textureMode(PApplet.IMAGE);        // uv coordinates in image pixels not normalized
+		 
+		int w = robotVP.w;
+		int h = robotVP.h;
+		   
+		rvq.vertex(0,0,0, 0,0);      // xyzuv   uv assigned at frame draw
+		rvq.vertex(h,0,0, 0,0);
+		rvq.vertex(w,h,0, 0,0);
+		rvq.vertex(0,w,0, 0,0);  
+	   
+	rvq.endShape();
+	  
+	
+}
+
   
   /** Draw overhead view of robot, from perspective of orthographic camera mounted directly above
    * robot looking straight down using robots current x,y location and heading on line following course
@@ -334,48 +409,40 @@ public void coverSensorView(int r, int g, int b, int a)    // color including al
 	  int w = robotVP.w;
 	  int h = robotVP.h;
 	  
-	  float scale = 2.0f;   // need to calc!   for now  400x400 = 1/2 800x800  scale 2.0 x
+	  float scale = 2.0f;   // need to calc!!!   for now  400x400 = 1/2 800x800  scale 2.0 x
 	  
-	  PVector[] v = new PVector[4];
 	  
-	  v[0] = new PVector(0,0);          // sample region of course bitmap 
-	  v[1] = new PVector(w,0);          // 1:1 course bitmap is 64DPI and we want to sample 64DPI image
-	  v[2] = new PVector(w,h);
-	  v[3] = new PVector(0,h);
+	  if ((rvq==null) && (courseImage != null)) 
+		  createRobotViewQuad(courseImage); // do one time  !!! if viewport altered need to set v null 
+	  
 
+	  rvv[0].set(0,0);   // robot view, actually at w/2,h/2 which gets corrected with translate
+	  rvv[1].set(h,0);
+	  rvv[2].set(w,h);
+	  rvv[3].set(0,w);   // think this is correct   square area w=h  would not matter
+	  
+	
 	  // calculate position and orientation of u,v coordinates to sample course texture map
 	  
-	  vertTranslate(v,-w/2,-h/2);                          // translate center of view to origin
-	  vertRotateScale(v,PApplet.radians(robot.heading-90),scale,scale);   // rotate (about origin)  and scale e.g. 2.0 doubles sample region size
+	  vertTranslate(rvv,-w/2,-h/2);                          // translate center of view to origin
+	  vertRotateScale(rvv,PApplet.radians(robot.heading-90),scale,scale);   // rotate (about origin)  and scale e.g. 2.0 doubles sample region size
 	 	 
-	  vertTranslate(v,robot.x*courseDPI,robot.y*courseDPI);    
+	  vertTranslate(rvv,robot.x*courseDPI,robot.y*courseDPI);    
+	
 	  
-	  PShape rv;
+	  for (int i = 0; i<4; i++)                   // set UV coordinates of quad
+	    rvq.setTextureUV(i, rvv[i].x,rvv[i].y);
+	 
 	  
-	  rv = p.createShape();
-	  rv.beginShape();
-	  
-	  rv.texture(courseImage);
-	  
-	  rv.textureMode(PApplet.IMAGE);             // uv coordinates in image pixels not normalized
-	  
-	  rv.vertex(0,0,0, v[0].x,v[0].y);      // xyzuv
-	  rv.vertex(w,0,0, v[1].x,v[1].y);
-	  rv.vertex(w,h,0, v[2].x,v[2].y);
-	  rv.vertex(0,h,0, v[3].x,v[3].y);
-	  
-	  rv.endShape();
-	  
-	  p.resetMatrix();  // temp ?
+		  
+	  p.resetMatrix();  
 	  p.camera();
 	  
 	  p.translate(robotVP.x,robotVP.y);       // offset window origin 
 	  
-	  p.shape(rv);                            // draw shape to display window  
+	  p.shape(rvq);                            // draw shape to display window  
 	  
-	  p.translate(-robotVP.x,-robotVP.y);     // undo transform  	  
-  
-	
+		
 	  // draw robot coordinate axes 
 	   
 	  p.resetMatrix();
@@ -698,6 +765,8 @@ void drawRobotCoordAxes()  // called from LFS
 
   {
 
+  if (!crumbsEnabled) return;  // new 1.5.2	 
+	  
   // add cookie crumb if robot has moved more than crumbThresholdDist from previous crumb
   if (PApplet.dist(robot.x,robot.y,curCrumbX,curCrumbY) > crumbThresholdDist) 
   {
