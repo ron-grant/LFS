@@ -85,7 +85,9 @@ ePrev = e;
 
 // generally your robot will up updating TargetTurnRate and possibly TargetSpeed
 
-lfs.setTargetTurnRate(-e * Kp + (e - ePrev) * Kd);   // turn rate in degrees per second
+// lfs.setTargetTurnRate(-e * Kp + (e - ePrev) * Kd);   // turn rate in degrees per second
+lfs.setTargetSidewaysSpeed( 0.1*(-e * Kp + (e - ePrev) * Kd) );   // turn rate in degrees per second
+
 
 // handy to disable set target speed and manually change 
 // note: in this case start in non-contest mode.
