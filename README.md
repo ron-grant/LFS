@@ -3,10 +3,10 @@
 New User's Guide 1.5 (PDF Available)
 Parameter Editor Ctrl-A, repaired & improved mouse button pressed logic preventing select when drifting off item.
 
-New experimental ability to for controller to notify simulator it does not need update on sensor data for next step.
-This can speed up simulation execution rate, while not affecting robot "run time"
+New ability for controller to notify simulator it does not need sensor data update for next step.
+This can speed up simulation execution rate while not affecting robot "run time".
 
-See other release notes at end of readme.
+See other release notes at end of README.
 
 
 # LFS - Line Follower Simulation 
