@@ -4,12 +4,12 @@
    Oct 27, 2020
    
    RobotState class, defined in UserReset tab, provides a facility to capture robot state information while
-   non-contest run is in progress via M marker command (the robot step rate can be throttled with 1..9 keys OR
+   a non-contest run is in progress via M marker command (the robot step rate can be throttled with 1..9 keys OR
    frozen with SPACE when the marker records state. This saved state marker  appears as a marker circle
-   with internal rotating square.
+   with and added internal rotating square.
    
-   The idea is to allow state capture some amount of time into a course run, before the robot approaches
-   a feature that it is failing on, then return to that location and robot state quickly after making 
+   The idea is to allow state capture some amount of time into a course run, as the robot approaches
+   a feature that it is failing on, then return to that location and robot state instantly after making 
    changes to the controller code.
    
    If your robot carries little state information, this facility may not be of much use. Placing a robot 
@@ -55,7 +55,7 @@
    after closing and restarting the sketch. At that point, go to work on your controller.
    
    Again, if you add new state variables you might need to erase .srs file. 
-   In the future, LFS may better recognize changes, and prompt for erasure of old imcompatible saved state markers.
+   In the future, LFS may better recognize changes, and prompt for erasure of old incompatible saved state markers.
      
  */
   

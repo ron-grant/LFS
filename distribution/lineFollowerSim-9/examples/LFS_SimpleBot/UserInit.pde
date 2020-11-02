@@ -69,12 +69,9 @@ void userInit()  // called at startup and typically by UserReset tab's userContr
      
   lfs.lapTimer.lapCountMax = 3;        // Maximum number of laps before stop for lap courses defined with defineLapCourse method.
     
-  lfs.reportDistanceTraveled= true;    // (lib 1.4.1) false compatible with previous lfs versions
-                                       // setting true, would require erasing contest.cdf file to allow generation of
-                                       // correct header which includes "Dist"
-                                       // * If this statment is omitted in your application the library defaults 
-                                       //   to false. I would prefer to eliminate this assignment.. 
- 
+  lfs.reportDistanceTraveled= true;    // Include Dist, field in contest.cdf, erase old contest.cdf, and new
+                                       // file will correctly include Dist header.
+                                     
  
   // End of New to LIB 1.4.1 -----------------------------------------------------------------------------------------------------------
   
@@ -109,7 +106,7 @@ void userInit()  // called at startup and typically by UserReset tab's userContr
   // Sept 16, need to change new SpotSensor to lfs.create..   to save having to include reference to sensors.. 
          
   sensorL = lfs.createSpotSensor(1,-2,12,12);         // example spot sensors 
-  sensorM = lfs.createSpotSensor(1.5f,0,10,10);
+  sensorM = lfs.createSpotSensor(1.5f,0,15,15);
   sensorR = lfs.createSpotSensor(1, 2,12,12);
   sensor1 = lfs.createLineSensor(2.0f, 0, 5,5, 65); // x,y offset from robot center, spot size (5,5) ,
                                                      // number of samples (if even, gets incremented to odd value 

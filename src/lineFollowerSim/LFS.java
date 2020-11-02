@@ -86,7 +86,7 @@ Marker marker;         // single instance of marker class - accessed from this c
  * next contest run. 
  * 
  */
-public boolean reportDistanceTraveled;  // when true distance traveled included in run report  1.4.1
+public boolean reportDistanceTraveled = true;  // when true distance traveled included in run report  1.4.1
 /**
  * When set true (default value), on screen display includes distance traveled since start. 
  * New feature in (lib 1.4.1) default is false. See UserInit tab in simulation app.

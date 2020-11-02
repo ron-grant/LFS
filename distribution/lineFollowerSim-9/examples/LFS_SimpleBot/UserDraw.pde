@@ -18,7 +18,7 @@ void userDraw()
 {
   if (showUserDraw == false) return;    
   
-  if (courseTop) lfs.setupUserDraw();   // sets up transforms origin robot center scale inches for Robot view
+  if (courseTop) lfs.setupUserDraw();      // sets up transforms origin robot center scale inches for Robot view
   else lfs.setupUserDrawSensorViewport();  // ... for SensorView
      
   lfs.drawRobotCoordAxes();  // draw robot coordinate axes 

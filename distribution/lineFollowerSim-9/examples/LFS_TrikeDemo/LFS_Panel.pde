@@ -12,6 +12,8 @@
    (file).
    
 */
+  
+  boolean showCommandSummary = true;   // set false for possible slight fps increase  See Ctrl-Q
 
   // using simple VP rectangle exposed in lib 1.3.2
   // like Processing rect in CORNER mode  : upper-left x,y and  width,height
@@ -35,6 +37,9 @@
   void help (String s) { text (s,helpVP.x+helpX,helpVP.y+helpY); helpY += helpLineSpace; }  // display line and advance down page
   void helpGap() { helpY+=8; }  // small vertical tab (gap)
   int  helpPages = 3;           // lib 1.4.1 added page with simulator maximums 
+ 
+  boolean userPanel1Visible = true;  // toggled by U key  (lib 1.4.2)
+  boolean userPanel2Visible = true;
  
   void helpVu(String s, float val, String units)
   { help(String.format ("%50s = %8.2f %s",s,val,units)); }
@@ -87,9 +92,10 @@ void lfsDrawPanel()  // called from draw() at frame rate
       help ("PARAMETER DIALOG   Dialog that displays program variables included in list within UPar tab.");
       helpGap();
       help ("P)arameter dialog on/off (also click on [X] to hide parameter dialog.");
-      help ("ctrl-D)efault - Set selected parameter to default value. (ctrl-A Default ALL)");
-      help ("ctrl-S)ave    - Save Parameters to sketch's data sub-folder param.cdf");
-      help ("ctrl-L)oad    - Load Parameters from sketch's data sub-folder param.cdf (manual Load only 1.4)");
+      help ("ctrl-D)efault - Set selected parameter to default value.");
+      help ("ctrl-A)ll        - Set ALL parameters to default value."); 
+      help ("ctrl-S)ave     - Save Parameters to sketch's data sub-folder param.cdf");
+      help ("ctrl-L)oad     - Load Parameters from sketch's data sub-folder param.cdf (manual Load only 1.4)");
       help("");
       help("");
       help ("LFS Simulator Imposed Maximum (& Minimum) Values ");   // new in lib 1.4.1
@@ -146,7 +152,7 @@ void lfsDrawPanel()  // called from draw() at frame rate
       help ("  hold left mouse button down and drag to change position");
       help ("  hold right mouse button down and drag horizontally to change heading");
       helpGap();
-      help ("MANUAL ROBOT DRIVE (repetitive press of keys) ");
+      help ("MANUAL ROBOT DRIVE (repetitive press of keys) - with Controller OFF");
       help (" Vert Arrows        - speed increase/decrease (signed value  +forward -reverse)");
       help (" Horz Arrows        - turn rate increase/decrease (signed value +right -left)");
       help (" < > (comma period) - sideways motion increase/decrease (signed value +right -left)");
@@ -156,19 +162,21 @@ void lfsDrawPanel()  // called from draw() at frame rate
       help ("TAB     Toggle visiblity of course vs User Panel 2");
       help ("ALT     Toggle 90 degree rotation of course ");
       help ("Ctrl-C  Course select (next course) from list defined in UserInit.");
-      help ("U)ser   Toggle user panel visibility");
+      help ("U)ser   Toggle user panel visibility   Q)uietDisplay cycle hiding text/graphics panels 1..4 ");
      
     } // end if help page 1   
     
   } // end if helpVisible
     else
     {
-      
-      drawEmptyVP(cmdVP);
-      cmdSumX = 20;             // text offset
-      cmdSumY = 20;
-      cmdSumLineSpace = 22;     // vert offset for each cmdSum() call
-      textSize (18);
+      if (showCommandSummary)
+      {
+        drawEmptyVP(cmdVP);
+        cmdSumX = 20;             // text offset
+        cmdSumY = 20;
+        cmdSumLineSpace = 22;     // vert offset for each cmdSum() call
+        textSize (18);
+      }  
       
       if (lfs.getContestState() == 'S')
       {
@@ -179,14 +187,14 @@ void lfsDrawPanel()  // called from draw() at frame rate
         cmdSum("");
         cmdSum("OR Press X to cancel");
       }
-      else
+      else if (showCommandSummary)
       {
         cmdSum ("LFS Command Key Summary        H)elp       P)arameter dialog   U)ser panel");
         cmdSumGap();
-        cmdSum ("CONTEST  R)un SPACE-Stop F)inish    0..9 step speed             ESC)Exit Program");
+        cmdSum ("CONTEST R)un SPACE-Stop  0..9 step speed             ESC)Exit Program");
         cmdSumGap();
-        cmdSum ("C)ontroller (on/off) G)o S)top  E)raseCrumbs M)arker");
-        cmdSum ("Tab course view    ALT Rotate Course  h Ctrl-C Course select");    // Ctrl-C new (lib 1.4.1)
+        cmdSum ("C)ontroller (on/off) G)o S)top  E)raseCrumbs M)arker SPACE-toggle freeze");
+        cmdSum ("Tab course view    ALT Rotate Course    Ctrl-C Course select  Q)uietDisplay");    // Ctrl-C new (lib 1.4.1)
         
         
         cmdSum(userKeyCommands1); // draw user key commands 1
@@ -215,7 +223,7 @@ void lfsDrawPanel()  // called from draw() at frame rate
     }
     
     
-    if (focused && (helpPage==0) && !courseTop)
+    if (focused && (helpPage==0) && !courseTop && userPanel2Visible)
     {
       pushMatrix();
       
@@ -235,7 +243,7 @@ void lfsDrawPanel()  // called from draw() at frame rate
     }
     
    
-     if (focused && !parEditor.visible)
+     if (focused && !parEditor.visible && userPanel1Visible)
     {
       pushMatrix();
       

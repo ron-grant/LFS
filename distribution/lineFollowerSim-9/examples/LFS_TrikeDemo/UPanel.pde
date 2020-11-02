@@ -44,8 +44,6 @@ boolean showUserPanel1 = true; // set false to blank display of user Panel 1
 boolean showUserPanel2 = true; // set false to blank display of user Panel 2
                                // noting that it is only visible normally when course not displayed 
 
-boolean userPanel1Visible = true;  // toggled by U key  (lib 1.4.2)
-
 void userDrawPanel1()          // Panel located in same location as Parameters, called only when 
                                // parameters not visible
 {

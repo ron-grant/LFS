@@ -9,8 +9,6 @@
     or adding to key functionality...
   
   + userStop() called when stop command issued (lib 1.4.3)  
-
-  - Handle notification to user of marker click
    
   - user console messages ability to capture  
   
@@ -65,5 +63,19 @@
   void userLapDetected() {}          // future sound effect / graphics (lib 1.4.2)
   void userFinishLineDetected() {}   // user thinks they crossed finish line (lib 1.4.3)
   void userStartedRun() {}           // R)un or G)o just issued (lib 1.4.2)
+  
+  (lib 1.5.1)
+  + Param Editor Ctrl-A)ll not working
+  + Param Editor allowed drifting off selected parameter when left mouse button held down 
+      logic still not totally clean, but better
+      
+  + Updated Users Manual
+  + Implemented Q)uietDisplay used to cycle (1..4) blanking of display panels / text except for essential Sensor view 
+    Experiment in program speed up.
+    
+    
+    
+  
+  
 
 */
