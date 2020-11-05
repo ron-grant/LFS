@@ -34,7 +34,7 @@ LineSensor sensor1;
 void userInit()  // called at startup and typically by UserReset tab's userControllerResetAndRun method
 {
  
-  lfs.setFirstNameLastNameRobotName("Carl","Ott ","MecanumDemo");   // change to your name and robot
+  lfs.setFirstNameLastNameRobotName("PutYour","NameHere","&NameYourBot");   // change to your name and robot
   
   // ---- NEW TO LIB 1.4.1 -----------------------------------------------------------------------------------------
   
@@ -152,7 +152,7 @@ void userInit()  // called at startup and typically by UserReset tab's userContr
     
   if (genIcon)
   {
-    String genInitials = "CO";               // replace with your initials (2 or 3 char) and colors below... 
+    String genInitials = "??";               // replace with your initials (2 or 3 char) and colors below... 
     color genColor = color (250,230,0);      // robot color  Aztec Yellow
     color genTextColor = color (0,0,100);    // text color   Dark Blue   
     
