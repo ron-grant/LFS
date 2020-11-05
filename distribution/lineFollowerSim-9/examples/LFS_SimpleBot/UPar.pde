@@ -1,4 +1,4 @@
- /* UserPar    User Parameter Editor  Support added in LFS library 1.4   
+  /* UserPar    User Parameter Editor  Support added in LFS library 1.4   
     
     User specifies a list of primitive float and int variables via method calls
     used by parameter editor to create a screen of runtime interactive adjustable values. 

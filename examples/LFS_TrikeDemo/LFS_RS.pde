@@ -4,12 +4,12 @@
    Oct 27, 2020
    
    RobotState class, defined in UserReset tab, provides a facility to capture robot state information while
-   non-contest run (G-Key run) is in progress via M marker command (the robot step rate can be throttled
-   with 1..9 keys OR frozen with SPACE when the marker records state. This saved state marker appears as 
-   a marker circle with internal rotating square.
+   a non-contest run is in progress via M marker command (the robot step rate can be throttled with 1..9 keys OR
+   frozen with SPACE when the marker records state. This saved state marker  appears as a marker circle
+   with and added internal rotating square.
    
-   The idea is to allow state capture some amount of time into a course run, before the robot approaches
-   a feature that it is failing on, then return to that location and robot state quickly after making 
+   The idea is to allow state capture some amount of time into a course run, as the robot approaches
+   a feature that it is failing on, then return to that location and robot state instantly after making 
    changes to the controller code.
    
    If your robot carries little state information, this facility may not be of much use. Placing a robot 
@@ -55,10 +55,10 @@
    after closing and restarting the sketch. At that point, go to work on your controller.
    
    Again, if you add new state variables you might need to erase .srs file. 
-   In the future, LFS may better recognize changes, and prompt for erasure of old imcompatible saved state markers.
+   In the future, LFS may better recognize changes, and prompt for erasure of old incompatible saved state markers.
      
  */
- 
+  
 boolean verboseStateRW = false;  // used to see on console, what fields are being read/written
       
 ArrayList  <RobotState> robotStateList = new ArrayList <RobotState> ();  // current list of saved robot states
@@ -138,7 +138,8 @@ void lfsNewMarkerPlaced(boolean placed)  //called when a new marker placed or re
     ss.robotSpeed = lfs.getSpeed();                     // instantaneous speed and turn rate           
     ss.robotSidewaysSpeed = lfs.getSidewaysSpeed();     // these are always available from simulator.
     ss.robotTurnRate = lfs.getTurnRate();
-    ss.timerTick = lfs.lapTimer.getTick();              // save current stop watch time
+    ss.timerTick = lfs.lapTimer.getTick();              // save current stop watch time 
+    
  
     objectSave(ss,"tempMod$.srs");  // save new modified snapshot  
  
@@ -173,16 +174,17 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
   if (dist(curX,curY,rs.markerX,rs.markerY) < 1.0)
   {
    println ("Saved RobotState found, updating current state. ");  // This always printed on console.
-      
+   
+   
    rsprintln ("currentRobotState");
    if (verboseStateRW) objectPrint(currentRobotState);
       
    objectSave(rs,"tempClick$.srs");                 // save new modified snapshot
-   objectLoad(currentRobotState,"tempClick$.srs");  // load into current state
+   objectLoad(currentRobotState,"tempClick$.srs");  // load into current state instance of RobotState
   
    rsprintln ("updated currentRobotState");
    if (verboseStateRW) objectPrint(rs);
-   
+     
    // restore system state information not found exclusively in RobotState
   
    RobotState cs = currentRobotState;         // short hand access to current state 
@@ -191,7 +193,6 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
    lfs.setInstantSidewaysSpeed(cs.robotSidewaysSpeed);
    lfs.lapTimer.setTick(cs.timerTick);       // restore stop watch at time of state save  
        
-   //println ("Executing Resume robot drive.");
    println ("Executing Resume robot drive - FREEZE - Press SPACE to run");
    
    lfs.setEnableController(true);
@@ -201,8 +202,7 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
                       // would need to hold until mouse button released, or execute this method call after mouse button
                       // released AND not allow mouse to drag robot.. 
    
-  
-  
+   
    return;
   }
   else 
@@ -216,8 +216,10 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
     userStop();
   }
   
- 
- 
+  
+  
+  
+  
  
 }    
   

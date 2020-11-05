@@ -41,7 +41,7 @@ class RobotState  {
   float robotSpeed;            // current robot speed and turn rate must also be defined
   float robotSidewaysSpeed;    // and not modified by user  
   float robotTurnRate;        
-  float robotHeading;          // Note: this value is not updatated during contest run.
+  float robotHeading;          // Note: this value is not updated during contest run.
   int   timerTick;             // lap timer stop watch time elapsed (lap state not preserved) 
 
   int   sampleTempValue = 99;

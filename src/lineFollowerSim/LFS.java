@@ -86,7 +86,7 @@ Marker marker;         // single instance of marker class - accessed from this c
  * next contest run. 
  * 
  */
-public boolean reportDistanceTraveled;  // when true distance traveled included in run report  1.4.1
+public boolean reportDistanceTraveled = true;  // when true distance traveled included in run report  1.4.1
 /**
  * When set true (default value), on screen display includes distance traveled since start. 
  * New feature in (lib 1.4.1) default is false. See UserInit tab in simulation app.
@@ -913,6 +913,20 @@ public LineSensor createLineSensor (float xoff, float yoff, int w, int h, int nu
 public void crumbsEraseAll() { view.crumbEraseAll(); }
 
 /**
+ *  Crumb threshold distance apart. Default is 0.5 inches, increase to reduce drawing overhead
+ *  and potentially increase frame rate late in a run where many crumbs are displayed.
+ *  @param d Minimum separation distance (inches).  
+ */
+public void setCrumbThresholdDist(float d) {view.crumbThresholdDist = d; }
+
+/**
+ * Crumb enable/disable. Automatically enabled when contest run started. 
+ * @param enable
+ */
+
+public void setCrumbsEnabled(boolean enable) { view. crumbsEnabled = enable; }
+
+/**
  *  Draw robot coordinate axes in robot view. Optionally called in userDraw. Serves as a good reminder orientation of robot coordinates
  *  and origin when positioning sensors.
  */
@@ -961,6 +975,7 @@ public void contestStart()
   contestState = ContestStates.csRun;
   controllerEnabled = true;
   crumbsEraseAll();
+  setCrumbsEnabled(true);
   lapTimer.clear();
   robot.setDistanceTraveled(0.0f);         // clear distance counter new 1.4.1
   view.userRobotIconRotationBias = 0.0f;

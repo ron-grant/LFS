@@ -1,8 +1,8 @@
 /* LFS_Key - actions to take when key is pressed   (also mouseClicked actions)
              formerly UserKey
 
-   Code in this tab is not generally modified by user. See UserKey tab which 
-   is the preferred location for user keys. 
+   Code in this tab is not generally modified by user. See UKey tab which 
+   is the preferred location for optional user key command decode.
    
    Single key response commands here to allow manual drive of robot
    turning drive controller on/off, Contest Run control.
@@ -12,7 +12,8 @@
  
 */
 
- boolean rotate90 = true;  // course view toggle rotate90 off/on  with ALT key 
+ boolean rotate90 = true;       // course view toggle rotate90 off/on  with ALT key
+ int quietDisplay = 0;          // Q - Cycles 0,1,2   >0 hide displays >1 hide sensor overlay
 
  void mouseMoved()
  {
@@ -90,7 +91,24 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                 //userInit(); 
                 break;
                 
-  
+  case 'Q'    : quietDisplay++;                            // cycle quietDisplay -- used to hide panels.. sensor draw..
+                if (quietDisplay > 4) quietDisplay = 0;    // experimental frame rate speed up
+                showCommandSummary = (quietDisplay==0);    // 3 = shows sensor view with overlay
+                showTopTextBar = (quietDisplay==0);        // 4 = shows only sensor view -- bare minimum
+                if (quietDisplay==3) { 
+                  courseTop = false;
+                  userPanel1Visible = false;
+                  userPanel2Visible = false;
+                  helpPage = 0;
+                }
+                if (quietDisplay==0) 
+                { courseTop = true; 
+                  userPanel2Visible = true;
+                  userPanel1Visible = true;
+                }
+                                              
+                break;
+                
  
   case 'C' :    lfs.setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
                 if (!lfs.controllerIsEnabled()) lfs.stop();           // position and heading of robot

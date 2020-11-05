@@ -6,8 +6,8 @@
    
    These keys are unavailable, used by LFS:
    
-   EFCGHMSPR 0123456789 +- <>,.    Alpha-numeric keys
-   ACDILS                          These control keys
+   EFCGHMSPQR 0123456789 +- <>,.    Alpha-numeric keys
+   ACDILS                           Control keys
    
    
    As a double check, try your proposed key out before adding code.

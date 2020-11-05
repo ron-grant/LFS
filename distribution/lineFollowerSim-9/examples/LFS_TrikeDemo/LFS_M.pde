@@ -1,9 +1,9 @@
   /* Line Following Simulator User Application - Processing Environment
-   (Main file (notebook tab) of multi-file project)
-
+   
+ 
    Care should be made to not modify LFS_XXX.pde files (notebook tabs).
-   The main tab should be modified to LFS_yourRobotName 
-   Subsequent library releases with updated LFS_ code should require little/no 
+   The main tab should be named to LFS_yourRobotName 
+   Subsequent library releases with updated LFS_ code files should require little/no 
    modification to your files.
    
   
@@ -37,7 +37,7 @@
     
       
    See Document  LFS-1.3-Changes.pdf
-   See Document  LFS-1.4-Changes.pdf (not yet available as of Oct 24,2020)
+   See Document  LFS-1.5.pdf (not yet available as of Oct 24,2020)
    
    Some changes are highlighted as (lib 1.3) or (lib 1.4) in this program indicating 
    library version 1.3 or 1.4 and on is required.
@@ -49,19 +49,26 @@
    Oct 25, 2020   - lap counter for select courses, parameter dialog mouse making changes outside dialog fixed,
                     defineCourse list support (UserInit). 
                     faster frame rate (fixed sensor screen read problem - thanks Chris N for pointing out)
-  
+                    
+   Oct 29, 2020   - robot state save/recover  lib 1.5 
    
    
    https://github.com/ron-grant/LFS
    
      
-   Refer to LFS User's Guide for a description of tabs and methods
+   Refer to LFS User's Guide for a description of tabs and ethods
    Short summary here:
    
    Program Tab  Methods called by LFS           Short Description 
    
-   LFS_XXX        NA                            Sketch main program - high level code usually not  
-                                                user modified - may be library version dependent! 
+   
+   
+   LFS_XXX        NA                            Sketch main program - high level processing sketch skeleton.
+                                                Should not change. 
+  
+   LFS_M                                        Previously main tab, now contains functions called by
+                                                main which is now skeleton that should not change
+                                                or change very little in the future.
   
    LFS_Key                                      LFS command key decode, undecoded keys passed to 
                                                 userKeypress method in UserKey.
@@ -101,7 +108,8 @@
    Note shorter names for user notebook tabs (file) that have been created or changed significantly
    with library release 1.4.  The library code remains unchanged from 1.3 except a few cases exposing 
    icon variables and outOfBounds query for robot.
-  
+   
+   
   
    New (lib 1.5)
    
@@ -115,7 +123,7 @@
    a test cycle if robot runs at a faster rate.
    
    Making the request does not guarantee LFS will abide by the request, so sensors may in fact get updated.
-         
+   
 */  
 
                                
@@ -129,13 +137,15 @@ boolean simFreeze = false;            // toggled by space bar (when simSpeed>0) 
 boolean simRequestStep = false;       // program has decided it needs to take a simulation step
 boolean courseTop = true;             // couse view top, now when false course view (and small robot view) are hidden                     
 float fr;                             // throttled frame rate update/change to make display more reabable
+boolean sensorUpdateNeeded;  // See header, method for speeding up simulator execution  
  
-boolean sensorUpdateNeeded;           // See header, method for speeding up simulator execution  
+boolean showTopTextBar = true;       // set false to see impact on fps
+  
   
 void sensorUpdateNotNeeded()    // called by controller if next update, it does not need sensors to be updated
 { sensorUpdateNeeded=false;     // the end result is that LFS execution will be faster, see header above.
-}
-                                                                             
+}   
+    
 public void setupLFS()
 {
      
@@ -161,8 +171,6 @@ public void setupLFS()
 
   void lfsDraw ()  // method called from draw() that is called by Processing as fast as possible, unless throttled by
                    // setup call to frameRate(), see sketch main tab
-                  
-                    
   {
     background(0,0,20);  // erases window every draw
    
@@ -194,52 +202,59 @@ public void setupLFS()
    // Using GPU may eliminate this feature... 
     
    if (!courseTop) lfs.updateSensors(0,0,0,alpha); // complimentary to call above
-     
+    
+   if (quietDisplay==0)  
    userDraw();          // draw optional user graphics/annotation overlay on robot view or sensor view 
     
    resetMatrix();       // reset transforms back to screen coordinates 
    camera();
     
-       
-   rectMode (CORNER);            // top of screen text boxes - backgrounds 
-   strokeWeight (1.0);           // added explicit  strokeWeight,strokeColor  for lib 1.31
-   stroke (240);      
-   fill (0);
-   rect (40,10,400,48);          // top left of screen   time box
-   rect (480,10,width-500,48);   // top right of screen  contestant name, robot, location velocity 
+   if (showTopTextBar)
+   {
+     rectMode (CORNER);            // top of screen text boxes - backgrounds 
+     strokeWeight (1.0);           // added explicit  strokeWeight,strokeColor  for lib 1.31
+     stroke (240);      
+     fill (0);
+     rect (40,10,400,48);          // top left of screen   time box
+     rect (480,10,width-500,48);   // top right of screen  contestant name, robot, location velocity 
      
-   fill(240);                             // draw contestant name robot name in top right box
-   textSize(28);
-   text(lfs.getContestTimeString(),51,46);
-   text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);
+     fill(240);                             // draw contestant name robot name in top right box
+     textSize(28);
+     text(lfs.getContestTimeString(),51,46);
+     text(lfs.nameFirst+lfs.nameLast+"  "+lfs.nameRobot,500,46);
+   }
    
    // --- Contest State, Controller ON/OFF State  FPS  Step Speed (or FREEZE) display upper right box right side ----- 
    
    fill(200,200,250); // light blue 
-   
    textSize (18);
    if (frameCount%60 == 0) fr = frameRate;
-   text(String.format("%2.0f fps",fr),width-100,30);    // (lib 1.4.1) moved to right side of screen
+   if (quietDisplay == 0)
+     text(String.format("%2.0f fps",fr),width-100,30);    // (lib 1.4.1) moved to right side of screen
+   else 
+     text(String.format("Q)uietDisplay %d   %2.0f fps",quietDisplay,fr),width-300,30);
+     
+   if (showTopTextBar)
+   {
+     if (simFreeze) text ("FREEZE",width-220,30);
+     else           text(String.format("step speed %d",simSpeed),width-240,30);
    
-   if (simFreeze) text ("FREEZE",width-220,30);
-   else           text(String.format("step speed %d",simSpeed),width-240,30);
+     textSize (22);
+     text(lfs.getContestStateName(),width-338,34); 
+     textSize(18);
+     text ("contest state",width-352,53);
+     if (lfs.controllerIsEnabled()) text ("controller ON",width-160,53);
+     else                           text ("controller off",width-160,53);
    
-   textSize (22);
-   text(lfs.getContestStateName(),width-338,34); 
-   textSize(18);
-   text ("contest state",width-352,53);
-   if (lfs.controllerIsEnabled()) text ("controller ON",width-160,53);
-   else                           text ("controller off",width-160,53);
+     // ---- end of Contest State info (light blue) 
    
-   // ---- end of Contest State info (light blue) 
-   
-   fill (240);
-   textSize (22);                       // (lib 1.4.1) shrunk text just a bit 
-   lfs.drawRobotLocHeadingVel(974,44);  // draw x,y location and heading using lfs provided bitmap  
-                                        // during contest run, these values are not available,
-                                        // That is, getRobotX() getRobotY() return zeros.
-                                        // If non-contest run with Go command, values are available
-    
+     fill (240);
+     textSize (22);                       // (lib 1.4.1) shrunk text just a bit 
+     lfs.drawRobotLocHeadingVel(974,44);  // draw x,y location and heading using lfs provided bitmap  
+                                          // during contest run, these values are not available,
+                                          // That is, getRobotX() getRobotY() return zeros.
+                                          // If non-contest run with Go command, values are available
+   } 
    // Simulation Throttling -- this changes how fast simulation runs, but does not affect simulation 
    // logged time. That is slowing down a simulation slows down simulator stopwatch clock
          
@@ -260,26 +275,18 @@ public void setupLFS()
    }
      
    // --- end simulation throttling  
-   
- 
-   int skipSensorUpdateCount = 0;
-   
-   do {  // new (lib 1.5) 
+     
+
+   int skipSensorUpdateCount = 0;  
+   do {  // new (lib 1.5)   
    
      sensorUpdateNeeded = true; // new variable - if controller sets false 
                                 // simulation can take multiple steps without time consuming
                                 // sensor image redraw -- no impact on simulation -- just speeds 
-                                // execution time (same number of stopwatch ticks...     
-       
-       
+                                // execution time (same number of stopwatch ticks... 
+   
      if (lfs.controllerIsEnabled())    // if turned off, no update.
-     {
        userControllerUpdate();         // user reads sensors changes target speed and turn rate as needed.
-       
-      // if (skipSensorUpdateCount++  <3) sensorUpdateNeededByController = false;  // experiment here outside of controller
-                                                                         // this is optional new variable
-                                                                         
-     }
      
      if (lfs.robotOutOfBounds())       // Moved up to just after userController update Oct 22, 2020
      {
@@ -290,25 +297,29 @@ public void setupLFS()
      else userInBounds();    
       
       
+      
      lfs.driveUpdate(simRequestStep);  // if step requested update robot speed and turn rate with acceleration rates 
                                        // then position and heading with current speed and turn rates.
                                        // Note: if controller is not enabled this call will insure robot  
                                        // position is updated allowing manual drive.
                                        
      if (lfs.lapTimer.lapTimerUpdate(simRequestStep))  // update lap timer including stopwatch if not lap mode.                                  
-       userLapDetected();                              // returns true if lap detected, calling user method in UMisc tab. 
-       
-   } while (!sensorUpdateNeeded &&(skipSensorUpdateCount<3));  // limit number of times controller can request no sensor update
-   
-                                               
-     
+       userLapDetected();                              // returns true if lap detected, calling user method in UMisc tab.                                     
                                              
+        
+     } while (!sensorUpdateNeeded &&(skipSensorUpdateCount<3));  // limit number of times controller can
+                                                                 // reqest no update 
+                                             
+   
+   
    simRequestStep = false;           // reset simulation step request, if set during this "draw"
    
    informMarkersAboutSavedRobotState();  // LFS_RS - notify markers if robot saved states is present, appearance 
                                          // will change upon markerDraw()  (lib 1.5)
     
-   lfs.showSensors((courseTop)?'R':'S');               // show user colorable sensors (lib 1.3)
+   if (quietDisplay<4)
+     lfs.showSensors((courseTop)?'R':'S');             // show user colorable sensors (lib 1.3)
+   
    if (courseTop && (helpPage==0)) lfs.markerDraw();   // only display markers when course visible (lib 1.3)
                                                        // and not displaying help       
    

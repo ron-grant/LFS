@@ -48,13 +48,12 @@ boolean showUserPanel1 = true; // set false to blank display of user Panel 1
 boolean showUserPanel2 = true; // set false to blank display of user Panel 2
                                // noting that it is only visible normally when course not displayed 
 
-boolean userPanel1Visible = true;  // toggled by U key  (lib 1.4.2)
 
 void userDrawPanel1()          // Panel located in same location as Parameters, called only when 
                                // parameters not visible
 {
   if (showUserPanel1 == false) return; // hide user drawing
-  if (!userPanel1Visible) return;
+ 
   
   VP panel = selectUserPanel1();
   
@@ -84,6 +83,7 @@ void userDrawPanel2()  // Panel located where help is displayed, but only visibl
   // caller setup coordinate origin 0,0 to upper left corner of this view panel
   
   if (showUserPanel2 == false) return; // blank display of panel if false
+ 
     
   VP panel = selectUserPanel2();  // reference to window located where help area is, but 150 pixels shorter
   

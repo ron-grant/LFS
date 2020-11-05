@@ -1,0 +1,32 @@
+This is text from sketch data sub-folder userhelp.txt (replace with your own notes..)
+New Renditions of LFS_SampleBot and LFS_DemoTrikeBot Example programs for each library 
+release. 
+
+Library 1.4.2/1.4 
+	* Fixed issues with parameter editor responding to mouse when outside window.
+	* Added Lap Timer for courses with lap timing
+	* Added course list, optional starting location, Lap timer mode option N laps.
+	* Ctrl-C select next course from list. (UserInit)
+	* Run more fool proof. Press R then SPACE to stop (or auto stop N laps), then modal
+	  box requests F)inish & report or X cancel.
+	* Parameter Editor 
+	* Sample program frame work has been cleaned up, better separating
+	  your code from LFS code 
+	* Robot stops out of bounds   See UMisc.
+	* Sound supported for events like lap counter 
+	* Sensor visual data as sample time corrupted sensor readings & slowed down LFS
+Lib 1.5
+	* Save and Restore of non-contest run data. See: Header comment LFS_RS tab.
+
+Tabs named with following prefixes 
+
+LFS_     LFS code you probably won't need to modify
+User      Core user code  (few changes in UserInit)
+U           New user code modules (or changed significantly) these 
+             contain optional code (except for their methods being present,
+             but disabled or empty)
+
+Program tab summary appears in LFS_M main tab.
+LFS_YourSketchName, main tab now includes simple program skeleton.
+Goal is with new library code, you can drop in other LFS_ tab (.pde files)
+to update your LFS application program.

@@ -2,11 +2,11 @@
    (Main file (notebook tab) of multi-file project)
 
    LFS_XXX  Main Tab   new (lib 1.5)
-  
+   
    The main tab now contains basic skeleton of sketch.
    It contains core functions setup() and draw() with calls to methods that are 
    effectively the body of setup and draw. It is easy to right click on them below and be taken 
-   to their declarations.
+   to their declarations via (Jump to declaration)
    
    This tab shows what libraries are imported and also gives easy access to basic settings relating to
    screen resolution.
