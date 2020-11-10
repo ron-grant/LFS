@@ -1,3 +1,18 @@
+### Library 1.6
+
+TimeWarp!!! (run 100X + faster simulation)
+<p>
+Loop  GUI-Buttons/Checkboxes (with most functionality except 0..9)  Also Switch to Improved Key Cmd Menu.
+<p>
+New Tab LFS_G,  Top of tab has a few constants + sound file names, rest is GUI button/command defs.
+<p>
+UMisc cleaned up - only user code & demo user buttons.
+<p>
+UPar TimeWarp control and robot opacity control (4 lines of code added).
+<p> 
+Some documentation may follow, buttons are buttons, and they all have hover hints.
+
+
 ### Library 1.5.2 released
 
 New User's Guide 1.5 (PDF Available)
