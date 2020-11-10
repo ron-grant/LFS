@@ -19,7 +19,7 @@
   // like Processing rect in CORNER mode  : upper-left x,y and  width,height
    
   VP helpVP = new VP(850,100,900,750);  // x,y,w,h   screen absolute coords
-  VP cmdVP  = new VP(850,720,720,150);  // x,y,w,h
+  VP cmdVP  = new VP(850,720,740,150);  // x,y,w,h
  
   VP userVP1 = new VP(0,0,0,0);   // user vieports (panels) calculated at runtime
   VP userVP2 = new VP(0,0,0,0);
@@ -97,8 +97,21 @@ void lfsDrawPanel()  // called from draw() at frame rate
       help ("ctrl-S)ave     - Save Parameters to sketch's data sub-folder param.cdf");
       help ("ctrl-L)oad     - Load Parameters from sketch's data sub-folder param.cdf (manual Load only 1.4)");
       help("");
+      help ("MARKERS ");
+      helpGap();
+      help ("When robot stopped, pressing M creates a location marker (magenta circle) which records robot");
+      help ("location and heading for later click that positions robot for run start (Go or Run command).");
+      help ("When robot is running in non-contest mode (G key run), pressing M creates a robot state save");
+      help ("marker (magenta circle with rotating square) which records robot location, heading, speed, turn-");
+      help ("rate and user controller state variables defined in RobotState class. See UserReset tab and");
+      help ("LFS User's Guide.  Later click on state-save marker, restores robot run state, but freezes robot,");
+      help ("press SPACE or 1..9 to resume run. ");
+      help ("");
+      help ("Pressing M while robot is located on a marker, erases the marker.");
+      help ("Markers are persistant between LFS invocations. (course name.mrk file)");
+      help ("");
       help("");
-      help ("LFS Simulator Imposed Maximum (& Minimum) Values ");   // new in lib 1.4.1
+      help ("LFS SIMULATOR IMPOSED MAXIMUM & MINIMUM VALUES");   // new in lib 1.4.1
       help ("");
       helpVu("MaxSpeed",lfs.getSimMaxSpeed(),"inches/sec");
       helpVu("MaxTurnRate ",lfs.getSimMaxTurnRate(),"degrees/sec");
@@ -112,16 +125,21 @@ void lfsDrawPanel()  // called from draw() at frame rate
       
     if (helpPage ==3)
     {
-      help ("User Help ");
+      help ("USER HELP  (/data/userhelp.txt)");
       helpGap();
       String fname = "userhelp.txt";
-      String [] h = loadStrings(fname);
-      if (h == null)
-      { help ("help file "+fname+" not found in data sub-folder.");
-        help ("Note: file name is case senitive.");
+      
+      File f = new File (dataPath(fname));
+      if (!f.exists())
+      { help ("User commands and comments can be placed here via creation of help file "+fname);
+        help ("placed in sketch data sub-folder. Note: file name is case senitive.");
+        help ("Also, file should be plain ASCII text with hard carriage returns.");
       }
       else
-      for (String s: h) help (s);
+      {  String [] h = loadStrings(fname);
+        for (String s: h) help (s);
+      }
+          
     }
     else if (helpPage == 1)
     {
@@ -132,44 +150,45 @@ void lfsDrawPanel()  // called from draw() at frame rate
       help ("CONTEST RUN");
       help ("R)un    - Start robot in contest mode. The most recent marker click is used for the start location.");
       help ("             If no markers have been clicked (defined and clicked) then the programmed start location");
-      help ("             is used. Parameter dialog not available when running contest, use G)o command instead. ");
+      help ("             is used. Parameter dialog is not available when running contest, use G)o command instead. ");
       help ("SPACE  - Stop the contest run.   A modal dialog appears in the location of the Command");
-      help ("              Summary panel offering two choices: F)inish and append run data to data folder contest.cdf,");
-      help ("              or X) Cancel report. No other input will be acceptd until choice is made.");
+      help ("              Summary panel offering two choices: F)inish and append run data to data folder");
+      help ("              contest.cdf, or X) Cancel report. No other input will be accepted until choice is made.");
       helpGap();
-      help ("Non-Contest Run");
+      help ("NON-CONTEST RUN");
       helpGap();
       help ("G)o     - Start robot in non-contest mode (user code has access to simulator position and heading)");
-      help ("SPACE   - Toggle freeze (on/off) of simulator, when frozen no time steps/ controller updates.");
-      help ("0..9    - Rate of time steps, 0=stop (like freeze) 1=slow ... 9=max speed");
-      help ("M)arker - Place marker circle at current robot location (recording position and heading).");
-      help ("              Left click in a marker circle to move robot to marker and set recorded heading.");  
-      help ("              When robot is located in a marker press M to erase it.");
-      
-      help(""); //helpGap();
-      help ("ROBOT POSITION CONTROL");
-      help ("Position mouse in course view or (small) robot view, then:");
-      help ("  hold left mouse button down and drag to change position");
+      help ("SPACE  - Toggle freeze (on/off) of simulator, when frozen no time steps/ controller updates.");
+      help ("0..9     - Time step rate 1..9, 0=Stop, repetitively press 0 or SPACE to single step.");
+      help ("M)arker - Place/Erase Start/State Save Marker - see next help page. ");
+      help ("T)imeWarp- Toggle time warp mode, simulator takes multiple steps per frame draw, with huge");
+      help ("                 simulator speed-up potential. Time Warp Multipler is controlled by Parameter Editor");
+      help ("                 while not running contest.");
+      help ("");
+      helpGap();
+      help ("ROBOT POSITION CONTROL (contest not running) - Position mouse in course or robot view, then:");
+      help ("  hold left mouse button down and drag to change position ");
       help ("  hold right mouse button down and drag horizontally to change heading");
       helpGap();
       help ("MANUAL ROBOT DRIVE (repetitive press of keys) - with Controller OFF");
       help (" Vert Arrows        - speed increase/decrease (signed value  +forward -reverse)");
       help (" Horz Arrows        - turn rate increase/decrease (signed value +right -left)");
       help (" < > (comma period) - sideways motion increase/decrease (signed value +right -left)");
-      help ("");
-      help ("More Commands ");
+      //help ("More Commands ");
       helpGap();
+      help ("D)im    repetitive press while mouse over course or robot view to change brightness");  
       help ("TAB     Toggle visiblity of course vs User Panel 2");
       help ("ALT     Toggle 90 degree rotation of course ");
       help ("Ctrl-C  Course select (next course) from list defined in UserInit.");
-      help ("U)ser   Toggle user panel visibility   Q)uietDisplay cycle hiding text/graphics panels 1..4 ");
+      help ("U)ser   Toggle user panel visibility");
+      help ("Q)uiet  Toggle mute");
      
     } // end if help page 1   
     
   } // end if helpVisible
     else
     {
-      if (showCommandSummary)
+      if (showCommandSummary & !guiMode)
       {
         drawEmptyVP(cmdVP);
         cmdSumX = 20;             // text offset
@@ -187,22 +206,44 @@ void lfsDrawPanel()  // called from draw() at frame rate
         cmdSum("");
         cmdSum("OR Press X to cancel");
       }
-      else if (showCommandSummary)
+      else if (showCommandSummary && !guiMode) 
       {
-        cmdSum ("LFS Command Key Summary        H)elp       P)arameter dialog   U)ser panel");
-        cmdSumGap();
-        cmdSum ("CONTEST R)un SPACE-Stop  0..9 step speed             ESC)Exit Program");
-        cmdSumGap();
-        cmdSum ("C)ontroller (on/off) G)o S)top  E)raseCrumbs M)arker SPACE-toggle freeze");
-        cmdSum ("Tab course view    ALT Rotate Course    Ctrl-C Course select  Q)uietDisplay");    // Ctrl-C new (lib 1.4.1)
-        
+        if (lfs.contestIsRunning())
+        {
+          cmdSum ("LFS Command Keys  Contest Running - SPACE BAR Stop        ESC Exit");
+          cmdSumGap();
+          cmdSum ("U)ser panel  D)im");
+          cmdSum ("1..9 step speed 0)single step  T)imeWarp   ");
+          //cmdSumGap();
+          cmdSum ("Tab course view    ALT Rotate Course  Q)uiet");   
+        }
+        else
+        {
+          cmdSum ("LFS Command Key Summary   H)elp   P)aramEdit  U)ser panel  Ctrl-G GUI  ESC Exit");
+          cmdSumGap();
+          
+          cmdSum ("R)unContest  1..9 step speed  0)single step  T)imeWarp L)oop ");
+          
+          cmdSumGap();
+          cmdSum ("C)ontroller (on/off) G)o S)top  E)raseCrumbs M)arker SPACE-toggle freeze");
+          cmdSum ("Tab course view    ALT Rotate Course  D)imViews   Ctrl-C Course select  Q)uiet");    // Ctrl-C new (lib 1.4.1)
+        }
         
         cmdSum(userKeyCommands1); // draw user key commands 1
         
         if (userKeyCommands2.length() >0)  // replace bottom line with 2nd line of user commands 
           cmdSum(userKeyCommands2);
         else
+        {
+         if (lfs.controllerIsEnabled())
+         {
+           if (simSpeed==0) cmdSum ("(step speed = 0)   SPACE BAR  single step");
+           else
+           cmdSum ("(step speed > 0)   SPACE BAR  toggles FREEZE");
+         }
+         else
           cmdSum ("* If markers defined, G)o or R)un start at last clicked marker.");
+        }  
       }  
         
     }
@@ -242,11 +283,12 @@ void lfsDrawPanel()  // called from draw() at frame rate
      
     }
     
-   
-     if (focused && !parEditor.visible && userPanel1Visible)
+    // Determine if Panel1 is to be shown
+    if (focused && userPanel1Visible) 
+    if ((parEditor.visible && !guiMode) || (guiMode && helpPage==0) || !guiMode )
     {
       pushMatrix();
-      
+        
       resetMatrix();
       camera();
       
@@ -255,6 +297,7 @@ void lfsDrawPanel()  // called from draw() at frame rate
       selectUserPanel1();   // makes sure VP location has been calculted
      
       translate (userVP1.x,userVP1.y);
+      if (guiMode) translate (1000,0);
     
       userDrawPanel1();  // user provided method for drawing information in panel
                          // about same size as parameter dialog when it is not visible.
@@ -284,8 +327,9 @@ void lfsDrawPanel()  // called from draw() at frame rate
    userVP1.x = parEditor.parVP.x;
    userVP1.y = cmdVP.y;  
    
-   if (!courseTop) userVP1.y -= 50;   // hack to make sensor data visible bottom of Sensor view (lib 1.4.1)
-   userVP1.w = parEditor.parVP.w;
+   if (!guiMode && !courseTop) userVP1.y -= 50;   // hack to make sensor data visible bottom of Sensor view (lib 1.4.1)
+   
+   userVP1.w = parEditor.parVP.w-100;
    userVP1.h = cmdVP.h;
     
    return userVP1;

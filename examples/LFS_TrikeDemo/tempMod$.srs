@@ -1,0 +1,18 @@
+{
+  "robotSpeed": 2.340736150741577,
+  "steerAngleDeg": -54.18400192260742,
+  "cOld": -5,
+  "timerTick": 1653,
+  "wheelVelocity": 4,
+  "robotHeading": 156.56007385253906,
+  "x2_h": -0.21181653439998627,
+  "toGo": -0.19999830424785614,
+  "x1_h": -0.43504685163497925,
+  "robotSidewaysSpeed": 0,
+  "robotTurnRate": 46.46117401123047,
+  "steerAngleR": -0.94568932056427,
+  "markerY": 84.28172302246094,
+  "markerX": 26.872331619262695,
+  "sampleTempValue": 99,
+  "sensorState": 0
+}

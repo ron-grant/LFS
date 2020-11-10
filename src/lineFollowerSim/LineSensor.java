@@ -8,7 +8,9 @@ import processing.core.*;
  *
  */
 public class LineSensor extends SpotSensor {
-  
+	
+  // note LFS class, using reflection, refers to this class by name ".LineSensor"  
+	
   private Sensors sensors;  // object that performs operations on Line and Spot sensors
                             // keeps track of lists of each ...
                           
@@ -49,7 +51,7 @@ public class LineSensor extends SpotSensor {
  *
  *                    
  */
-  LineSensor (PApplet parent, Sensors sensors, float xoff, float yoff, int spotWPix, int spotHPix, int sensorCells)
+  public LineSensor (PApplet parent, Sensors sensors, float xoff, float yoff, int spotWPix, int spotHPix, int sensorCells)
   {
 	super(parent,sensors,xoff,yoff,spotWPix,spotHPix);  
 	  

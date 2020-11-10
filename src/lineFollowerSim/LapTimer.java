@@ -67,11 +67,15 @@ public class LapTimer {
    * Maximum number of laps before robot forced to stop.
    */
   public int lapCountMax = 99;    // max lap count 
-  /**
-   * Current lap count
-   */
-  public int lapCount;            
+ 
+  int lapCount;            
 
+  /**
+   * Get number of laps completed.
+   * @return number of laps completed
+   */
+  public int getLapCount() { return lapCount; }
+  
   
   boolean lapTriggered   = false;
   boolean lapTestEnabled = false;
@@ -241,14 +245,14 @@ public class LapTimer {
   }
 
   /**
-   * Call every draw time, 
+   * Call every time step
    * @param simRequestStep set true if simulation is taking timestep, timer will increment one tick.
    * @return Returns true if lap detected and logged
    */
   public boolean lapTimerUpdate(boolean simRequestStep)
   {
-     if (lapTimerModeEnabled) 
-       drawPanel ("Lap Timer ",4,60,480,250,160);
+     //if (lapTimerModeEnabled)  -- draw called explicitly now (lib 1.6)
+     //  drawPanel ("Lap Timer ",4,60,480,250,160);
     
      if (!simRequestStep) return (false);
   
@@ -270,6 +274,7 @@ public class LapTimer {
        {
          logLapTime();
          resetLapDetector(); 
+         lapCount++;
         
          if (lapList.size() >= lapCountMax)
          { 	 

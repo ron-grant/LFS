@@ -17,6 +17,7 @@
    That is, with a new library release and download the .pde files should be able to be copied
    over the files in your sketch if your release is (lib 1.4.3) or later.
    
+   LFS_G
    LFS_Key
    LFS_M
    LFS_Panel
@@ -53,11 +54,16 @@ void settings()  // processing calls this one time at start of program
 }
    
 void setup()  {
-  frameRate(1000);       // request high frame rate, e.g. 1000 max,  to run simulator as fast as possible.
+frameRate(120);          // request high frame rate, e.g. 1000 max,  to run simulator as fast as possible.
                          // frame rate (frames per second - fps) reported top right of display.
                          // A frame rate of 60 would closely match the simulator default time step, but 
                          // there is no need to restrict the simulator speed. The stopwatch will count the 
                          // same amount of time regardless of how fast the simulator executes.
+                         // (lib 1.6) is game changer including timeWarp, allowing multiple simulation steps
+                         // between each screen update. For example a time warp of 100 might speed up simulation 
+                         // by factor of as much as 100. If insufficient CPU power, frame rate will fall, but still
+                         // net time steps/sec will be greatly increased
+                         
                          
   setupLFS();            // LFS related setup, see LFS_M tab
 } 

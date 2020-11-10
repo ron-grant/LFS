@@ -8,23 +8,26 @@ import processing.core.*;
  *
  */
 
-public class SpotSensor {
-                              // viewing robot from above
+public class SpotSensor { 
+  // note LFS class, using reflection refers to this class by name ".SpotSensor"
+   
+	
+                                // viewing robot from above
   protected float xoff;         // sensor offset from robot center in inches (positive X=distance along robot direction of straight travel, positive Y=distance to right)
   protected float yoff;
   protected int spotWPix;
   protected int spotHPix;      // spot size in pixel
   
-  protected String name;       // sensor can be manually set OR using java reflection determined from variable name 
+  public String name;       // sensor can be manually set OR using java reflection determined from variable name 
   
   private float intensity;    // normalized intensity 0.0 (black) to 1.0 (white)
   private int color; 
   private PApplet p;          // ref to processing applet
   private Sensors sensors;
- 
   
+   
  // no modifier = package private SpotSensor
- SpotSensor (PApplet parent, Sensors sensors, float xoff, float yoff, int spotWPix, int spotHPix)  // constructor 
+ public SpotSensor (PApplet parent, Sensors sensors, float xoff, float yoff, int spotWPix, int spotHPix)  // constructor 
  {
    p = parent; 
    this.sensors = sensors;
@@ -42,7 +45,8 @@ public class SpotSensor {
    color =  p.color (0,255,0);  // default green - until user modifies 
      
    sensors.spotSensorList.add(this);   // add this new instance to list, processed by sensorUpdate()
-    
+   
+   name = "";
  }
  
  /**Return spot sensor value averaged over pixels sampled by sensor 0.0 to 1.0. For example if 1/4 sensor pixels on 
@@ -112,7 +116,8 @@ public String getName () { return name; }
 
 
 // no modifier package protected
-float sampleSensorPixel (VP vp, int courseDPI, float xoff, float yoff)  
+
+float sampleSensorPixel (VP vp, int courseDPI, float xoff, float yoff)  // old pre-1.6  read the screen method 
 {
  
   // note xoff,yoff are provided as parameters to allow use by LineSensor which creates an
@@ -181,7 +186,8 @@ float sampleSensorPixel (VP vp, int courseDPI, float xoff, float yoff)
  return (float) (sum/count/255.0); // return normalized value 0.0 (black) to 1.0 (white)
    
 }
- 
+
+
     
 }
 

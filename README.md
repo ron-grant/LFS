@@ -7,7 +7,7 @@ New ability for controller to notify simulator it does not need sensor data upda
 This can speed up simulation execution rate while not affecting robot "run time".
 
 1.5.2 Added setCrumbThresholdDist to UserInit - allows for spacing cookie crumbs out a bit to speed simulator on long
-course runs. Reduced demands on heap when drawing sensor/robot views, lowering frequency of garbage collection that can 
+course runs. Also eliminated some dynamic (heap) alloocated vars. when drawing sensor/robot views, lowering frequency of garbage collection that can 
 cause frame rate reduction.  
 
 Also, Q)uietDisplay command to hide panels to speed frame rate for faster simulation runs. (lib 1.5.1)

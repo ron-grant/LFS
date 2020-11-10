@@ -114,7 +114,7 @@ public String simContestFilename = "contest.cdf";
  */
 
 public void setShowSensorsOnSensorView(boolean show)
-{ p.println ("setShowSensorsOnSensorView support dropped lib 1.4.1"); }
+{ PApplet.println ("setShowSensorsOnSensorView support dropped lib 1.4.1"); }
 
 /** User first name supplied by call to setFirstNameLastNameRobotName
  */
@@ -390,7 +390,8 @@ public VP getSensorViewport() { return view.sensorVP; }
 
 
 
-/** Draw internal bitmap of robot proximity and update sensor data values. Called from draw() at each simulation step.
+/** Draw internal bitmap of robot proximity and update sensor data values, called from draw()
+ *  at each simulation step, deprecated method.
  * <p>
  * (Called by simulation core code.) 
  * @param r Red color channel 0..255
@@ -399,17 +400,44 @@ public VP getSensorViewport() { return view.sensorVP; }
  * @param a Alpha opacity 0..255 (0=transparent .. 255 = opaque)
  * 
  */
-// public void updateSensors (PApplet.color c)
 public void updateSensors(int r, int g, int b, int a)
 {
   view.drawSensorView(course,robot,courseDPI);  
-  view.sensorUpdate(sensors,courseDPI);
-                                                       // draws into screen frame buffer now - fast
-  if (a>0) view.coverSensorView(r,g,b,a);              // rgb,alpha, skip if alpha 0
+  
+  if (sensors != null)
+  {	  
+    if (sensors.sensorImageRead)
+      sensors.update(view.sensorVP,course,robot,courseDPI);
+    else
+      view.sensorUpdate(sensors,course,robot,courseDPI);
+    
+                                                   // draws into screen frame buffer now - fast
+     if (a>0) view.coverSensorView(r,g,b,a);       // rgb,alpha, skip if alpha 0
  
-  
-  
-  
+  }
+}
+
+/**
+ * Draw large sensor view, display of this view is no longer needed, using updateSensorsFast. 
+ * @param dimCover 0=no dimming 255 = dim to black
+ */
+public void drawSensorView(int dimCover)
+{
+  view.drawSensorView(course,robot,courseDPI);  	
+  if (dimCover>0) view.coverSensorView(0,0,0,dimCover);	
+	
+}
+
+/**
+ *  Update sensors for controller, executed by core LFS call before userContollerUpdate called.
+ */
+
+public void updateSensorsFast()
+{
+   if (sensors.sensorImageRead)
+	   sensors.update(view.sensorVP,course,robot,courseDPI);
+   else PApplet.println ("ERROR sensorImageRead not enabled, updateSensorsFast not performed");    
+	
 }
 
 
@@ -420,8 +448,8 @@ public void updateSensors(int r, int g, int b, int a)
  */
 public void clearSensors()              { sensors.clear();    }
 
-/**
- *    Draw robot view and course views to screen. 
+/**   DEPRECATED METHOD, Draw robot view and course views to screen, LFS now uses drawRobotView and 
+ *    drawCourseView methods.
  *    Divider variable 0=disable view, 1= draw every frame, 2 = every other frame (every two draw() calls),
  *    3 every third frame (draw() call)... This allows throttling view updates which may be helpful
  *    if graphics performance is limited. The robot view is always rendered to an internal 
@@ -445,7 +473,7 @@ public void drawRobotAndCourseViews(int rvDiv, int cvDiv, boolean cRotate90) // 
 	if (p.mousePressed) rvCount = 1;  
 	if (--rvCount<= 0)
 	{ rvCount = rvDiv;	
-      view.drawRobotView(course,courseDPI,robot,contestIsRunning());   // draw robot view into defined viewport
+      view.drawRobotView(course,courseDPI,robot,contestIsRunning(),0);   // draw robot view into defined viewport
 	}  
   }
   
@@ -455,11 +483,32 @@ public void drawRobotAndCourseViews(int rvDiv, int cvDiv, boolean cRotate90) // 
 	if (--cvCount<=0)
 	{ cvCount = cvDiv;
 	  view.drawCourseView(course,robot,courseDPI,cRotate90, contestState == ContestStates.csFinished,
-	  contestIsRunning());   // contest Finished draw (F) on course 
+	  contestIsRunning(),0);   // contest Finished draw (F) on course , dim value 
 	}  
   } 
   
 }
+/**
+ * Draw robot view (small), dimming option  0..255 option.
+ * @param dim dim value 0=OFF ... 255 dimmed out to black
+ */
+public void drawRobotView (int dim)
+{
+  view.drawRobotView(course,courseDPI,robot,contestIsRunning(),dim);	
+}
+
+/**
+ * Draw view of course, with rotation option and dimming 0..255 option.
+ * @param cRotate90
+ * @param dim dim value 0=OFF ... 255 dimmed out to black
+ */
+public void drawCourseView (boolean cRotate90, int dim)
+{
+   view.drawCourseView(course,robot,courseDPI,cRotate90, contestState == ContestStates.csFinished,
+	  contestIsRunning(),dim);   // contest Finished draw (F) on course 	
+	
+}
+
 
 
 
@@ -633,6 +682,7 @@ public void setCourse(String fname)
 {
  courseFilename = fname;
  course = p.loadImage(fname); 
+ course.loadPixels();            // for image read sensor access
 }
 
 /**
@@ -698,8 +748,10 @@ public void driveUpdate(boolean stepRequested)
   if ((stepRequested) || !controllerEnabled)      // needed to insure when controller OFF drive update still works
   {                                               // for manual test driving robot
     robot.driveUpdate(timeStep);
-    view.crumbAdd(robot);
-  }  
+  }
+  
+  if (controllerEnabled) view.crumbAdd(robot);    // controller must be enabled for crumbs to be dropped (lib 1.6)
+ 
   
   if (stepRequested && controllerEnabled) lapTimer.tick();
 } 
@@ -781,7 +833,7 @@ robot.setTargetSpeed(s);
  */
 public void setInstantSpeed(float s)
 {  if (!contestIsRunning()) robot.speed = s; 
-   else p.println ("ERROR setInstantSpeed non-functional during contest run.   ");
+   else PApplet.println ("ERROR setInstantSpeed non-functional during contest run.   ");
 } 
 
 /**
@@ -794,7 +846,7 @@ public void setInstantSpeed(float s)
 	
 public void setInstantSidewaysSpeed(float ss)
 { if (!contestIsRunning()) robot.sidewaysSpeed = ss;
- else p.println ("ERROR setInstantSidewaysSpeed non-functional during contest run.   ");
+ else PApplet.println ("ERROR setInstantSidewaysSpeed non-functional during contest run.   ");
 }
 /**
  * Available only when contest not running. Used by LFS in restoring robot state
@@ -806,7 +858,7 @@ public void setInstantSidewaysSpeed(float ss)
 
 public void setInstantTurnRate(float tr)
 { if (!contestIsRunning()) robot.turnRate = tr;
-  else  p.println ("ERROR setInstantTurnRate non-functional during contest run.");
+  else  PApplet.println ("ERROR setInstantTurnRate non-functional during contest run.");
 }
 
 
@@ -923,8 +975,14 @@ public void setCrumbThresholdDist(float d) {view.crumbThresholdDist = d; }
  * Crumb enable/disable. Automatically enabled when contest run started. 
  * @param enable
  */
-
 public void setCrumbsEnabled(boolean enable) { view. crumbsEnabled = enable; }
+
+/**
+ * Double buffer crumb list used in warp speed and loop to create persistant 
+ * display of cookie crumbs
+ * @param e Set true to enable double buffer 
+ */
+public void setCrumbsDoubleBuffer(boolean e) {view.crumbSetDoubleBuffer(e); }
 
 /**
  *  Draw robot coordinate axes in robot view. Optionally called in userDraw. Serves as a good reminder orientation of robot coordinates
@@ -932,6 +990,13 @@ public void setCrumbsEnabled(boolean enable) { view. crumbsEnabled = enable; }
  */
 public void drawRobotCoordAxes()  { view.drawRobotCoordAxes(); }
 
+/**
+ * Draw robot coordinate axes in robot view. Optionally called in userDraw. Serves as a good reminder orientation of robot coordinates
+ * and origin when positioning sensors.
+ * @param size  size of axes icon 
+ * @param alpha transparency of axes 0=invisible .. 255=opaque
+ */
+public void drawRobotCoordAxes(float size, int alpha) {view.drawRobotCoordAxes(size,alpha); }
 
 void createFile(File f){
   File parentDir = f.getParentFile();
@@ -1544,6 +1609,24 @@ public void defineLapCourse(int num, String name, float x,float y,float heading)
  * @param heading Robot heading 0..359 (degrees) 
  */
 public void defineCourse (int num,String name,float x,float y, float heading) {defC(false,num,name,x,y,heading);   }
+
+
+/*  Trying to get this method working here, vs in LFS processing application                Nov 5,2020 
+    LFS_M tab where it does work -- and is currently enabled  
+
+   being denied access to field 
+   Able to get names and class names of fields 
+   not able to set names in the class instance 
+   
+   Throwing IllegalAccessException
+   
+   thrown when an application tries to reflectively create an instance (other than an array),
+   set or get a field, or invoke a method, but the currently executing method does not have 
+   access to the definition of the specified class, field, method or constructor.
+
+*/
+
+
 
 
 

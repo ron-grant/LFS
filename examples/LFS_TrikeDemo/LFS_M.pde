@@ -1,6 +1,5 @@
   /* Line Following Simulator User Application - Processing Environment
-   
- 
+
    Care should be made to not modify LFS_XXX.pde files (notebook tabs).
    The main tab should be named to LFS_yourRobotName 
    Subsequent library releases with updated LFS_ code files should require little/no 
@@ -29,6 +28,7 @@
      
    
    *  genRobotIcon able to create robot icon with user initials on the fly (lib 1.4.2)
+   *  bigMessage (lib 1.6)
    
    
      If you have added key commands or text drawing to your robot controller sketch, consider importing to 
@@ -126,7 +126,6 @@
    
 */  
 
-                               
 
 LFS lfs;  // line following simulator - single instance created in setup()
 
@@ -138,9 +137,9 @@ boolean simRequestStep = false;       // program has decided it needs to take a 
 boolean courseTop = true;             // couse view top, now when false course view (and small robot view) are hidden                     
 float fr;                             // throttled frame rate update/change to make display more reabable
 boolean sensorUpdateNeeded;  // See header, method for speeding up simulator execution  
- 
 boolean showTopTextBar = true;       // set false to see impact on fps
-  
+int timeWarpMult = 50;
+
   
 void sensorUpdateNotNeeded()    // called by controller if next update, it does not need sensors to be updated
 { sensorUpdateNeeded=false;     // the end result is that LFS execution will be faster, see header above.
@@ -156,52 +155,40 @@ public void setupLFS()
   lfs.defineRobotViewport(40,70,400,400);           // small robot viewport  upper-left x,y,width,height
   lfs.defineCourseViewport(480,70,1280,640);        // course viewport (allowable region for course image)
   lfs.defineSensorViewport(40,80,800,800);          // raw sensor view. should be 800x800  (lib 1.3)
-                                                
+                                     
    
   userInit();    // called here - and also on robot start (contest start)
   simSpeed =9;   // step speed, default full speed 9, set by 0..9 keys 
+                                             
+  loadRobotStates();    // RobotState captured on previous run marker click while robot running (in G)o mode) (lib 1.5)
+  loadSoundFiles();     // LFS_G, preload all sounds
+  userLoadSoundFiles(); // UMisc optional sound files 
+  userMiscSetup();      // UMisc setup - for optional audio init...
   
-  // lfs.setShowSensorsOnSensorView(true);  // slight frame rate gain if false (removed 1.4.1)
-                                            // 1 pixel overlap caused problems, feature removed
-                                            
-  loadRobotStates();  // RobotState captured on previous run marker click while robot running (in G)o mode) (lib 1.5)
-  userMiscSetup();    // UMisc setup - for optional audio init... 
+  uiSetup();            // LFS_G Buttons/Checkboxes using  Lightweight UI -- included in lineFollowerSim library code 
+  
 }
 
 
-  void lfsDraw ()  // method called from draw() that is called by Processing as fast as possible, unless throttled by
-                   // setup call to frameRate(), see sketch main tab
-  {
-    background(0,0,20);  // erases window every draw
-   
-   // Robot view and Course view overwrite viewport areas - but not every frame unless view rate dividers set to 1 (see below)
-   // Other screen areas should be overwritten with solid rect before writing text.
-   
-   int alpha = 0;                      // default alpha=0 fully transparent cover (cover disabled)
-   if (courseTop) alpha = 220;         // when course and smaller robot view displayed, dim out larger sensor view 
-                                       // 255 is an option to fully obscure from view.
-                                      
-  
-   if (courseTop)
-   lfs.updateSensors(0,0,0,alpha);     // draws 64 DPI bitmap of current robot location on screen (can be covered)
-                                       // sensor updates, making sensor data available for user controller
-                                       // r,g,b cover with alpha written over sensor view after it has been sampled
-                                       // if alpha=0 cover rectangle not drawn.
+void lfsDraw ()  // method called from draw() that is called by Processing as fast as possible, unless throttled by
+                 // setup call to frameRate(), see sketch main tab
+{
+    background(0,0,20);                // erases window every draw
     
    lfs.setCrumbsVisible(helpPage==0);  // show crumbs if help not visible - hack to fix bleed through 
-                                       // Drawing order or Z-depth.. ??  
-   
-   if (courseTop)  // selective enable/disable controlled by Tab key 
-     lfs.drawRobotAndCourseViews(1,1,rotate90);  // draw robot and course, using frame divider
-   
-   // Frame divider (1,1,.. ) used for display every frame. Normal case.
-   // To attempt to improve performance read on:
-   // robot view rate divider, course view rate divider
-   // 0=disable 1=every frame 2=every other frame, 3= every 3..
-   // when mouse pressed and not disabled, LFS will temporarily insure every frame
-   // Using GPU may eliminate this feature... 
-    
-   if (!courseTop) lfs.updateSensors(0,0,0,alpha); // complimentary to call above
+     
+   int dimSensorRobotView = (int) (255* abs(cos(PI/8.0*dimRobotViewIndex)));  // calculate view dimming. 
+   int dimCourseView = (int) (255* abs(cos(PI/8.0*dimCourseViewIndex)));      // As index values incremented dimming 
+                                                                              // values repeat "sinusoidally"
+                                      
+   if (courseTop)  //   selective enable/disable controlled by Tab key 
+   {
+     lfs.drawCourseView(rotate90,dimCourseView);  // draw course view with dimming value 0..255  0=dimming OFF
+     lfs.drawRobotView(dimSensorRobotView);       // dimming value 
+   }  
+    // lfs.drawRobotAndCourseViews(0,1,rotate90);  // draw robot and course, use (1,1, = to draw every frame 
+   else                                         
+     lfs.drawSensorView(dimSensorRobotView); // draw sensors. dimming value 0..255 
     
    if (quietDisplay==0)  
    userDraw();          // draw optional user graphics/annotation overlay on robot view or sensor view 
@@ -213,10 +200,11 @@ public void setupLFS()
    {
      rectMode (CORNER);            // top of screen text boxes - backgrounds 
      strokeWeight (1.0);           // added explicit  strokeWeight,strokeColor  for lib 1.31
-     stroke (240);      
+     stroke (240);  
+     if (timeWarp) stroke (255,100,100);
      fill (0);
      rect (40,10,400,48);          // top left of screen   time box
-     rect (480,10,width-500,48);   // top right of screen  contestant name, robot, location velocity 
+     rect (480,10,width-485,48);   // top right of screen  contestant name, robot, location velocity 
      
      fill(240);                             // draw contestant name robot name in top right box
      textSize(28);
@@ -228,11 +216,20 @@ public void setupLFS()
    
    fill(200,200,250); // light blue 
    textSize (18);
-   if (frameCount%60 == 0) fr = frameRate;
-   if (quietDisplay == 0)
-     text(String.format("%2.0f fps",fr),width-100,30);    // (lib 1.4.1) moved to right side of screen
+   
+   if (frameCount%60 == 0)  // about every second update fps (or sps with TimeWarp)
+   {  fr = frameRate;
+      if (timeWarp) fr *= timeWarpMult;  // effective frame rate x timeWarp (time warp steps taken per frame)
+   
+   }
+   char sf = 'f';
+   if (timeWarp) sf = 's';  // fps (frames per second) or sps (steps per second) if timeWarp 
+   
+  
+   if (quietDisplay == 0)  // quietDisplay possibly obsolete method of hiding display features to speed frame rate
+     text(String.format("%2.0f %cps",fr,sf),width-100,30);    // (lib 1.4.1) moved to right side of screen
    else 
-     text(String.format("Q)uietDisplay %d   %2.0f fps",quietDisplay,fr),width-300,30);
+     text(String.format("Q)uietDisplay %d   %2.0f %cps",quietDisplay,fr,sf),width-300,30);
      
    if (showTopTextBar)
    {
@@ -249,7 +246,7 @@ public void setupLFS()
      // ---- end of Contest State info (light blue) 
    
      fill (240);
-     textSize (22);                       // (lib 1.4.1) shrunk text just a bit 
+     textSize (20);                       // (lib 1.4.1) shrunk text just a bit (lib 1.6) a bit more 
      lfs.drawRobotLocHeadingVel(974,44);  // draw x,y location and heading using lfs provided bitmap  
                                           // during contest run, these values are not available,
                                           // That is, getRobotX() getRobotY() return zeros.
@@ -258,8 +255,20 @@ public void setupLFS()
    // Simulation Throttling -- this changes how fast simulation runs, but does not affect simulation 
    // logged time. That is slowing down a simulation slows down simulator stopwatch clock
          
-   if (!simFreeze)                             // if simulation not frozen with speed=0 (key='0' freezes)
-   {                                           // SPACE bar toggles freeze in G)o mode 
+   
+     
+   // --- end simulation throttling  
+     
+   // removed sensorUpdateNeeded
+   // timeWarp 
+ 
+   int twc = 1;
+   if (timeWarp) twc = timeWarpMult;
+   for (int timeWarp =0; timeWarp<twc; timeWarp++)
+   {   
+    
+    if (!simFreeze)                             // if simulation not frozen with speed=0 (key='0' freezes)
+    {                                           // SPACE bar toggles freeze in G)o mode 
      if (simSpeed == 0)
      { }
      else
@@ -272,52 +281,53 @@ public void setupLFS()
      else
      if ((frameCount % (60-simSpeed*60/9) == 0))   // allow keys 1..9 to control speed  
        simRequestStep = true;                      // simSpeed of 9 requests frame every time
-   }
-     
-   // --- end simulation throttling  
-     
-
-   int skipSensorUpdateCount = 0;  
-   do {  // new (lib 1.5)   
-   
-     sensorUpdateNeeded = true; // new variable - if controller sets false 
-                                // simulation can take multiple steps without time consuming
-                                // sensor image redraw -- no impact on simulation -- just speeds 
-                                // execution time (same number of stopwatch ticks... 
-   
-     if (lfs.controllerIsEnabled())    // if turned off, no update.
+    }   
+  
+  
+     lfs.updateSensorsFast();
+      
+     if (lfs.controllerIsEnabled() && simRequestStep)    // if turned off, no update.    // !!! change   
        userControllerUpdate();         // user reads sensors changes target speed and turn rate as needed.
      
      if (lfs.robotOutOfBounds())       // Moved up to just after userController update Oct 22, 2020
      {
        push();                         // push Matrix and Style  
-       userOutOfBounds();
+       lfs_OutOfBounds();
        pop();
      }
-     else userInBounds();    
+     else lfs_InBounds();              
       
-      
+     // !!! take a look at driveUpdate Nov 4 - should be OK 
       
      lfs.driveUpdate(simRequestStep);  // if step requested update robot speed and turn rate with acceleration rates 
                                        // then position and heading with current speed and turn rates.
                                        // Note: if controller is not enabled this call will insure robot  
                                        // position is updated allowing manual drive.
-                                       
-     if (lfs.lapTimer.lapTimerUpdate(simRequestStep))  // update lap timer including stopwatch if not lap mode.                                  
-       userLapDetected();                              // returns true if lap detected, calling user method in UMisc tab.                                     
-                                             
-        
-     } while (!sensorUpdateNeeded &&(skipSensorUpdateCount<3));  // limit number of times controller can
-                                                                 // reqest no update 
-                                             
    
+     if (lfs.controllerIsEnabled())
+     if (lfs.lapTimer.lapTimerUpdate(simRequestStep))  // update lap timer including stopwatch if not lap mode.                                  
+       lfs_LapDetected();                              // returns true if lap detected, calling user method in UMisc tab.                                     
+     
+     if (!lfs.controllerIsEnabled()) break; // exit timeWarp loop (if enabled)                                          
+        
+   } // end for timeWarp
+                                             
+  
+   if (lfs.lapTimer.lapTimerModeEnabled)
+   {
+     if (guiMode && focused)
+       lfs.lapTimer.drawPanel ("Lap Timer ",4,740,height-182,250,158); // nvis,x,y,w,h
+     else
+       lfs.lapTimer.drawPanel ("Lap Timer ",4,60,480,250,160);
+   }    
+  
    
    simRequestStep = false;           // reset simulation step request, if set during this "draw"
    
    informMarkersAboutSavedRobotState();  // LFS_RS - notify markers if robot saved states is present, appearance 
                                          // will change upon markerDraw()  (lib 1.5)
     
-   if (quietDisplay<4)
+   if ((quietDisplay<4) && showSensors)
      lfs.showSensors((courseTop)?'R':'S');             // show user colorable sensors (lib 1.3)
    
    if (courseTop && (helpPage==0)) lfs.markerDraw();   // only display markers when course visible (lib 1.3)
@@ -338,61 +348,25 @@ public void setupLFS()
    lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish" after delay of few frames  
    
    
-   userMiscUpdate(); // uMisc method called every time Processing calls draw method 
- 
+   userMiscUpdate();     // uMisc method called every time Processing calls draw method
    
-  } // end of draw()
+   if (guiMode && !parEditor.visible) uiUpdate();      // draw buttons process clicks
+                                                       // hide when parameter dialog invoked
   
    
-  
-import java.lang.reflect.*;  // java reflection used to lookup sensor variable names 
-
-public void nameSensorsUsingVariableNames()  // (lib 1.3)
-  {
-  PApplet p = this; // p is current instance of PApplet
-  
-  println ("SpotSensors");
-  for(Field f : p.getClass().getDeclaredFields())   
-  {
-     if(f.getType() == SpotSensor.class)
-     {
-       String name = f.getName(); 
-       try {
-    
-       SpotSensor ss = (SpotSensor) (f.get(p));  // access class instance
-       if (ss.getName() == null) ss.setName(name);
-       println (name, ss.getXoff(), ss.getYoff()); 
-       } catch (IllegalAccessException e)
-       {}
-     }
+   bigMessageUpdate();   // LFS Message on screen facility
+     
    
-  } 
-
-  println ("LineSensors");
-  for(Field f : p.getClass().getDeclaredFields())
-  {
-     if(f.getType() == LineSensor.class)
-     {
-       String name = f.getName();
-           
-       try {
-         LineSensor ls = (LineSensor) (f.get(p));  // access class instance
-        
-         if (ls.getName() == null) 
-          ls.setName(name);             // set sensor default name using variable name 
-         println (name, ls.getXoff(), ls.getYoff()); 
-       }
-       catch (IllegalAccessException e)
-       {
-       }
+} // end of draw()
   
-     } 
-  }
+  
+// name sensors using variable names - moved to library Sensors class. (lib 1.6)  
+void nameSensorsUsingVariableNames() { lfs.sensors.nameSensorsUsingVariableNames(); } // provide compatible means of 
+                                                                                      // access from old app.
 
-} // end method   
 
 
-// Generate A Robot Icons - eliminating need to use bitmap editor / or drawing program to create an icon.
+// Generate a Robot Icon - eliminating need to use bitmap editor / or drawing program to create an icon.
 // If you want to customize this code, suggest renaming and moving a copy of this method into your UserDraw
 // and calling it from your userInit. This code tab is subject to change in later library 
 // releases. See: UserInit tab.
@@ -427,6 +401,268 @@ PImage genRobotIcon (String initials,int size, color c,color textColor)  // crea
   
   return mg;                 // return PImage reference 
 }
+
+
+// Big Message on Screen Facility (lib 1.6)   -----------------------------------------------------------------------
+// message fades out and vanishes. Only 1 at a time to keep simple  
+// mainly select key command responses for on-screen feedback 
+                                                   
+  String bigMessage = "";
+  int bigMessageTotal;
+  int bigMessageFrame;
+  color bigMessageColor;
+   
+  void bigMessage(String s, color c)
+  { bigMessage = s;
+    bigMessageTotal = (int) (frameRate*2)  ; // make dependent on frame rate?
+    bigMessageFrame = bigMessageTotal;
+    bigMessageColor = c;
+  }
+  
+  void bigMessageUpdate()  // called every frame draw
+  {
+    if (bigMessageFrame>0)
+    {
+      bigMessageFrame--;
+      pushStyle();
+      
+      textSize (60); // -bigMessageFrame/2);
+      
+      fill (bigMessageColor,(int) 255*exp(-sq(1.5 - 1.5*bigMessageFrame/bigMessageTotal)  ));  // start alpha 255 then fade out
+      stroke (0,0,255);
+      textAlign(CENTER);
+      text(bigMessage,width/2,height/2);
+      popStyle();
+    }  
+  }
+ 
+ // ----------------------------------------------------------------------------------------------------------
+                          
+ /*                                     
+
+   userOutOfBounds method called by LFS when robot runs off the edge of a course image.
+   If a contest run was in progress it is automatically stopped.
+   The method should be defined, but can be empty.
+  
+   Here, for fun, a simple demo is provided to generate an explosion sound along with rotating, scaling
+   and fading out icon.
+   
+   More can be done here, always the future... 
+  
+     
+   ---- Beeps and Sound File Sounds  
+   
+   To use the lap beeps and/or explosion sounds included in this program tab, the optional 
+   Processing Sound library must be installed, see main tab for information. (LFS_XXX  XXX=robotName) 
+  
+*/
+
+  boolean mute = false;     // mute audio - toggled by Q
+  boolean ticking = false;  // state of "audible ticking" persistant if mute toggled to true
+
+  SoundFile soundInit (String fname)     // load sound file from /sound subfolder  
+  {  return new SoundFile(this,"/sound/"+fname); }
+  
+    
+  void playSound(SoundFile s, float volume) { if (soundEnabled && !mute) {s.amp (volume); s.play();} }
+     
+  void tickingSoundUpdate()
+  {
+     if (soundEnabled)
+     {
+       if (simFreeze || (timeWarp & (timeWarpMult>10)) || !lfs.controllerIsEnabled()) 
+       { tickingSound.stop();
+         //ticking = false;
+       }
+       else
+       { tickingSound.rate(simSpeed/9.0);
+         tickingSound.amp(tickSoundAmp*(simSpeed+5)/14.0); // quieter slower 
+       }
+     }  
+  }
+  
+  void lfs_SetMute(boolean muteAudio)
+  {
+    mute = muteAudio;
+    if (soundEnabled && ticking)
+    {
+      if (mute) tickingSound.stop();
+      else
+      { playTickingSound();
+        tickingSoundUpdate();
+      }  
+    }
+    
+    if (mute) mutePlayingSound();
+    
+  }
+  
+  void lfs_StopTickingSound()
+  {  if (soundEnabled) { ticking=false;  tickingSound.stop(); }
+  }
+  
+   
+  void lfs_LapDetected() {
+    userLapDetected();
+    
+    if (lapBeepEnabled & !timeWarp) playLapBeep();
+    // just for fun print distance traveled at lap crossing, not available if contest running 
+    if (!loopMode) println ("Lap Detected  getDistanceTraveled (zero if contest running) ",lfs.getDistanceTraveled()); 
+
+    //if (!lfs.contestIsRunning()) 
+    if (lfs.lapTimer.lapList.size() == lfs.lapTimer.lapCountMax)
+    {
+      if (!loopMode) 
+      { lfs.setEnableController(false);
+        lfs_StopTickingSound();
+      }
+       
+    }
+    
+    
+    if (!timeWarp && !loopMode) { playCheers(); } // every lap
+
+    if (loopMode)
+    {  lfs.setCrumbsDoubleBuffer(loopMode && timeWarp);  // make sure double buffer if loop and timeWarp
+       lfs.crumbsEraseAll();
+    }
+ }
+ 
+ void lfs_StartedRun() {           // called when R)un or G)o command issued (lib 1.4.2)
+   
+   userStartedRun();
+   if (lfs.contestIsRunning())
+   {
+     playTickingSound();
+     tickingSoundUpdate();
+     playStartRun();
+   }  
+  
+     
+ }
+                             
+    
+ void lfs_FinishLineDetected() {    // user thinks they crossed finish line (lib 1.4.2)
+   userFinishLineDetected();
+   if (soundEnabled) tickingSound.stop();
+ 
+   if (lfs.contestIsRunning())
+   lfs.contestStop();               // stops stopwatch and LFS will prompt for F)inish and log run to contest.cdf report
+   else                             // or X cancel -- this must be called by your controller
+   {
+     lfs.setEnableController(false);
+     lfs.stop();
+   }
+   
+   if (loopMode)
+   {  commandGo();
+      lfs.crumbsEraseAll();
+      lfs.setCrumbsDoubleBuffer(loopMode && timeWarp);
+   }
+   else
+     playCheers();
+   
+   
+ }                                    
+ 
+  // out of bounds blow-up states
+  int outState = 0;
+  boolean outResponseTriggered;
+  float iconOriginalScale;
+ 
+  
+void lfs_InBounds() // complimentary call to userOutOfBounds
+{
+  userInBounds();
+  outResponseTriggered = false;
+}
+ 
+void lfs_OutOfBounds ()
+{  
+  userOutOfBounds();
+  
+  if (loopMode)  // new (lib 1.6) -- restart robot 
+  {
+    commandGo();
+    return;
+  }
+  
+  //PImage ci =  lfs.getCourse();
+  //float ymax= ci.height/64;
+  //float xmax= ci.width/64;   //
+    
+  if (!outResponseTriggered)
+  {
+     outResponseTriggered = true;
+     if (soundEnabled && explosionSoundEnabled) playBoom();
+     outState = 1;
+     iconOriginalScale = lfs.getRobotIconScale();
+     lfs_StopTickingSound();
+  }
+  
+  if (stopOnOutOfBounds)
+  {
+    if (lfs.contestIsRunning()) lfs.contestStop();
+    else if (!mousePressed) lfs.stop();
+  }   
+     
+  if (blowUpOutOfBounds) 
+  {
+    if (outState >0)
+    {
+        lfs.stop();
+        //println ("stop");
+        
+        lfs.setRobotIconScale(iconOriginalScale + (0.01*outState));
+        outState += 6;
+        lfs.setRobotIconAlpha (255-outState);                // fade out icon
+        lfs.setRobotIconRotationBias(outState *0.005 );      // rotate icon 
+        
+        if (outState>=255)
+        {  outState = 0;
+           lfs.setRobotIconRotationBias(0); // reset
+           lfs.setRobotIconScale(iconOriginalScale); // need to be able to read  scale to restore    
+           lfs.setRobotIconAlpha(100);
+        }  
+      }
+     }
+    
+    // demo draw a box at robot location 
+    
+    if (!lfs.contestIsRunning()) // contest should be stopped at this point
+    {                            // if not, getRobotX Y return 0
+    
+    
+      // handy method for getting screen coords of robot
+      
+      PVector loc =  lfs.courseCoordToScreenCoord(lfs.getRobotX(),lfs.getRobotY());
+    
+      // here you could do some fun stuff beyond boring rectangle 
+    
+      if (courseTop)  // Added condition Oct 22
+      {
+        rectMode (CENTER);
+        noFill();
+        stroke (255,0,0);
+        strokeWeight(2.0);
+        rect (loc.x,loc.y,40,40,4);
+        
+        // ..maybe something beyond even boring spinning rectangle, presented here
+            
+        pushMatrix();                  // save current transform which is screen default 0,0 upper left
+                                       // transforms are composed in reverse order 
+                                       
+        translate (loc.x,loc.y);       // 2. translate to robot location on screen  
+        rotate (millis()/1000.9);      // 1. rotate about 0,0
+        rect (0,0,30,30,4);            // draw 30 by 30 rectangle (with radiused corners 4) centered at 0,0
+        popMatrix();                   // recover current transform
+      }
+    }  
+    
+    
+}  
+
+ 
 
 
 

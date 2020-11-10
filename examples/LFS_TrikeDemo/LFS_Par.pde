@@ -222,7 +222,7 @@ class ParEditor {
       mouseInCloseBox = (mouseX>parVP.x+parVP.w-30) && (mouseX<parVP.x+parVP.w-30+22) &&
                         (mouseY>parVP.y+8)          && (mouseY<parVP.y+8+22);
       fill (240);
-      text ("x",parVP.x+parVP.w-29,parVP.y+28);
+      text ("x",parVP.x+parVP.w-26, parVP.y+25);
     
       
       fill (240);
@@ -298,9 +298,12 @@ class ParEditor {
  
    // limit visible to parPageSize with TopIndex controlled by PgUp PgDn
     
+    
    if (visible && (parIndex>=parPageTopIndex) && (parIndex<parPageTopIndex+parPageSize))
    {
      String txt =  String.format("%s  %s  = %1.2f",vname,id,v);
+     //String txt = String.format ("parIndex %d parPageTopIndex %d",parIndex,parPageTopIndex);  // diagnostic 
+     
      if (textBox(txt,posN,txtVP.x,txtVP.y+(parIndex+1-parPageTopIndex)*txtVPLineH,txtVP.w,txtVP.h))      // return true if mouse clicked in box
      {
       if (!mouseDownL) parCurIndex = parIndex;     // if init pass (setting defaults) don't modify parCurIndex
@@ -382,7 +385,7 @@ class ParEditor {
     int dv = maxV-minV;       
     float posN = 1.0*(v-minV)/dv;  // normalized position 
    
-   if (visible) 
+   if (visible && (parIndex>=parPageTopIndex) && (parIndex<parPageTopIndex+parPageSize)) 
    {
      String txt =  String.format("%s  %s  = %d",vname,id,v);   // Oct 22, 2020  changed to int %d
      if (textBox(txt,posN,txtVP.x,txtVP.y+(parIndex+1-parPageTopIndex)*txtVPLineH,txtVP.w,txtVP.h))      // return true if mouse clicked in box

@@ -102,9 +102,21 @@ private int sensorTotalSpotCount;   // enumerated every call to updateSensors
 // variables used for line sensor spot location calculation 
 private int sensorN;    
 private float halfWidth;
-int DPI;
+int dpi;
 float sinA,cosA; 
 float xoff,yoff;
+public boolean sensorImageRead = true;        // New Super Fast when true
+boolean diagDrawOnCourseImage = false; // normally false - slow down 
+                                       // good for checking logic on new sampleSensorPixel
+// new values for direct image read 
+
+private float cosH;         // sine heading angle       used for every spot sensor 
+private float sinH;         // cosine heading angle     pre-computed just in case high spot count 
+private PImage courseImage; // reference to course image
+private Robot robot;        // reference to robot
+private boolean drawOnCourseImage; // diagnostic normally false
+private int nPix;            // number of pixels in bitmap - for range test
+
 
 
 Sensors (PApplet parent)
@@ -137,7 +149,7 @@ public void lineSensorSpotLocationCalcInit(LineSensor ls)
 {
   sensorN = ls.getSensorCellCount();  	
 
-  halfWidth = (sensorN / 2.0f * ls.getSpotWPix()) / DPI;      // half width of line sensor in inches 
+  halfWidth = (sensorN / 2.0f * ls.getSpotWPix()) / dpi;      // half width of line sensor in inches 
 	                                                          // used to calculate offset of line sensor
                                                               // equal to 1/2 sensor total width applied in robot -Y direction 
 	   
@@ -176,7 +188,7 @@ public void lineSensorSpotLocationCalc (LineSensor ls, int index, PVector result
     y = (float) -(r*Math.cos(t));
     x = (float)  (r*Math.sin(t));
   }  
-  else y = ((0.5f+index)*ls.getSpotHPix()/DPI) - halfWidth;   // straight line 
+  else y = ((0.5f+index)*ls.getSpotHPix()/dpi) - halfWidth;   // straight line 
                    
   result.x = xoff + x * cosA - y * sinA;   // rotate spot sensor sensor  
   result.y = yoff + x * sinA + y * cosA;   // about sensor origin (center of sensor array                               
@@ -185,7 +197,7 @@ public void lineSensorSpotLocationCalc (LineSensor ls, int index, PVector result
 
 
 
-void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI image - now on screen) 
+void update(VP vp, PImage courseImage, Robot robot, int courseDPI)  // called after sensor view draw (64 DPI image - now on screen) 
 
 
                     // iterates through sensor lists, reading all sensor values and storing within sensor class instances
@@ -193,18 +205,34 @@ void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI imag
                     // line sensors sample a linear cluster array or clusters of pixels 
                    
 {
- DPI = courseDPI;   // set local DPI used in calculations
-	
- p.loadPixels(); // prepare to access screen pixels in pixels[] array
+ dpi = courseDPI;   // set local DPI used in calculations
  
+ this.robot = robot;
+ this.courseImage = courseImage;
+ 
+ //if (courseImage != null)
+//	  courseImage.loadPixels(); // done at load time - try here - likely slow down prog.  !!!
+ 
+ 
+ 
+ if (!sensorImageRead)
+   p.loadPixels(); // prepare to access screen pixels in pixels[] array
+ else
+   imageReadSensorSetup();   
  
  // update spot sensors 
  
  sensorTotalSpotCount = 0;
+ 
+ 
+ // note: xoff,yoff explicitly sent to imageReadSensorSpot due to line sensor loop calc of xoff yoff
 
  for (SpotSensor ss : spotSensorList)
  {
-   ss.setIntensity(ss.sampleSensorPixel(vp,courseDPI,ss.getXoff(),ss.getYoff()));  
+   if (!sensorImageRead) ss.setIntensity(ss.sampleSensorPixel(vp,courseDPI,ss.getXoff(),ss.getYoff())); 
+   else
+	 ss.setIntensity(imageReadSensorSpot(ss,ss.getXoff(),ss.getYoff()));  // new local to Sensors, fast mode image direct 
+   
    //sensorTotalSpotCount++;
  }
  
@@ -223,16 +251,16 @@ void update(VP vp, int courseDPI)  // called after sensor view draw (64 DPI imag
    { // for each line sensor pixel index (e.g. 0..64 if 65 pixel sensor)
     
 	 lineSensorSpotLocationCalc (ls,index,spotLoc);  // calculate location of spot, reference returned in spotLoc 
-     sensorTable[index] = ls.sampleSensorPixel(vp,courseDPI,spotLoc.x,spotLoc.y);
+	 if (!sensorImageRead) sensorTable[index] = ls.sampleSensorPixel(vp,courseDPI,spotLoc.x,spotLoc.y);
+	 else sensorTable[index] = imageReadSensorSpot((SpotSensor) ls, spotLoc.x, spotLoc.y); // fast image read 
                               
    } 
    sensorTotalSpotCount+=sensorN;  // tally total #of sensor elements (spots)
    
  }
  
- // eliminated overdrawing when sampling, rely on showSensors
- //if (showSampledPixels) 
- //  p.updatePixels();  // update required since sampled pixels are have been colored green to help with visualization of locations sampled     
+ 
+ 
 } 
 
 
@@ -353,6 +381,227 @@ void showSensorName(VP vp, String name)       // overlay sensor name on robot or
   p.text (name,vp.x+vp.w/2,vp.y+vp.h-20);
   p.popStyle();
 }
+
+
+void imageReadSensorSetup()
+{
+  
+   float rh = PApplet.radians(robot.heading);
+   cosH = PApplet.cos(rh);                         // cosine and sine of robot heading angle 
+   sinH = PApplet.sin(rh);                         // common to all spot sensors and line sensor spot elements 
+  
+   if (courseImage != null)
+     nPix = courseImage.width * courseImage.height; // number of pixels in bitmap
+  // courseDPI = lfs.courseDPI ;
+}
+ 
+
+// NEW Fast Method Nov 3, 2020 
+
+float imageReadSensorSpot(SpotSensor ss,float sensorX,float sensorY)   // return intensity of spot  
+{
+  
+  int spotW =  ss.getSpotWPix();
+  int spotH =  ss.getSpotHPix();
+
+  
+  if ((courseImage == null) || (nPix == 0)) return 0.0f;
+  
+    
+  PImage c = courseImage;     // reference to course image 
+  int cw = c.width;           // width of course bitmap
+  
+  float cx = robot.x * dpi;   // course map pixel location of robot center, allowing fractional pixels 
+  float cy = robot.y * dpi;   // converting inches to pixel units
+  
+  // calculate location of center of sensor rectangle in world (course) coordinates 
+  // rotating sensor location which is relative to robot center (robot coordinates)
+  //
+  // robotX+ in direction of robot heading, when robot heading 0 this is world -X axis
+  // robotY+ is to right of robot, when robot heading 0 this is world -Y axis
+    
+  float sx = sensorX * cosH - sensorY * sinH;
+  float sy = sensorX * sinH + sensorY * cosH;
+    
+  float xCenter = cx - sx * dpi;    // sensor rectangle sensor in world coordinates (image coordinate system)
+  float yCenter = cy - sy * dpi;
+  
+  // sample rotated rectangle that is spotW by spotH pixels in image 
+  // first calculating "lower-left" corner point xStart,yStart
+      
+  float x1 = spotH/2.0f;
+  float y1 = spotW/2.0f;
+  
+  float xr =  cosH*x1 - sinH*y1;    // rotate corner point location in sensor coordinates by robot heading angle 
+  float yr =  sinH*x1 + cosH*y1;    // that is, rotate about spot rectangle's center 
+     
+  float xStart = xCenter + xr;     // world coordinate location of sensor rectangle "lower-left" corner
+  float yStart = yCenter + yr;     // in image pixel units (1/64th inch each) 
+
+  
+  // calculate step as progress across rectangle  and also down on spot rectangle
+  // scale is 1:1  so in unrotated case dx=0 dy=-1
+                         
+  float dx = sinH;       // column step  applied 0 to spotW (pixels)
+  float dy = -cosH;    
+  
+  // delta x,y for "left most" pixel of each row of pixels starting at corner point (xStart,yStart)
+  
+  float dxRow = -cosH;   
+  float dyRow = -sinH;
+   
+  int sum = 0;
+  
+  // sample rotated rectangle pixel array 
+ 
+  for (int h = 0; h<spotH; h++)
+  {
+    // calculate left most pixel of current row (h) of rotated spot rectangle 
+    
+    float x = xStart;
+    float y = yStart;
+      
+    for (int w = 0; w<spotW; w++)
+    {
+      x+= dx;   // compute x,y as progress one pixel at a time  in the spot width direction 
+      y+= dy;   // because spot rectangle is rotated deltaX and deltY component 
+      
+      // truncate or round  x,y ?
+      // pixel coordinates for bitmap (stored in 1D array cw pixels wide for each row of pixels indexed by y
+      // with offset (column) x.
+      // 0,0 is upper-left corner of image   where x progresses to right for a total of cw pixels then
+      // advance next row (0,1);
+      
+      // should do range test ,perhaps bounding box on spot and not here   !!!
+      
+      int offset = cw *(int) y + (int) x; 
+        
+      // color pixels in sample rectangle 
+      // lower-left black    increasing red  along width axis
+      //                     increasing blue along height axis
+      // magenta upper-right   
+      
+      if  ((offset>-1) && (offset<nPix)) 
+      {
+         int gr = (c.pixels[offset] >> 8) & 0xFF;
+         sum += gr;
+         
+         if  (drawOnCourseImage)  // diagnostic -- normally disabled 
+         { 
+            if (gr<10) c.pixels[offset] = p.color(0,255,0); 
+            else
+            if ((w<5) && (h<5))  c.pixels[offset] = p.color (255,0,0);     // green block
+            else  c.pixels[offset] = p.color(255*w/spotW,0,255*h/spotH);   // color increasing
+            
+         }
+         
+      }
+    }  // end for w
+    
+    xStart += dxRow;     // advance to Start of next row, along the "height" side of the spot
+    yStart += dyRow; 
+    
+  } // end for h
+  
+  if (drawOnCourseImage) 
+  {
+    p.fill(0,255,255);
+    for (int y=-3;y<3;y++)
+    for (int x=-3;x<3;x++)
+      c.pixels[((int) yCenter+y)*cw + x+ (int) xCenter] = p.color (0,255,255);
+    
+    c.updatePixels();  // normally not enabled -- takes time
+  }
+ 
+	
+  return 1.0f * sum /255.0f/(spotW*spotH);
+  
+}	
+
+
+
+
+boolean verboseSensorNames = false;  // added (lib 1.6)
+/**
+ *  Iterate through defined sensors and assign their variable name to their 
+ *  name. This is used to ID sensors when mouse hovering over robot/sensor view.
+ *  This method is called in UserInit tab after defining all sensor instances.
+ */
+public void nameSensorsUsingVariableNames()  // (lib 1.3)
+  {
+  //PApplet p = this; // p is current instance of PApplet 
+  // inside LFS p assigned to PApplet instance ref upon instance created 	
+	
+  
+  if (verboseSensorNames) PApplet.println ("SpotSensors");  
+  for(Field f : p.getClass().getDeclaredFields())   
+  {
+	  
+	//diagnostic   
+	//PApplet.println(String.format("Ref>>[%s] %s",f.getName(),f.getType().getName()));
+
+     if(f.getType().getName().contains(".SpotSensor"))   // applicationName.SpotSensor
+     {
+   
+       
+       String name = f.getName(); 
+       try {
+    
+       //PApplet.println(String.format("trying to assign name %s to class instance",name));   
+    	
+       // Field.get(Object obj) obj = object from which fields are to be extracted 
+       // in this case the Processing Applet instance  p
+            
+       //PApplet.println(String.format("trying to assign name %s to class instance",name));   
+       
+       f.setAccessible(true);  // prevents get from throwing exception   
+       SpotSensor ss = (SpotSensor) (f.get(p));  // access class instance
+       if (ss.getName().length()==0) ss.name = name;
+      
+       if (verboseSensorNames) PApplet.println (name, ss.getXoff(), ss.getYoff()); 
+       } catch (IllegalAccessException e)
+       {
+    	 PApplet.println("Illegal Access Exception");
+    	 //e.printStackTrace();
+    	   
+       }
+     }
+   
+  } 
+
+  if (verboseSensorNames) PApplet.println ("LineSensors");  
+  
+  for(Field f : p.getClass().getDeclaredFields())
+  {
+     if(f.getType().getName().contains(".LineSensor"))  // name is lineFollowerSim.LineSensor
+     {
+       String name = f.getName();
+       try {
+    	 //PApplet.println(String.format("trying to assign name %s to class instance",name));  
+    	
+    	 f.setAccessible(true);   // this prevents next line from throwing exception 
+    	                          // was not needed within  Processing app. 
+         LineSensor ls = (LineSensor) (f.get(p));  // access class instance
+      
+        if (ls.getName().length() ==0) ls.name = name;   // set sensor default name using variable name 
+        if (verboseSensorNames) PApplet.println (name, ls.getXoff(), ls.getYoff());  
+       }
+       catch (IllegalAccessException e)
+       {
+    	 PApplet.println("Illegal Access Exception");
+         //e.printStackTrace();
+       }
+  
+     } 
+     
+     
+     
+  }
+
+} // end method   
+
+
+
 
 
 

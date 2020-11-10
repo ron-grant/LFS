@@ -59,6 +59,9 @@
      
  */
   
+import java.lang.reflect.*;
+
+  
 boolean verboseStateRW = false;  // used to see on console, what fields are being read/written
       
 ArrayList  <RobotState> robotStateList = new ArrayList <RobotState> ();  // current list of saved robot states
@@ -95,13 +98,13 @@ void loadRobotStates()
   
    String srsFilename = getSavedRobotStateFilename();  // filename and path 
   
-   objectListLoad(currentRobotState, robotStateList,srsFilename,verboseStateRW);
-   
-   rsprintln (String.format("Loaded RobotStates,  Total of %d",robotStateList.size()));
-   
-   rsprintln ("Loaded List ");
-   if (verboseStateRW) objectListPrint(robotStateList);
-   rsprintln ("");
+   if (objectListLoad(currentRobotState, robotStateList,srsFilename,verboseStateRW))    // now return false no file (lib 1.6)
+   {   
+     rsprintln (String.format("Loaded RobotStates,  Total of %d",robotStateList.size()));
+     rsprintln ("Loaded List ");
+     if (verboseStateRW) objectListPrint(robotStateList);
+     rsprintln ("");
+   }  
    
 }
 
@@ -122,8 +125,11 @@ void lfsNewMarkerPlaced(boolean placed)  //called when a new marker placed or re
 
   RobotState rs = currentRobotState;        // shorthand alias (reference to currentRobotState)
   
+  if (placed && !lfs.controllerIsEnabled()) playMarker();
   if (placed && lfs.controllerIsEnabled()) 
   {
+    playStateMarker();
+    
     rsprintln ("controller running and marker placed, create snapshot of currentRobotState");  // verbose what is going on
         
     RobotState ss = new RobotState();  // ss =  to be saved state 
@@ -161,7 +167,8 @@ void lfsNewMarkerPlaced(boolean placed)  //called when a new marker placed or re
                                       
 void lfsMarkerClicked()                     //  called when robot jumps to old marker, allowing oppurtunity to 
 {                                           //  restore robot state information  (lib 1.4.3)
-
+   
+  
    float curX = lfs.getRobotX();
    float curY = lfs.getRobotY();
 
@@ -173,8 +180,9 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
   for (RobotState rs : robotStateList)
   if (dist(curX,curY,rs.markerX,rs.markerY) < 1.0)
   {
-   println ("Saved RobotState found, updating current state. ");  // This always printed on console.
+   if (!loopMode) println ("Saved RobotState found, updating current state. ");  // This always printed on console.
    
+ 
    
    rsprintln ("currentRobotState");
    if (verboseStateRW) objectPrint(currentRobotState);
@@ -193,7 +201,7 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
    lfs.setInstantSidewaysSpeed(cs.robotSidewaysSpeed);
    lfs.lapTimer.setTick(cs.timerTick);       // restore stop watch at time of state save  
        
-   println ("Executing Resume robot drive - FREEZE - Press SPACE to run");
+   if (!loopMode) println ("Executing Resume robot drive - FREEZE - Press SPACE to run");
    
    lfs.setEnableController(true);
    lfs.crumbsEraseAll();
@@ -202,24 +210,19 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
                       // would need to hold until mouse button released, or execute this method call after mouse button
                       // released AND not allow mouse to drag robot.. 
    
-   
+   playStateMarker();
    return;
   }
-  else 
-  { println ("no state info for this marker");
-    lfs.setEnableController(false);                     // G)o or R)un to start 
-    lfs.clearDistanceTraveled();    // could recover
-    lfs.crumbsEraseAll();
-    lfs.lapTimer.lapTimerAndCountReset();
-    simFreeze = false; 
-    lfs.stop();
-    userStop();
-  }
   
-  
-  
-  
-  
+  println ("no state info for this marker");
+  playMarker();
+  lfs.setEnableController(false);                     // G)o or R)un to start 
+  lfs.clearDistanceTraveled();    // could recover
+  lfs.crumbsEraseAll();
+  lfs.lapTimer.lapTimerAndCountReset();
+  simFreeze = false; 
+  lfs.stop();
+  userStop();
  
 }    
   
@@ -299,17 +302,24 @@ void objectListSave(ArrayList alist, String filename)
 // exampleListItem argument is a experimental hack.. this will probably go away, may not be using..
 // was not needed earlier.. leaving for now
   
-void objectListLoad (Object exampleListItem,ArrayList alist, String filename,boolean verbose)
+boolean objectListLoad (Object exampleListItem,ArrayList alist, String filename,boolean verbose)
 { 
    JSONObject j;
    
    alist.clear();  // clear list of class instances 
    
    try {
+     File f = new File(filename);
+     if (!f.exists())
+     {
+       //println ("no file ",filename);  
+       return false;
+     }
+     
      j = loadJSONObject(filename);
    } catch (Exception e ) {
      println ("no json file ",filename);  
-     return; 
+     return false; 
    }
    
    // creating an array of class instances within JSON image 
@@ -323,7 +333,7 @@ void objectListLoad (Object exampleListItem,ArrayList alist, String filename,boo
  
    if (ja==null) { 
       println (String.format("failed to getJSONArray in objectLoadList  key [%s]",lsc));
-      return;
+      return false;
    }
    
   // j.setJSONArray(alist.get(0).getClass().getName(),ja);   // key String, value JSON Array  (the array)
@@ -334,28 +344,9 @@ void objectListLoad (Object exampleListItem,ArrayList alist, String filename,boo
    for (int i=0; i<ja.size(); i++)
    {
       if (verbose) println ("load   reading item ",i," of ",ja.size());
-      
-                                                                                                             
-       // Object obj = new Object (); // is this OK? -- no need Class  
-      
-      //println ("objectListLoad alist.get(i).getClass().toString() ",alist.get(i).getClass().toString());
-      //
-      
-      /*
-      Object obj = null;
-      
-      try {
-       obj = exampleListItem.getClass().newInstance();
-      } catch (InstantiationException ie ) {
-        println ("cannot instantiante obj in objectListLoad");
-      }
-      catch (IllegalAccessException ia ) {   }
-      */
-      
+    
       RobotState obj = new RobotState();    // don't know how to do this generically OR using reflection
-                                            // ???
-       
-       
+                                            // ???   this works fine for this app  (lib 1.6)
       
       JSONObject jo = (JSONObject) ja.get(i);
             
@@ -363,6 +354,8 @@ void objectListLoad (Object exampleListItem,ArrayList alist, String filename,boo
       
       alist.add(obj);
     }
+ 
+    return true;   
      
 } 
    

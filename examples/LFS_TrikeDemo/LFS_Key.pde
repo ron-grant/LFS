@@ -14,6 +14,10 @@
 
  boolean rotate90 = true;       // course view toggle rotate90 off/on  with ALT key
  int quietDisplay = 0;          // Q - Cycles 0,1,2   >0 hide displays >1 hide sensor overlay
+ boolean timeWarp = false;
+ int timeWarpCount = 0;
+ boolean loopMode = false;      // repeat Go reset on out of bounds
+ 
 
  void mouseMoved()
  {
@@ -38,16 +42,57 @@
   
     }
  
-
-public void keyPressed()  // handle keypress events for manual driving of robot.
-{
-  // !!! Processing does make note of using NEWT KeyEvent constants with P3D renderer
-  // !!! Have not found a problem - yet here.   See Processing keyCode in their Reference.
-  
-  
-  if ((key>='a')&&(key<='z')) key -=32; // shift to uppercase  
  
-  // override key decode after contest stop
+boolean commandGo()  // G)o Command - non contest run start  (reset controller, clear crumbs, reset stopwatch
+{
+   if (lfs.contestIsRunning())
+   { 
+     playBadKeySound();
+     return false; // go not allowed
+   }
+  
+   lfs.clearSensors();              
+   userControllerResetAndRun();
+   lfs.setEnableController(true);
+   lfs.crumbsEraseAll();
+   lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
+             
+   lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+   simFreeze = false;
+   lfs_StartedRun();
+   cbController.checked = lfs.controllerIsEnabled();
+   return true;
+}         
+
+void commandTimeWarp (boolean tw)
+{ timeWarp = tw;
+  cbTimeWarp.checked = tw;  // update GUI control 
+  
+  if (timeWarp)
+  {  timeWarpCount++;
+     playTimeWarp();
+     bigMessage ("Time Warp Mode",color(255,50,50));
+  }  
+  else
+  {  bigMessage("Time Warp OFF",color(50,50,255));
+  }
+  tickingSoundUpdate();
+}  
+
+boolean kbdKey;  // lets decodeKey know source is keyboard vs GUI    
+
+void decodeCtrlKey (char k) { decodeKey ((char) (k-64)) ; }
+
+void decodeKeyFromKeyboard(char k)
+{ kbdKey = true;  // true for this keypress 
+  decodeKey(k);
+}
+
+
+void decodeKey(char key)
+{
+  
+   // override key decode after contest stop
   if (lfs.getContestState() == 'S')
   {
     if (key == 'F') { 
@@ -55,43 +100,127 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
       helpPage =0;            // help not visible
       parEditor.hide();       // parameter editor not visible 
       lfs.contestFinish();
+      bigMessage ("Contest Run Logged",color (200,255,200));
+      uiContestComplete();
       return;
     }
     
     if (key == 'X') {
       lfs.contestEnd();       // back to idle state  (lib 1.4.2)
+      bigMessage ("Contest Run NOT Logged",color (255,200,200));
+      uiContestComplete();
       return;
     } 
     
+    playBadKeySound();
     return;
   }
- 
-  if ((key >= '0') && (key <= '9')) 
-  { simSpeed = key-'0';
-    simFreeze =  (simSpeed == 0);
-    key = '0';  // set to be captured in below switch and not to default 
-                // which calls userKeypress
-  }
-
-  parEditor.processKey(key,keyCode);  
-  
-  // P Ctrl-A Ctrl-D Ctrl-S Ctrl-L + - PgUp PgDn keys  -- parEditor.processKey
   
   switch (key) {
   
   case '0' :   break;   
     
-  case 'P' :     // parameter editor P Ctrl-A Ctrl-D Ctrl-L Ctrl-S   
+  case 'P' :     // parameter editor P Ctrl-A Ctrl-D Ctrl-L Ctrl-S  
   case 'A'-64 :  // all key codes here to for duplicate checking 
   case 'D'-64 :  // present for cases   
   case 'L'-64 : 
-  case 'S'-64 :  break;  // do nothing here 
+  case 'S'-64 :  parEditor.processKey(key,keyCode); 
+                 break;  // do nothing here 
   
   case 'C'-64 : lfs.chooseNextCourse();    // get next course in list, see UserInit tab.  (lib 1.4.1)  
+                lfs.crumbsEraseAll();
+                lfs.setCrumbsDoubleBuffer(false);
                 //userInit(); 
                 break;
+ 
+  case 'G'-64: guiMode = !guiMode;        // draw buttons vs command key menu 
+               break;
+ 
+   
+  case 'C' :    if (!lfs.contestIsRunning())
+                {
+                  lfs.setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
+                  if (!lfs.controllerIsEnabled()) 
+                  {  lfs.stop();           // position and heading of robot
+                     bigMessage ("Controller OFF",color(255,0,0));
+                  }
+                  else
+                  bigMessage("Controller ON",color(255,255,50));
+                }
                 
-  case 'Q'    : quietDisplay++;                            // cycle quietDisplay -- used to hide panels.. sensor draw..
+                cbController.checked = lfs.controllerIsEnabled();
+                
+                
+                break;                                                // if controller not enabled - stop robot
+                  
+  case 'D' :    if (!courseTop || (! lfs.getCourseViewport().pointInside(mouseX,mouseY)))   // dim (lib 1.6)
+                 dimRobotViewIndex++;    // D - Dim  cycles
+                else              
+                 dimCourseViewIndex++;    // D - Dim  cycles
+            
+                break;
+               
+  
+  case 'H' : helpPage++;
+             if (helpPage>helpPages) helpPage = 0;
+             break;  
+             
+  case 'L' : if (lfs.contestIsRunning())
+             {  bigMessage ("Loop Mode Not Available",color(200,200,2000));
+                cbLoopMode.checked = false;
+             }
+             else
+             {
+               if (kbdKey) loopMode = !loopMode;
+               else loopMode = cbLoopMode.checked;
+                 
+               if (loopMode) bigMessage ("Loop Mode",color (255,40,40));
+               if (!loopMode) bigMessage ("Loop Mode OFF",color (40,40,255));
+    
+               cbLoopMode.checked = loopMode;
+             }  
+             break;
+        
+
+  case 'M' : boolean placed = lfs.markerAddRemove();  // interactive marker placement/removal  (lib 1.3)
+             lfsNewMarkerPlaced(placed);              // true if placed, false if removed. See LFS_RS OR LFS_M   (lib 1.4.3)
+             userNewMarkerPlaced(placed);  
+             break;
+  
+  case ' ' : if (lfs.contestIsRunning()) 
+             {  
+               lfs.contestStop();
+               bigMessage ("Contest Stop",color(255,0,0));
+               uiContestEnded(); // changes visibility of buttons  
+             }  
+             else
+             {
+               if (simSpeed == 0) simRequestStep = true;
+               if (simSpeed > 0) simFreeze = ! simFreeze;
+               
+               //if (soundEnabled && ((simSpeed==0) || (simFreeze))) tickingSound.stop();
+               
+             }
+             
+             lfs_StopTickingSound();
+             break;  
+                                                                  
+  case 'E' :  lfs.crumbsEraseAll();
+              break;
+             
+  case 'G' : if (commandGo())    // Go  enable controller, clear crumbs, reset stopwatch 
+             bigMessage ("Go - Non-Contest Run",color (50,255,50));
+             break;
+ 
+   
+  case 'Q'    : mute = !mute;
+                lfs_SetMute(mute); 
+                if (mute) btnMute.label = "UnMute";
+                else btnMute.label = "Mute";
+                break;
+                
+                
+  case 'Q'-64 : quietDisplay++;                            // cycle quietDisplay -- used to hide panels.. sensor draw..
                 if (quietDisplay > 4) quietDisplay = 0;    // experimental frame rate speed up
                 showCommandSummary = (quietDisplay==0);    // 3 = shows sensor view with overlay
                 showTopTextBar = (quietDisplay==0);        // 4 = shows only sensor view -- bare minimum
@@ -110,41 +239,48 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
                 break;
                 
  
-  case 'C' :    lfs.setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
-                if (!lfs.controllerIsEnabled()) lfs.stop();           // position and heading of robot
-                break;                                                // if controller not enabled - stop robot
-                      
-  
-  case 'H' : helpPage++;
-             if (helpPage>helpPages) helpPage = 0;
-             break;  
-
-  case 'M' : boolean placed = lfs.markerAddRemove();  // interactive marker placement/removal  (lib 1.3)
-             lfsNewMarkerPlaced(placed);            // true if placed, false if removed. See LFS_RS OR LFS_M   (lib 1.4.3)
-             userNewMarkerPlaced(placed);  
-             break;
-  
-  case ' ' : if (lfs.contestIsRunning()) 
-               lfs.contestStop();
-             else
-             {
-               if (simSpeed == 0) simRequestStep = true;
-               if (simSpeed > 0) simFreeze = ! simFreeze;
-             }
-            
-             break;  
-                                                                  
-  case 'E' :  lfs.crumbsEraseAll();
-              break;
- 
                                                  
-  case 'S' :  lfs.stop(); lfs.setEnableController(false);
-              userStop();  // allow user to add custom actions to be taken on S)top (lib 1.4.3)
+  case 'S' :  lfs.stop(); 
+              lfs.setEnableController(false);
+              lfs_StopTickingSound();
+              userStop();                        // user code 
+              cbController.checked = false;
+              break;
+              
+              
+ 
+      
+  case 'R' : lfs.clearSensors();
+             userControllerResetAndRun();
+             lfs.contestStart();               // Run  enable controller, clear crumbs, reset stopwatch, reset Distance Traveled
+             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+             
+             helpPage =0;                      // make help not visible
+             parEditor.hide();                 // parameter editor not visible 
+             
+             simSpeed = 9;
+             simFreeze = false;
+             loopMode = false;
+             lfs_StartedRun();
+             bigMessage ("Starting Contest Run",color (50,255,50));
+             cbController.checked = lfs.controllerIsEnabled();
+             break;
+ 
+  case 'T' :  commandTimeWarp(!timeWarp);
               break;
   
-  case 'U' :  userPanel1Visible = !userPanel1Visible;
-              if (userPanel1Visible) parEditor.visible = false;
-              break;
+  
+  
+  case 'U' : if (kbdKey) userPanel1Visible = !userPanel1Visible;
+             else userPanel1Visible = cbPanel1Visible.checked; 
+                         
+             if (userPanel1Visible) parEditor.visible = false;
+             
+             cbPanel1Visible.checked = userPanel1Visible;
+                          
+             break;
+              
+ 
   
   // Sideways Drive Mode - e.g. Mecanum Wheel  using < > keys (shifted or not shifted) 
   // controller would typically use lfs.setTargetSidewaysSpeed() method in addition to 
@@ -157,39 +293,50 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
   case '.' :
   case '>' : lfs.changeTargetSidewaysSpeed(1.0);
              break;
-            
-  case 'G' : lfs.clearSensors();             // Go  enable controller, clear crumbs, reset stopwatch 
-             userControllerResetAndRun();
-             lfs.setEnableController(true);
-             lfs.crumbsEraseAll();
-             lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
-             
-             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
-             
-             simFreeze = false;
-             userStartedRun();
-             break;
-       
-  case 'R' : lfs.clearSensors();
-             userControllerResetAndRun();
-             lfs.contestStart();               // Run  enable controller, clear crumbs, reset stopwatch, reset Distance Traveled
-             lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
-             
-             helpPage =0;                      // make help not visible
-             parEditor.hide();                 // parameter editor not visible 
-             
-             simSpeed = 9;
-             simFreeze = false;
-             userStartedRun();
-             break;
+    
   
  case TAB   : courseTop = !courseTop;   //  Ctrl-I
               break;
  
-   default  : if (key<128) userKeypress(key);   // call user method with key not decoded by LFS    
+   default  : if (key<128)
+              if (!userKeypress(key))   // call user method with key not decoded by LFS
+                playBadKeySound(); // drum sound 
               break;
              
-  } // end switch              
+  } // end switch    
+  
+  kbdKey = false; // reset every time 
+  
+}
+
+public void keyPressed()  // handle keypress events for manual driving of robot.
+{
+  // !!! Processing does make note of using NEWT KeyEvent constants with P3D renderer
+  // !!! Have not found a problem - yet here.   See Processing keyCode in their Reference.
+  
+  
+  if ((key>='a')&&(key<='z')) key -=32; // shift to uppercase  
+ 
+ 
+ 
+  if ((key >= '0') && (key <= '9')) 
+  { 
+    if ((simSpeed == 0) && (key=='0'))  key = ' ';  // allow 0 to single step if already in single step  (lib 1.6)
+    else
+    {
+      simSpeed = key-'0';
+      simFreeze =  (simSpeed == 0);
+      key = '0';  // set to be captured in below switch and not to default 
+                  // which calls userKeypress
+       tickingSoundUpdate();                 
+    }              
+  }
+
+   
+  decodeKeyFromKeyboard(key);  
+  
+  // P Ctrl-A Ctrl-D Ctrl-S Ctrl-L + - PgUp PgDn keys  -- parEditor.processKey
+          
    
   if ((keyCode == UP) || (keyCode == DOWN) || (keyCode == LEFT) || (keyCode == RIGHT))
   {

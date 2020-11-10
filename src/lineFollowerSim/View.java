@@ -57,8 +57,12 @@ class View {  // no modifier = package protected
   // to encode their position.  One thought if a robot ran a contest "slow" with success, it could reference cookie crumb list to run fast.
   // Fair game if robot controller generates its own crumbs, but questionable to allow access to this crumb list.
   
-  private ArrayList <PVector> crumbList = new ArrayList <PVector> ();   
-
+  //private ArrayList <PVector> crumbList = new ArrayList <PVector> ();   
+  private ArrayList <PVector>[] crumbList = (ArrayList<PVector>[]) new ArrayList[2];   // array of 2 crumbLists 
+  
+  int activeCrumbList = 0;                     // crumb list that is being added to 
+  boolean doubleBufferCrumbs = false;          // allows for crumb persistence  used for warpSpeed and looping  
+                                               // show the list that is not active and toggle activeCrumbList 0 to 1
  
   private float curCrumbX;
   private float curCrumbY;
@@ -107,6 +111,10 @@ class View {  // no modifier = package protected
   View(PApplet parent)
   {
     p = parent;
+    crumbList[0] = new  ArrayList<PVector>();
+    crumbList[1] = new  ArrayList<PVector>();
+    
+    
     this.courseDPI = courseDPI;
     crumbThresholdDist = 0.5f;     // distance from previous crumb must exceed this value before new crumb is generated
     userRobotIconScale = 1.0f;
@@ -342,8 +350,10 @@ boolean mouseInside(VP v)
     return (mx>0)&&(mx<v.w)&&(my>0)&&(my<v.h); }  
 
 
-public void sensorUpdate(Sensors sensors, int dpi)
-{ sensors.update(sensorVP,dpi);    // process robot view  (64DPI overhead view of invisible robot)
+
+
+public void sensorUpdate(Sensors sensors, PImage course, Robot robot, int dpi)
+{ sensors.update(sensorVP,course,robot,dpi);    // process robot view  (64DPI overhead view of invisible robot)
 }
 
 
@@ -400,10 +410,11 @@ void createRobotViewQuad(PImage courseImage)
    * @param courseImage
    * @param courseDPI
    * @param robot
+   * @param dim 
    * 
    */
   
-  public void drawRobotView(PImage courseImage, int courseDPI, Robot robot, boolean contestRunning)
+  public void drawRobotView(PImage courseImage, int courseDPI, Robot robot, boolean contestRunning,int dim)
   {
 
 	  int w = robotVP.w;
@@ -442,6 +453,13 @@ void createRobotViewQuad(PImage courseImage)
 	  
 	  p.shape(rvq);                            // draw shape to display window  
 	  
+	  if (dim>0)  
+	  {		
+		p.noStroke();                          // draw dimming rectangle over window 
+	    p.fill (0,0,0,dim);                    // alpha on shape might be possible... 
+	    p.rect(0, 0, robotVP.w, robotVP.h);
+	  }  
+	  
 		
 	  // draw robot coordinate axes 
 	   
@@ -455,7 +473,9 @@ void createRobotViewQuad(PImage courseImage)
   }
   
 
-void drawRobotCoordAxes()  // called from LFS 
+void drawRobotCoordAxes() { drawRobotCoordAxes(1,255); } // original scale  
+  
+void drawRobotCoordAxes(float scale, int alpha)  // called from LFS 
 {
   p.pushMatrix();
   
@@ -470,22 +490,27 @@ void drawRobotCoordAxes()  // called from LFS
   else
 	p.translate (sensorVP.x+sensorVP.w/2,sensorVP.y+sensorVP.h/2);  
   
+  p.scale(scale);
   p.textSize(32);
   p.strokeWeight(3);
-  p.stroke(0,250,0);   // green
+  p.stroke(0,250,0,alpha);   // green
   p.line (0,0,yL,0);   // screen X (y axis line)
-  p.fill (0,250,0);
+  p.fill (0,250,0,alpha);
   p.text ("Y",yL,4);
  
  
-  p.stroke(250,0,0);   // red 
+  p.stroke(250,0,0,alpha);   // red 
   p.line (0,0,0,-xL);  // screen Y (x axis line) 
-  p.fill (250,0,0);
+  p.fill (250,0,0,alpha);
   p.text ("X",-6,-xL);
   
   p.popMatrix();
   
 } 
+
+
+
+
 
 
  PVector courseCoordToScreenCoord (float wx, float wy)  // given world XY coord return screen XY   exposed in LFS class
@@ -544,7 +569,7 @@ void drawRobotCoordAxes()  // called from LFS
   // shape probably faster
   
   void drawCourseView(PImage course, Robot robot, int courseDPI, boolean rotateCourse90,
-	   boolean contestFinished, boolean contestRunning)
+	   boolean contestFinished, boolean contestRunning,int dim)
   {
     int cw = course.width;     // width and height of course image in pixels
     int ch = course.height;
@@ -581,25 +606,36 @@ void drawRobotCoordAxes()  // called from LFS
 	p.resetMatrix();
 	p.camera();
 	p.noStroke();  // no border on image
-	    
+	 
+	p.pushMatrix();
+	
 	if (rotateCourse90)
 	{
 	   float tx = ch*vs + courseVP.x;  // course height (now screen width scaled to view) + screen horz offset
 	      
 	   p.translate (tx,courseVP.y);    // origin at upper right 
 	   p.rotate (PApplet.radians(90.0f));    // +cw -ccw 
-	   p.scale(vs,vs);
-	   p.image (course,0,0); 
 	}
 	else // non-rotated case - simply scale course and translate origin to course view location on screen
 	{ 
 	  float tx = courseVP.x;        // place image origin at screen XY = horzOffsetCV,viewsTopBorder
 	  p.translate (tx,courseVP.y);  
-	  p.scale(vs,vs);                   // image scale factor calculated to scale image to fit into viewport
-	                                    // which is widthCV by heightCV pixels 
+	}
+	p.scale(vs,vs);  // image scale factor calculated to scale image to fit into viewport
+	p.image(course, 0, 0);  // draw course with no offset (transform composition above does the work)
+	
+	p.popMatrix();
+	
+	if (dim>0)  
+	{		
+	   p.noStroke();                          // draw dimming rectangle over window 
+	   p.fill (0,0,0,dim);                    // alpha on shape might be possible... 
+	 
+	   p.rect(courseVP.x,courseVP.y, courseVP.w, courseVP.h);
+	}  
 	  
-	  p.image (course,0,0);             // draw course with no offset (transform composition above does the work)
-	} 
+	
+	
 	
     p.popMatrix();
 	
@@ -703,7 +739,13 @@ void drawRobotCoordAxes()  // called from LFS
     
     p.stroke (0,255,0); // crumb color  
     p.strokeWeight(3.0f);
-    for (PVector pt : crumbList)
+    
+    int dsp = 0;
+    if (doubleBufferCrumbs) dsp = activeCrumbList ^1;  // if double buffer show list not being added to
+     
+    if (crumbList[dsp].size() == 0) dsp ^= 1;        // try to show non-empty list 
+    
+    for (PVector pt : crumbList[dsp])
     {
       
      // scale from course coordinates in inches to normalized coordinates,
@@ -770,9 +812,16 @@ void drawRobotCoordAxes()  // called from LFS
   // add cookie crumb if robot has moved more than crumbThresholdDist from previous crumb
   if (PApplet.dist(robot.x,robot.y,curCrumbX,curCrumbY) > crumbThresholdDist) 
   {
-   crumbList.add(new PVector(robot.x,robot.y));
-   curCrumbX = robot.x;
-   curCrumbY = robot.y;
+  
+    int cL = 0;
+    if (doubleBufferCrumbs) cL = activeCrumbList;  // if double buffer, add to active list 0 or 1
+	
+	  
+    crumbList[cL].add(new PVector(robot.x,robot.y));
+   
+   
+    curCrumbX = robot.x;
+    curCrumbY = robot.y;
   }
 
 
@@ -783,7 +832,30 @@ void drawRobotCoordAxes()  // called from LFS
    *  Clear all crumbs in course view
    */
   
-  public void crumbEraseAll() { crumbList.clear(); }
+  void crumbEraseAll()
+  {
+	if (doubleBufferCrumbs)
+	{                                            // active is crumb list being drawn into 
+		
+	  activeCrumbList = activeCrumbList ^ 1;     // toggle 0 1 0... 	
+	  crumbList[activeCrumbList].clear();        // clear the new active list will be drawn into  
+	
+	}
+	else crumbList[0].clear();
+  }
+
+  /**
+   * Reset crumblist state 
+   * @param e
+   */
+  
+  void crumbSetDoubleBuffer(boolean e)
+  {
+    //crumbList[0].clear();
+    //crumbList[1].clear();
+    //activeCrumbList = 0;
+    doubleBufferCrumbs = e;
+  }
   
   
  
