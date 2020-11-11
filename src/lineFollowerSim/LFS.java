@@ -147,7 +147,7 @@ int contestResetCount=0;
 boolean controllerEnabled = false;     // setcontrollerEnabled(t/f)   getcontrollerEnabled()                                
                      
                                
-private PImage course;           // courseImage 64 DPI rendition of course - see header comment
+PImage course;                         // courseImage 64 DPI rendition of course - see header comment
 private String courseFilename;
 
 /** 
@@ -172,8 +172,8 @@ private float userMaxTurnRate;         // saturate at simulation max values, and
 
 private float timeStep;                // simulation time step subject to user limits
 
-private int rvCount = 1;
-private int cvCount = 1;
+//private int rvCount = 1;
+//private int cvCount = 1;
 
 private int requestScreenSaveInFrameCount  = -1;
 
@@ -470,21 +470,21 @@ public void drawRobotAndCourseViews(int rvDiv, int cvDiv, boolean cRotate90) // 
 {
   if (rvDiv!=0)
   {	
-	if (p.mousePressed) rvCount = 1;  
-	if (--rvCount<= 0)
-	{ rvCount = rvDiv;	
+	//if (p.mousePressed) rvCount = 1;  
+	//if (--rvCount<= 0)
+	//{ rvCount = rvDiv;	
       view.drawRobotView(course,courseDPI,robot,contestIsRunning(),0);   // draw robot view into defined viewport
-	}  
+	//}  
   }
   
   if (cvDiv!=0)
   {	
-	if (p.mousePressed) cvCount = 1;   
-	if (--cvCount<=0)
-	{ cvCount = cvDiv;
+	//if (p.mousePressed) cvCount = 1;   
+	//if (--cvCount<=0)
+	//{ cvCount = cvDiv;
 	  view.drawCourseView(course,robot,courseDPI,cRotate90, contestState == ContestStates.csFinished,
 	  contestIsRunning(),0);   // contest Finished draw (F) on course , dim value 
-	}  
+	//}  
   } 
   
 }
@@ -681,8 +681,15 @@ nameRobot = robotName;
 public void setCourse(String fname)
 {
  courseFilename = fname;
+ course = null;
+ 
  course = p.loadImage(fname); 
- course.loadPixels();            // for image read sensor access
+ course.loadPixels();                   // for image read sensor access
+ 
+ view.invalidateRobotAndSensorViews();  // new (lib 1.6.1) 
+                                        // forces re-creation of textured quads used for robot and sensor view
+ 
+   
 }
 
 /**
@@ -1233,7 +1240,7 @@ public void contestScreenSaveIfRequested()  // need count down on this 1 frame
  * @return Processing PVector with screen x,y values  
  */
 public PVector courseCoordToScreenCoord (float worldX, float worldY) 
-	{ return view.courseCoordToScreenCoord (worldX,worldY); }  
+	{ return view.courseCoordToScreenCoord (course,worldX,worldY); }  
 
 
 // interface to Marker 
@@ -1608,7 +1615,8 @@ public void defineLapCourse(int num, String name, float x,float y,float heading)
  * @param y Robot Offset (inches) in course image
  * @param heading Robot heading 0..359 (degrees) 
  */
-public void defineCourse (int num,String name,float x,float y, float heading) {defC(false,num,name,x,y,heading);   }
+public void defineCourse (int num,String name,float x,float y, float heading)
+ {defC(false,num,name,x,y,heading);   }
 
 
 /*  Trying to get this method working here, vs in LFS processing application                Nov 5,2020 
@@ -1625,6 +1633,9 @@ public void defineCourse (int num,String name,float x,float y, float heading) {d
    access to the definition of the specified class, field, method or constructor.
 
 */
+
+
+public float distToClosestMarker (float x,float y) {return marker.getClosestDist(x,y); }
 
 
 

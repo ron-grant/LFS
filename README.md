@@ -1,4 +1,17 @@
-### Library 1.6
+### Library 1.6.1
+
+Fixed course change wrong image in robot view. (Texture map not updated on GPU was the problem).
+<p>
+Added GoMarker (thanks Will Kuhnle for suggesting). Using time warp and setting marker, robot drops out of warp and
+freezes on marker with all state information in tact. Virtually eliminates need for effort applied to saving 
+state in Robot State class. 
+<p>
+Fixed a number of contest run problems including lap contest auto end not allowing report or cancel. 
+<p>
+Made Parameter Editor slider scale match slider length. 
+
+
+### Library 1.6 
 
 TimeWarp!!! (run 100X + faster simulation)
 <p>

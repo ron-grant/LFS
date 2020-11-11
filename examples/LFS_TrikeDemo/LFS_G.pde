@@ -52,7 +52,7 @@
   boolean blowUpOutOfBounds      =  true;   // include animation of robot blowing up (except when Loop enabled)
   boolean explosionSoundEnabled  =  false;   // include explosion sound (auto disabled when Loop enabled)
  
-  float   tickSoundAmp = 0.6;                // 0 to 1.0 (value is attenuated when step rate slowed 1..8) 
+  float   tickSoundAmp = 0.4;                // 0 to 1.0 (value is attenuated when step rate slowed 1..8) 
   
   // End variables that can be assigned values in your userInit code -----------------------------------------
     
@@ -60,6 +60,9 @@
                                  // elsewhere.  Mute command (Q Key) can be used toggle sound 
   
   // sound files are defined here and loaded 
+
+  boolean freezeNearMarker = false;  // goMarker states
+  float   freezeNearMarkerMinDist;   // set to large value on GoMarker press 
 
 
   SoundFile lapBeepSound,boomSound,timeWarpSound,startSound,finishSound,tickingSound,badKeySound,tadaSound,whoopSound,
@@ -85,7 +88,7 @@
     
   }  
   
-  void playBoom()     { playSound(boomSound,0.5);    }
+  void playBoom()     { playSound(boomSound,0.4);    }
   void playTimeWarp() { playSound(timeWarpSound,0.4);}   // sound object, volume
   void playStartRun() { playSound(startSound,0.4);   } 
   void playCheers()   { playSound(finishSound,0.5);  }
@@ -93,7 +96,7 @@
   void playBadKeySound()   { playSound(badKeySound,0.8);  }
   void playTada()          { playSound(tadaSound,0.5); }
   void playMarker()        { playSound(whoopSound,0.1); }
-  void playStateMarker()   { playSound(snapSound,0.3); } 
+  void playStateMarker()   { playSound(snapSound,0.2); } 
   
      
   void playTickingSound() {  
@@ -211,13 +214,14 @@ void uiSetup()  // called once from setup, create button and checkbox definition
   ui.group(2);
   ui.btnc("User","Hide all buttons and display user buttons ");
   ui.btnc("#Marker","M - Marker place/erase  When stopped, location marker, when running via Go, state save marker.");
+  ui.btnc("GoMarker","Go until near marker using timeWarp then clear timeWarp & freeze, then, for example, press 1..9 to proceed, or 0 to single step");
  
  
   ui.group(3);     // control button, displayed while contest running -- end the contest
   ui.gotoCol(3);
   ui.gotoRow(7);
   ui.label("Contest Run In Progress");
-  ui.btnc("End","End Contest Run. Stopping Robot, allowing for choice of saving run or cancel.");
+  ui.btnc("End","End Contest Run. Stopping Robot, allowing for choice of appending to contest Report, or cancel.");
   
   ui.setColWidth(160); 
   
@@ -278,9 +282,9 @@ void uiUpdate()
   }
    
   if (ui.cmd("#Help")) decodeKey('H'); // help cycle 
-  if (ui.cmd("#TimeWarp")) commandTimeWarp(curButton.checked);  // set timeWarp to checkbox state
-  if (ui.cmd("#Loop")) decodeKey('L');                          // handles toggle if possible 
-  if (ui.cmd("#User Panel1")) decodeKey('U');                   // U=toggle panel visble check box
+  if (ui.cmd("#TimeWarp")) commandTimeWarp(curButton.checked,false);  // set timeWarp to checkbox state, false not silent
+  if (ui.cmd("#Loop")) decodeKey('L');                                // handles toggle if possible 
+  if (ui.cmd("#User Panel1")) decodeKey('U');                         // U=toggle panel visble check box
   if (ui.cmd("Sensors Vis"))
   { showSensors = curButton.checked;
   
@@ -335,6 +339,14 @@ void uiUpdate()
   }
   
   if (ui.cmd("User")) ui.setVisibleGroups(5);
+ 
+  if (ui.cmd("GoMarker")) 
+  { freezeNearMarker = true;
+    freezeNearMarkerMinDist = 99; 
+    simSpeed = 9;
+    commandTimeWarp(true,true);  // set timeWarp, silent 
+    decodeKey('G'); 
+  }
  
   userDecodeUICommands(curButton);
    

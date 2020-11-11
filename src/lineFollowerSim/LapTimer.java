@@ -278,8 +278,9 @@ public class LapTimer {
         
          if (lapList.size() >= lapCountMax)
          { 	 
-        	if (lfs.contestIsRunning()) lfs.contestStop();
-        	else lfs.stop();
+        	// (lib 1.6.1) let app handle final lap count 
+        	//if (lfs.contestIsRunning()) lfs.contestStop();
+        	//else lfs.stop();
          }	
          
          return true;

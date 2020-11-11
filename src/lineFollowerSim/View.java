@@ -93,7 +93,7 @@ class View {  // no modifier = package protected
   int courseDPI = 64;           // LFS can change via call, sets this value too.    
   
   boolean courseRotated90;
-  PImage course;   // ref to course bitmap 
+  //PImage course;                // ref to course bitmap 
   
   char userDrawViewID;  // used to tell coordinate axes which viewport is being used 'R' robot or 'S' sensor
   
@@ -122,6 +122,9 @@ class View {  // no modifier = package protected
     mouseActive = true;
   }
   
+  
+  //void setCourse(PImage im)
+  //{ course = im; }
   
   void setUserRobotIcon(String filename, int alpha)  // called by LFS  - replace blue pointer on course image
   {
@@ -267,7 +270,8 @@ void vertRotateTranslate (PVector[] v,float theta,float tx, float ty)  // 2D rot
 
 
 PVector[] sUV = null;  // vertex list for sensor view, allocated one time in createSensorViewQuad
-PShape svq = null;  // sensor view quad allocated one time, xyz preset, uv set every frame
+PShape svq = null;     // sensor view quad allocated one time, xyz preset, uv set every frame
+                       // OR after new course loaded, which sets svq to null via  invalidateRobotAndSensorViews() 
 
 
 void createSensorViewQuad(PImage courseImage)
@@ -402,7 +406,18 @@ void createRobotViewQuad(PImage courseImage)
 	
 }
 
-  
+/**
+ * Force redefinition of GPU textured polygons used by GPU to render robot and sensor viewports.
+ * LFS uses internally when loading a new course.
+ */
+public void invalidateRobotAndSensorViews() 
+{ rvq = null; 
+  svq = null;
+}
+
+
+
+
   /** Draw overhead view of robot, from perspective of orthographic camera mounted directly above
    * robot looking straight down using robots current x,y location and heading on line following course
    * image.
@@ -413,10 +428,12 @@ void createRobotViewQuad(PImage courseImage)
    * @param dim 
    * 
    */
-  
   public void drawRobotView(PImage courseImage, int courseDPI, Robot robot, boolean contestRunning,int dim)
   {
 
+	  //PImage courseImage = course;
+	  //this.course = courseImage;
+	  
 	  int w = robotVP.w;
 	  int h = robotVP.h;
 	  
@@ -424,8 +441,9 @@ void createRobotViewQuad(PImage courseImage)
 	  
 	  
 	  if ((rvq==null) && (courseImage != null)) 
-		  createRobotViewQuad(courseImage); // do one time  !!! if viewport altered need to set v null 
-	  
+		  createRobotViewQuad(courseImage);        // do one time, or after new course loaded through 
+	                                               // invalidateRobotAndSensorViews() called when course loaded 
+	                                         	  
 
 	  rvv[0].set(0,0);   // robot view, actually at w/2,h/2 which gets corrected with translate
 	  rvv[1].set(h,0);
@@ -513,10 +531,11 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
 
 
 
- PVector courseCoordToScreenCoord (float wx, float wy)  // given world XY coord return screen XY   exposed in LFS class
+ PVector courseCoordToScreenCoord (PImage course,float wx, float wy)  // given world XY coord return screen XY   exposed in LFS class
  {
     PVector pScreen = new PVector();  // output screen coords
    
+       
     int cw = course.width;     // width and height of course image in pixels
     int ch = course.height;
    
@@ -568,14 +587,15 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
   // at present drawCourse view using transform applied to scaled course image
   // shape probably faster
   
-  void drawCourseView(PImage course, Robot robot, int courseDPI, boolean rotateCourse90,
+  void drawCourseView(PImage courseIm, Robot robot, int courseDPI, boolean rotateCourse90,
 	   boolean contestFinished, boolean contestRunning,int dim)
   {
-    int cw = course.width;     // width and height of course image in pixels
-    int ch = course.height;
+    int cw = courseIm.width;     // width and height of course image in pixels
+    int ch = courseIm.height;
     
     courseRotated90 = rotateCourse90;  // used to inform  courseCoordToScreenCoord about course orientation
-    this.course = course;
+   
+    //this.course = course;
 	    
 	float vs = 1.0f;
 	float vsx = 1.0f*courseVP.w/cw;
@@ -621,8 +641,8 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
 	  float tx = courseVP.x;        // place image origin at screen XY = horzOffsetCV,viewsTopBorder
 	  p.translate (tx,courseVP.y);  
 	}
-	p.scale(vs,vs);  // image scale factor calculated to scale image to fit into viewport
-	p.image(course, 0, 0);  // draw course with no offset (transform composition above does the work)
+	p.scale(vs,vs);           // image scale factor calculated to scale image to fit into viewport
+	p.image(courseIm, 0, 0);  // draw course with no offset (transform composition above does the work)
 	
 	p.popMatrix();
 	
@@ -656,7 +676,7 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
   	    
   	    if (rotateCourse90)
   	    {
-  	      float wcp = 1.0f*course.height*vs;   // course horizontal width screen pixels    
+  	      float wcp = 1.0f*courseIm.height*vs;   // course horizontal width screen pixels    
   	      newY  = (courseVP.x+wcp-p.mouseX)/sy;
   	      newX  =  (p.mouseY-courseVP.y)/sx;
   	    }
@@ -686,7 +706,7 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
        
     if (rotateCourse90)
     {
-      float wcp = course.height*vs;   // course horizontal width screen pixels      
+      float wcp = courseIm.height*vs;   // course horizontal width screen pixels      
       x = courseVP.x + wcp - robot.y * sy;
       y = robot.x * sx + courseVP.y;
     }
@@ -753,7 +773,7 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
       
     if (rotateCourse90)
     {
-      float wcp = course.height*vs;   // course horizontal width screen pixels    
+      float wcp = courseIm.height*vs;   // course horizontal width screen pixels    
       
       xc =  courseVP.x + wcp- (pt.y * sy);  // x  upper right corner of course image  - y scaled to pixel units
       yc =  courseVP.y + (pt.x * sx);   // y  top border offset  + x scaled to pixel units  

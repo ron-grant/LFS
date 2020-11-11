@@ -16,8 +16,7 @@
  int quietDisplay = 0;          // Q - Cycles 0,1,2   >0 hide displays >1 hide sensor overlay
  boolean timeWarp = false;
  int timeWarpCount = 0;
- boolean loopMode = false;      // repeat Go reset on out of bounds
- 
+ boolean loopMode = false;           // repeat Go reset on out of bounds
 
  void mouseMoved()
  {
@@ -53,7 +52,7 @@ boolean commandGo()  // G)o Command - non contest run start  (reset controller, 
   
    lfs.clearSensors();              
    userControllerResetAndRun();
-   lfs.setEnableController(true);
+   setEnableController(true);
    lfs.crumbsEraseAll();
    lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
              
@@ -64,13 +63,13 @@ boolean commandGo()  // G)o Command - non contest run start  (reset controller, 
    return true;
 }         
 
-void commandTimeWarp (boolean tw)
+void commandTimeWarp (boolean tw, boolean silent)
 { timeWarp = tw;
   cbTimeWarp.checked = tw;  // update GUI control 
   
   if (timeWarp)
   {  timeWarpCount++;
-     playTimeWarp();
+     if (!silent) playTimeWarp();
      bigMessage ("Time Warp Mode",color(255,50,50));
   }  
   else
@@ -116,21 +115,26 @@ void decodeKey(char key)
     return;
   }
   
+  if (! parEditor.processKey(key,keyCode)) 
   switch (key) {
   
-  case '0' :   break;   
+  case '0' :      break;    // do nothing, 0..9 handled in keypress
+                            // prevents un decoded key message.. 
     
-  case 'P' :     // parameter editor P Ctrl-A Ctrl-D Ctrl-L Ctrl-S  
+  /*
+  case 'P' :   
+                break;
+  /*
   case 'A'-64 :  // all key codes here to for duplicate checking 
   case 'D'-64 :  // present for cases   
   case 'L'-64 : 
-  case 'S'-64 :  parEditor.processKey(key,keyCode); 
+  case 'S'-64 :  // parEditor.processKey(key,keyCode); 
                  break;  // do nothing here 
+  */
   
-  case 'C'-64 : lfs.chooseNextCourse();    // get next course in list, see UserInit tab.  (lib 1.4.1)  
-                lfs.crumbsEraseAll();
+  case 'C'-64 : lfs.chooseNextCourse();       // get next course in list, see UserInit tab.  (lib 1.4.1)  
                 lfs.setCrumbsDoubleBuffer(false);
-                //userInit(); 
+                lfs.crumbsEraseAll();
                 break;
  
   case 'G'-64: guiMode = !guiMode;        // draw buttons vs command key menu 
@@ -139,7 +143,7 @@ void decodeKey(char key)
    
   case 'C' :    if (!lfs.contestIsRunning())
                 {
-                  lfs.setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
+                  setEnableController(!lfs.controllerIsEnabled());  // toggle allowing controller to update
                   if (!lfs.controllerIsEnabled()) 
                   {  lfs.stop();           // position and heading of robot
                      bigMessage ("Controller OFF",color(255,0,0));
@@ -187,9 +191,14 @@ void decodeKey(char key)
              userNewMarkerPlaced(placed);  
              break;
   
-  case ' ' : if (lfs.contestIsRunning()) 
+  case ' ' : if (lfs.getContestState() == 'S')
+             {
+               uiContestEnded(); // changes visibility of buttons    
+             }
+             else
+             if (lfs.contestIsRunning()) 
              {  
-               lfs.contestStop();
+               lfs.contestStop();  // move to stop state  expect  Report or Cancel F or X 
                bigMessage ("Contest Stop",color(255,0,0));
                uiContestEnded(); // changes visibility of buttons  
              }  
@@ -197,9 +206,6 @@ void decodeKey(char key)
              {
                if (simSpeed == 0) simRequestStep = true;
                if (simSpeed > 0) simFreeze = ! simFreeze;
-               
-               //if (soundEnabled && ((simSpeed==0) || (simFreeze))) tickingSound.stop();
-               
              }
              
              lfs_StopTickingSound();
@@ -241,10 +247,9 @@ void decodeKey(char key)
  
                                                  
   case 'S' :  lfs.stop(); 
-              lfs.setEnableController(false);
+              setEnableController(false);
               lfs_StopTickingSound();
               userStop();                        // user code 
-              cbController.checked = false;
               break;
               
               
@@ -266,7 +271,7 @@ void decodeKey(char key)
              cbController.checked = lfs.controllerIsEnabled();
              break;
  
-  case 'T' :  commandTimeWarp(!timeWarp);
+  case 'T' :  commandTimeWarp(!timeWarp,false); // toggle timeWarp state,  not silent
               break;
   
   
@@ -321,14 +326,14 @@ public void keyPressed()  // handle keypress events for manual driving of robot.
  
   if ((key >= '0') && (key <= '9')) 
   { 
-    if ((simSpeed == 0) && (key=='0'))  key = ' ';  // allow 0 to single step if already in single step  (lib 1.6)
+    if ((simSpeed == 0) && (key=='0')) simRequestStep = true;  // allow 0 to single step if already in single step (lib 1.6.1)
     else
     {
       simSpeed = key-'0';
       simFreeze =  (simSpeed == 0);
       key = '0';  // set to be captured in below switch and not to default 
                   // which calls userKeypress
-       tickingSoundUpdate();                 
+      tickingSoundUpdate();                 
     }              
   }
 

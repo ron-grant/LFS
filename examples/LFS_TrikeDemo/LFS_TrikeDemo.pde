@@ -13,7 +13,7 @@
    
    A big goal here is that updates to the library or application code should only affect
    LFS_tabs other than this one.
-   
+    0 
    That is, with a new library release and download the .pde files should be able to be copied
    over the files in your sketch if your release is (lib 1.4.3) or later.
    

@@ -168,6 +168,20 @@ void draw()
    
 }
 
+float getClosestDist(float x, float y)
+{
+  float dmin = 99999;	
+  for (MarkerItem mi : startLocList) 
+  {	
+	float d2 = PApplet.sq(mi.x-x)+ PApplet.sq (mi.y-y);
+	if (d2 < dmin) dmin = d2;
+  }
+  
+  return PApplet.sqrt(dmin);
+	
+}
+
+
 private String markerGetFilename() {
   String s = lfs.getCourseFilename();
   while (s.charAt(s.length()-1) != '.') s = s.substring(0,s.length()-1);

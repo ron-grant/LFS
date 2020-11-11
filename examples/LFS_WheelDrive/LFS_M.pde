@@ -66,6 +66,9 @@
    LFS_XXX        NA                            Sketch main program - high level processing sketch skeleton.
                                                 Should not change. 
   
+   LFS_G                                        Some global variables/ sound control, GUI button definitions + GUI
+                                                command decode.
+  
    LFS_M                                        Previously main tab, now contains functions called by
                                                 main which is now skeleton that should not change
                                                 or change very little in the future.
@@ -186,7 +189,6 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
      lfs.drawCourseView(rotate90,dimCourseView);  // draw course view with dimming value 0..255  0=dimming OFF
      lfs.drawRobotView(dimSensorRobotView);       // dimming value 
    }  
-    // lfs.drawRobotAndCourseViews(0,1,rotate90);  // draw robot and course, use (1,1, = to draw every frame 
    else                                         
      lfs.drawSensorView(dimSensorRobotView); // draw sensors. dimming value 0..255 
     
@@ -267,6 +269,7 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
    for (int timeWarp =0; timeWarp<twc; timeWarp++)
    {   
     
+   
     if (!simFreeze)                             // if simulation not frozen with speed=0 (key='0' freezes)
     {                                           // SPACE bar toggles freeze in G)o mode 
      if (simSpeed == 0)
@@ -289,16 +292,12 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
      if (lfs.controllerIsEnabled() && simRequestStep)    // if turned off, no update.    // !!! change   
        userControllerUpdate();         // user reads sensors changes target speed and turn rate as needed.
      
+     lfs_CheckCloseToMarker();
+          
      if (lfs.robotOutOfBounds())       // Moved up to just after userController update Oct 22, 2020
-     {
-       push();                         // push Matrix and Style  
        lfs_OutOfBounds();
-       pop();
-     }
      else lfs_InBounds();              
-      
-     // !!! take a look at driveUpdate Nov 4 - should be OK 
-      
+         
      lfs.driveUpdate(simRequestStep);  // if step requested update robot speed and turn rate with acceleration rates 
                                        // then position and heading with current speed and turn rates.
                                        // Note: if controller is not enabled this call will insure robot  
@@ -313,12 +312,10 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
    } // end for timeWarp
                                              
   
-   if (lfs.lapTimer.lapTimerModeEnabled)
+   if (lfs.lapTimer.lapTimerModeEnabled && focused)  // only show when window focused (lib 1.6.1)
    {
-     if (guiMode && focused)
-       lfs.lapTimer.drawPanel ("Lap Timer ",4,740,height-182,250,158); // nvis,x,y,w,h
-     else
-       lfs.lapTimer.drawPanel ("Lap Timer ",4,60,480,250,160);
+     if (guiMode) lfs.lapTimer.drawPanel ("Lap Timer ",4,740,height-182,250,158); // nvis,x,y,w,h
+     else         lfs.lapTimer.drawPanel ("Lap Timer ",4,60,480,250,160);
    }    
   
    
@@ -344,18 +341,17 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
                                      // conditionally depending on screen configuration, e.g. help panel obscures 
                                      // user panel 2. Parameter dialog obscures panel 1.
                                    
-      
-   lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish" after delay of few frames  
+  
    
    
    userMiscUpdate();     // uMisc method called every time Processing calls draw method
    
    if (guiMode && !parEditor.visible) uiUpdate();      // draw buttons process clicks
                                                        // hide when parameter dialog invoked
+      
+   lfs.contestScreenSaveIfRequested();   // generates screen save upon contest "Finish" after delay of few frames  
   
-   
-   bigMessageUpdate();   // LFS Message on screen facility
-     
+   bigMessageUpdate();   // LFS bigMessage display (after screen save if requested)
    
 } // end of draw()
   
@@ -463,20 +459,27 @@ PImage genRobotIcon (String initials,int size, color c,color textColor)  // crea
   SoundFile soundInit (String fname)     // load sound file from /sound subfolder  
   {  return new SoundFile(this,"/sound/"+fname); }
   
+   
     
   void playSound(SoundFile s, float volume) { if (soundEnabled && !mute) {s.amp (volume); s.play();} }
-     
+   
+          
   void tickingSoundUpdate()
   {
      if (soundEnabled)
      {
-       if (simFreeze || (timeWarp & (timeWarpMult>10)) || !lfs.controllerIsEnabled()) 
+       if (simFreeze || !lfs.controllerIsEnabled()) 
        { tickingSound.stop();
          //ticking = false;
        }
        else
-       { tickingSound.rate(simSpeed/9.0);
-         tickingSound.amp(tickSoundAmp*(simSpeed+5)/14.0); // quieter slower 
+       { 
+         if (lfs.contestIsRunning())
+         {
+           if (!simFreeze && !tickingSound.isPlaying()) playTickingSound();
+           tickingSound.rate(simSpeed/9.0);
+           tickingSound.amp(tickSoundAmp*(simSpeed+5)/14.0); // quieter slower
+         }  
        }
      }  
   }
@@ -509,17 +512,28 @@ PImage genRobotIcon (String initials,int size, color c,color textColor)  // crea
     // just for fun print distance traveled at lap crossing, not available if contest running 
     if (!loopMode) println ("Lap Detected  getDistanceTraveled (zero if contest running) ",lfs.getDistanceTraveled()); 
 
-    //if (!lfs.contestIsRunning()) 
-    if (lfs.lapTimer.lapList.size() == lfs.lapTimer.lapCountMax)
+   
+    if (!loopMode && (lfs.lapTimer.lapList.size() >= lfs.lapTimer.lapCountMax))
     {
-      if (!loopMode) 
-      { lfs.setEnableController(false);
-        lfs_StopTickingSound();
-      }
+      if (lfs.contestIsRunning())
+      {
+        lfs.contestStop();
+        userStop();
+        decodeKey(' ');     // stop contest
+        uiContestEnded();   // set button visible groups for finish end
+      }   
+      else // not contest running
+      {
+         lfs.stop();
+         userStop();
+         setEnableController(false);  
        
+      }
+        
+      lfs_StopTickingSound();
     }
-    
-    
+           
+       
     if (!timeWarp && !loopMode) { playCheers(); } // every lap
 
     if (loopMode)
@@ -547,11 +561,15 @@ PImage genRobotIcon (String initials,int size, color c,color textColor)  // crea
    if (soundEnabled) tickingSound.stop();
  
    if (lfs.contestIsRunning())
+   {
    lfs.contestStop();               // stops stopwatch and LFS will prompt for F)inish and log run to contest.cdf report
+   userStop();
+   }
    else                             // or X cancel -- this must be called by your controller
    {
-     lfs.setEnableController(false);
+     setEnableController(false);
      lfs.stop();
+     userStop();
    }
    
    if (loopMode)
@@ -570,6 +588,41 @@ PImage genRobotIcon (String initials,int size, color c,color textColor)  // crea
   boolean outResponseTriggered;
   float iconOriginalScale;
  
+
+
+void lfs_CheckCloseToMarker()
+{
+  // contest not running, freezeMarker true and distance > 10 (to eliminate false detect of start marker)
+  // then proceed 
+  
+  if (lfs.contestIsRunning() || !freezeNearMarker ||  (lfs.getDistanceTraveled() < 10)) return;
+    
+  float x = lfs.getRobotX();  // non-contest mode, we have access to x,y coordinates 
+  float y = lfs.getRobotY();
+  float dm = lfs.distToClosestMarker(x,y);
+  
+  if (dm<4.0)
+  {
+    if (timeWarp)
+    {   // important eliminate time warp 
+        commandTimeWarp(false,true); // turn off time warp
+        bigMessage ("Time Warp OFF, Freeze",color(100,255,100)); // override time warp OFF with this variant
+    }
+    
+    { if  (dm<freezeNearMarkerMinDist) freezeNearMarkerMinDist = dm;
+      else 
+      {
+        simFreeze = true;
+        freezeNearMarker = false;
+        tickingSoundUpdate();         
+        println("lfs_CheckCloseToMarker - Freeze close to marker ");
+      } 
+    }  
+  }
+  
+}
+
+ 
   
 void lfs_InBounds() // complimentary call to userOutOfBounds
 {
@@ -578,12 +631,14 @@ void lfs_InBounds() // complimentary call to userOutOfBounds
 }
  
 void lfs_OutOfBounds ()
-{  
+{ 
+  push();                         // push Matrix and Style  
   userOutOfBounds();
   
   if (loopMode)  // new (lib 1.6) -- restart robot 
   {
     commandGo();
+    pop();
     return;
   }
   
@@ -659,12 +714,13 @@ void lfs_OutOfBounds ()
       }
     }  
     
-    
-}  
-
- 
+    pop();
+}  // end lfs out of bounds  
 
 
-
-
- 
+void setEnableController (boolean e )
+{
+  lfs.setEnableController(e);
+  cbController.checked = e;        // update check box
+  
+}

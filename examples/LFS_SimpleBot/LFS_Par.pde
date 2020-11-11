@@ -131,6 +131,8 @@ class ParEditor {
   int notAvailNoticeTime;  
   boolean setAllDefaults;      // make action more clear with variable (previously parCurIndex=-1 was used)
   
+ 
+  
   void statusMessage(String s)
   {
      statusMsg = s;
@@ -340,13 +342,14 @@ class ParEditor {
      
      if (mouseDownL)
      {
-      float d = ((mouseX-mouseXOnPressL)*dv/(width*0.5));  // change 
+      // float d = ((mouseX-mouseXOnPressL)*dv/(width*0.5));      // previous 
+      float d = ((mouseX-mouseXOnPressL)*(maxV-minV)/parVP.w);    // changed scale to panel width (lib 1.6.1)
+      
       v = mouseInitialValueL + floor(d/deltaV) *deltaV;
      }
     
       //  1 to 10 delta v = 0.1          +  0.08          
         
-     //curCmd = 0;
      
      if (v>maxV) v=maxV;
      if (v<minV) v=minV;
@@ -420,11 +423,8 @@ class ParEditor {
      // results in full scale change of v
      
      if (mouseDownL)
-      v = (int) mouseInitialValueL + ((mouseX-mouseXOnPressL)*dv/(width/2));  
+     v = (int) mouseInitialValueL + ((mouseX-mouseXOnPressL)*(maxV-minV)/parVP.w);  // scale control to panel width (lib 1.6.1)
        
-           
-    // curCmd = 0;
-     
      if (v>maxV) v=maxV;
      if (v<minV) v=minV;
      
@@ -442,35 +442,40 @@ class ParEditor {
  }
  
   
-  void processKey(char k, int kcode)
+  boolean processKey(char k, int kcode)
   { 
+   
+   
     if (lfs.contestIsRunning())
     {
-      if (k=='P') { notAvailNoticeTime = millis(); visible = true; }     
-      return;
-    }  
+      if (k=='P') 
+      { notAvailNoticeTime = millis(); visible = true; return false; }
+      
+    } 
+   
+    if  (k=='P')
+    { visible = !visible;
+      return true;
+    }
     
-    if (k == 'P') parEditor.visible = !parEditor.visible;
-    
-    if (!visible) return;  // skip decode if panel not visible
+    if (!visible) return false;  // skip decode if panel not visible
     
     curKey = k; // used for decode within parF parI methods for current parameter.
       
-   if (kcode == 16) parPageTopIndex -= parPageSize;   // KeyEvent.VK_PAGE_UP   - not accessible
+   if (kcode == 16)
+    parPageTopIndex -= parPageSize;   // KeyEvent.VK_PAGE_UP   - not accessible
+   else
    if (kcode == 11) parPageTopIndex += parPageSize;   // KeyEvent.VK_PAGE_DOWN
- 
-   // keep in limits based on number of items 
-   if (parPageTopIndex < 0) parPageTopIndex = 0;
-   if (parPageTopIndex >= parCount) parPageTopIndex -= parPageSize; 
-   
+   else 
    if (k == 'A'-64)
    { setAllDefaults = true;    // ctrl-A default ALL
      statusMessage("Set ALL parameters to default values");
    }
-   
+   else
    if (k == 'D'-64) requestDefault = true;  // set default on current variable, next time   
-  
+   else
    if (k == 'S'-64) requestSave = true;
+   else
    if (k == 'L'-64) 
    {
      paramLines = loadStrings(dataPath("param.cdf"));
@@ -483,6 +488,14 @@ class ParEditor {
      } 
       
    }
+   else return false;
+   
+   // keep page index in limits 
+   
+   if (parPageTopIndex < 0) parPageTopIndex = 0;
+   if (parPageTopIndex >= parCount) parPageTopIndex -= parPageSize; 
+   
+   return true; // processed key 
    
    
       

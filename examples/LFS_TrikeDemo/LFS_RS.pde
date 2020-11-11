@@ -203,7 +203,7 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
        
    if (!loopMode) println ("Executing Resume robot drive - FREEZE - Press SPACE to run");
    
-   lfs.setEnableController(true);
+   setEnableController(true);
    lfs.crumbsEraseAll();
    lfs.clearDistanceTraveled();    // could recover 
    simFreeze = true;  // if not frozen problems with controller on while mouse button pressed 
@@ -216,7 +216,7 @@ void lfsMarkerClicked()                     //  called when robot jumps to old m
   
   println ("no state info for this marker");
   playMarker();
-  lfs.setEnableController(false);                     // G)o or R)un to start 
+  setEnableController(false);                     // G)o or R)un to start 
   lfs.clearDistanceTraveled();    // could recover
   lfs.crumbsEraseAll();
   lfs.lapTimer.lapTimerAndCountReset();
