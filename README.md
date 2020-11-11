@@ -2,9 +2,10 @@
 
 Fixed course change wrong image in robot view. (Texture map not updated on GPU was the problem).
 <p>
-Added GoMarker (thanks Will Kuhnle for suggesting). Using time warp and setting marker, robot drops out of warp and
-freezes on marker with all state information in tact. Virtually eliminates need for effort applied to saving 
-state in Robot State class. 
+Added GoMarker button (thanks Will Kuhnle for suggesting). Robot runs from start position at warp speed, then
+drops out of warp and freezes near marker with all run state information in tact. This feature eliminates need for
+the saved robot state marker system and the effort on the part of user to add robot state variables to Robot State
+class.
 <p>
 Fixed a number of contest run problems including lap contest auto end not allowing report or cancel. 
 <p>
