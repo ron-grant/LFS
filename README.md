@@ -1,5 +1,7 @@
 ### Library 1.6.1
-
+<p>
+Revised User's Guide Released,   LFS Users Guide 1.6 
+<p>
 Fixed course change wrong image in robot view. (Texture map not updated on GPU was the problem).
 <p>
 Added GoMarker button (thanks Will Kuhnle for suggesting). Robot runs from start position at warp speed, then
