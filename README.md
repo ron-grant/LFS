@@ -1,5 +1,8 @@
 ### Library 1.6.1
 <p>
+Carl Ott - Spotted Misplaced assignment (Zeroing D term in PD controller)  in SimpleBot Mecanum demos.
+Also MecanumDemo missing LFS_G.pde file.  (couple of quick fixes for 1.6.2)
+<p>
 Revised User's Guide Released,   LFS Users Guide 1.6 
 <p>
 Fixed course change wrong image in robot view. (Texture map not updated on GPU was the problem).
