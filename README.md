@@ -1,4 +1,6 @@
-### Library 1.6.1
+### Library 1.6.1 .2 .3
+<p>
+Added LFS_2Spot demo. Very simple 2 spot sensor demo with a few automated steps on dimming course for looped timewarp (1.6.3)
 <p>
 Carl Ott - Spotted Misplaced assignment (Zeroing D term in PD controller)  in SimpleBot Mecanum demos.
 Also MecanumDemo missing LFS_G.pde file.  (couple of quick fixes for 1.6.2)

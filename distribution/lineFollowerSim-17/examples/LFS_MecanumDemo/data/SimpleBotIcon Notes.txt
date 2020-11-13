@@ -1,0 +1,25 @@
+SimpleBotIcon.svg and SimpleBotBigIcon.png  created by Drawing Program 
+ Inkscape 0.92 (www.inkscape.org)    SimpleBot.svg file
+
+Used to provide robot icon overlay on course and on robot view.
+
+
+Exported 2 Files as PNG
+ 
+Size In Pixels
+
+128 x 128 pixels   SimpleBotIcon.png
+800 x 800 pixels   SimpleBotBigIcon.png
+
+
+See LFS_Simplebot app  UserInit
+
+Now, as of (lib 1.4.2) LFS has ability to generate simple icon at runtime with user initials..
+See LFS_SimpleBot  UserInit tab.
+
+
+
+ 
+
+
+
