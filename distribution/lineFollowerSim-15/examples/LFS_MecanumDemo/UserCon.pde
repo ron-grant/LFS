@@ -74,7 +74,7 @@ void userControllerUpdate ()
   controllerMessageString = String.format("sensed line position error %3.1f",e);  // displayed by UPanel code
 
 
-ePrev = e;   
+
 
 // note you can dynamically change sensor positions if you wish
 // in this example sensor radius is varied - just to show it can be done
@@ -91,7 +91,7 @@ ePrev = e;
 // might need tp turn too???
 
 lfs.setTargetSidewaysSpeed( 0.1*(-e * Kp + (e - ePrev) * Kd) );   
-
+ePrev = e;   
 
 // handy to disable set target speed and manually change 
 // note: in this case start in non-contest mode.
