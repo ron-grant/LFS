@@ -1,5 +1,5 @@
-Kp,10.0000
-Kd,10.0000
-maxSpeed,9.0000
-sampleInt,9
-v1,17.8000
+Time Warp Multiplier,50
+Course Icon Opacity,0.1000
+speedClear,13.5000
+speedTurn,6.5000
+sensorSep,1.1000

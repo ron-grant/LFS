@@ -41,6 +41,7 @@
   
     }
  
+boolean goRequested = false;  // performed at bottom of simulation loop  
  
 boolean commandGo()  // G)o Command - non contest run start  (reset controller, clear crumbs, reset stopwatch
 {
@@ -49,19 +50,40 @@ boolean commandGo()  // G)o Command - non contest run start  (reset controller, 
      playBadKeySound();
      return false; // go not allowed
    }
-  
-   lfs.clearSensors();              
-   userControllerResetAndRun();
-   setEnableController(true);
-   lfs.crumbsEraseAll();
-   lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
-             
-   lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
-   simFreeze = false;
-   lfs_StartedRun();
-   cbController.checked = lfs.controllerIsEnabled();
+   setEnableController(false);  // prevent updates 
+   trike.reset();               // !!! experiment 
+   
+   goRequested = true;
+   goOnRequest();  // go now or comment out for goOnRequest placed at draw bottom of loop 
+   
    return true;
 }         
+
+void goOnRequest()  // for LFS_M main loop 
+{
+  if (!goRequested) return; 
+  
+  goRequested = false;
+  
+  lfs.clearSensors();              
+  userControllerResetAndRun();
+  setEnableController(true);
+  lfs.setCrumbsDoubleBuffer (loopMode && timeWarp);
+  lfs.crumbsEraseAll();
+  lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
+             
+  lfs.lapTimer.lapTimerAndCountReset();  // new (1.4.1) 
+  simFreeze = false;
+  lfs_StartedRun();
+  cbController.checked = lfs.controllerIsEnabled(); 
+  
+  trike.reset(); 
+  println ("trike.reset() called in LFS_Key  -- non-standard code, move ");
+  
+}
+
+
+
 
 void commandTimeWarp (boolean tw, boolean silent)
 { timeWarp = tw;
@@ -76,6 +98,7 @@ void commandTimeWarp (boolean tw, boolean silent)
   {  bigMessage("Time Warp OFF",color(50,50,255));
   }
   tickingSoundUpdate();
+     
 }  
 
 boolean kbdKey;  // lets decodeKey know source is keyboard vs GUI    
@@ -183,6 +206,9 @@ void decodeKey(char key)
     
                cbLoopMode.checked = loopMode;
              }  
+             
+             lfs.setCrumbsDoubleBuffer(loopMode && timeWarp); // update crumb double buffering 
+             
              break;
         
 

@@ -57,6 +57,7 @@ float[] lineData = lineSensor.read();
 */
 
 import processing.core.*;
+import processing.data.*;
 import java.util.ArrayList;
 import java.lang.reflect.*;   // Reflection allows the ability to obtain Class member names and to modify them by name
                               // used by nameSensorsUsingVariableNames() 
@@ -133,8 +134,6 @@ void clear()
   //sensorTotalSpotCount = 0;
 }
 
-float radians (float deg) { return deg*180.0f/((float) Math.PI);} 
-
 // xorg yorg are screen origins of sensor viewport 
 
 
@@ -153,9 +152,9 @@ public void lineSensorSpotLocationCalcInit(LineSensor ls)
 	                                                          // used to calculate offset of line sensor
                                                               // equal to 1/2 sensor total width applied in robot -Y direction 
 	   
-  float a = radians(ls.rotationAngle);
-  sinA = (float) Math.sin(a);                                 // 2D rotation pre-calc 
-  cosA = (float) Math.cos(a);
+  float a = PApplet.radians(ls.rotationAngle);
+  sinA = PApplet.sin(a);                                      // 2D rotation pre-calc 
+  cosA = PApplet.cos(a);
   
   xoff = ls.getXoff();
   yoff = ls.getYoff();

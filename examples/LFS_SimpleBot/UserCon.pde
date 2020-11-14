@@ -73,7 +73,6 @@ void userControllerUpdate ()
 
   controllerMessageString = String.format("sensed line position error %3.1f",e);  // displayed by UPanel code
 
-
 // note you can dynamically change sensor positions if you wish
 // in this example sensor radius is varied - just to show it can be done
 // now, commented out here
@@ -84,7 +83,7 @@ void userControllerUpdate ()
 // generally your robot will up updating TargetTurnRate and possibly TargetSpeed
 
 lfs.setTargetTurnRate(-e * Kp + (e - ePrev) * Kd);   // turn rate in degrees per second
-ePrev = e;   
+ePrev = e;      
 
 // handy to disable set target speed and manually change 
 // note: in this case start in non-contest mode.

@@ -353,6 +353,9 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
   
    bigMessageUpdate();   // LFS bigMessage display (after screen save if requested)
    
+   goOnRequest();  // synchronize go command with loop 
+   
+   
 } // end of draw()
   
   

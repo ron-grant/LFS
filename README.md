@@ -1,4 +1,8 @@
-### Library 1.6.1 .2 .3
+### Library 1.6.4
+<p>
+Line/Half-Circle sensor rotation problem fixed. Thanks Chris Netter for pointing out (1.6.4)
+Improved double buffer cookie crumbs logic  Loop+TimeWarp,  reduced/eliminated residule crumbs...
+Set explode on out of bounds to false (in most demos - check LFS_G make sure false).
 <p>
 Added LFS_2Spot demo. Very simple 2 spot sensor demo with a few automated steps on dimming course for looped timewarp (1.6.3)
 <p>

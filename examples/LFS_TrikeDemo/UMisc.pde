@@ -60,7 +60,11 @@
   void userOutOfBounds ()  {}    // LFS_M code handles stopping ..  
 
   void userNewMarkerPlaced(boolean placed)  {}   // called when a new marker placed, LFS handles save state...
-  void userMarkerClicked() {}  // optional user method. Note LFS is taking care of state save/restore 
+  void userMarkerClicked() {
+    
+    trike.reset(); // !!! added 
+  
+  }  // optional user method. Note LFS is taking care of state save/restore 
                              // see UserReset tab header. Also see LFS_RS.
                              
                              

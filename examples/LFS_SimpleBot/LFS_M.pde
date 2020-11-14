@@ -288,6 +288,7 @@ void lfsDraw ()  // method called from draw() that is called by Processing as fa
   
   
      lfs.updateSensorsFast();
+     //userControllerColorSensors();  // propose to add this call in lfs 1.6.2 !!!
       
      if (lfs.controllerIsEnabled() && simRequestStep)    // if turned off, no update.    // !!! change   
        userControllerUpdate();         // user reads sensors changes target speed and turn rate as needed.

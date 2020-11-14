@@ -49,7 +49,8 @@
                                             // course with controller still active.
                                       
   
-  boolean blowUpOutOfBounds      =  true;   // include animation of robot blowing up (except when Loop enabled)
+  boolean blowUpOutOfBounds      =  false;   // include animation of robot blowing up (except when Loop enabled)
+                                             //   problems with this feature when dragging robot back in bounds
   boolean explosionSoundEnabled  =  false;   // include explosion sound (auto disabled when Loop enabled)
  
   float   tickSoundAmp = 0.4;                // 0 to 1.0 (value is attenuated when step rate slowed 1..8) 

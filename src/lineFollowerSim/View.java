@@ -763,7 +763,7 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
     int dsp = 0;
     if (doubleBufferCrumbs) dsp = activeCrumbList ^1;  // if double buffer show list not being added to
     
-  //  if (doubleBufferCrumbs)                            // 1.6.4
+    if (doubleBufferCrumbs)                            // 1.6.4
     if (crumbList[dsp].size() == 0) dsp ^= 1;          // try to show non-empty list 
     
     for (PVector pt : crumbList[dsp])
@@ -872,10 +872,15 @@ void drawRobotCoordAxes(float scale, int alpha)  // called from LFS
   
   void crumbSetDoubleBuffer(boolean e)
   {
-    //crumbList[0].clear();
-    //crumbList[1].clear();
-    //activeCrumbList = 0;
     doubleBufferCrumbs = e;
+    if (!e) {
+      crumbList[0].clear();
+      crumbList[1].clear();	
+      activeCrumbList = 0;	
+    	
+    }
+    
+    
   }
   
   

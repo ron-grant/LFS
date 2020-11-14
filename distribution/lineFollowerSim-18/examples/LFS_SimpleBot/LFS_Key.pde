@@ -53,6 +53,7 @@ boolean commandGo()  // G)o Command - non contest run start  (reset controller, 
    lfs.clearSensors();              
    userControllerResetAndRun();
    setEnableController(true);
+   lfs.setCrumbsDoubleBuffer(loopMode && timeWarp);
    lfs.crumbsEraseAll();
    lfs.clearDistanceTraveled();    // new (1.4.1) see UserInit - no impact on simulator, report only item
              

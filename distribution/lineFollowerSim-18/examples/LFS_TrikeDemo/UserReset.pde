@@ -104,9 +104,13 @@ void userControllerResetAndRun()
   
    if (firstReset)
   {
-   firstReset = false;
+ //  firstReset = false;
    trike.wheelVelocity = 4.0;     // Target Speed - See: trikeDriveUpdate () in UserTracking
    cs.wheelVelocity = 4.0;
+   
+  // lfs.stop();
+   
+   
   }
     
                                       

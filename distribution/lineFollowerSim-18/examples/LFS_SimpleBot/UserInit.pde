@@ -52,7 +52,7 @@ void userInit()  // called at startup and typically by UserReset tab's userContr
   lfs.defineLapCourse(4,"Test2x3.png",24,12,20);
   lfs.defineLapCourse(5,"RG_5x7_Advanced_64DPI_R1.png");
     
-  lfs.chooseCourseOneTime(2);          // Here you choose an initial course to use. 
+  lfs.chooseCourseOneTime(5);          // Here you choose an initial course to use. 
                                        // If Ctrl-C command is issued it advances the selection to the next course, 
                                        // wrapping around to the start of list when advancing past the end. To preserve 
                                        // the Ctrl-C selection, this setting is ignored on subsequent userInit calls

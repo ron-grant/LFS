@@ -23,10 +23,10 @@ class Trike {
 
  Trike() {}
  
- //void reset()              // unused code - should modify current robot state if 
- //{ steerAngleR = 0.0;      // ever used 
- //  wheelVelocity = 0.0;
- //}  
+ void reset()              // unused code - should modify current robot state if 
+ { steerAngleR = 0.0;      // ever used 
+   wheelVelocity = 0.0;
+ }  
  
  // moved decodeKeys to UKey
  
