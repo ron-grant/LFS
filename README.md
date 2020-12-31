@@ -1,6 +1,6 @@
 # LFS - Line Follower Simulation 
-LFS is a software tool designed assist in the process of desinging robot line follower controller software and had the ability to run your robot in
-everything from single step to on the order  of 1000 times real-time using Time Warp (compute platform dependent).
+LFS is a software tool designed assist in the process of desinging robot line follower controller software and has the ability to run your robot in
+everything from single step to on the order  of 1000 times real-time using compute platform dependent Time Warp Feature.
 <p>
 LFS let's you quickly prototype different controller ideas, with different robot configurations, and develop insight to how they might behave on different line following courses. By the time LFS was first published on GitHub in August 2020, it had already been used to experiment and improve on sensor placement and controller algorithms for the baseline Tricycle Controller included in this repo. 
 <p>
